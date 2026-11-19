@@ -1,4 +1,4 @@
-"""Tests for AnimePahe scanner and URL parsing."""
+"""Tests for animepahe scanner and URL parsing."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ class TestParseAnimeUrl:
         assert host == "animepahe.com"
 
     def test_invalid_domain(self) -> None:
-        with pytest.raises(ValueError, match="Not an AnimePahe URL"):
+        with pytest.raises(ValueError, match="Not an animepahe URL"):
             parse_anime_url("https://google.com/test")
 
     def test_invalid_scheme(self) -> None:

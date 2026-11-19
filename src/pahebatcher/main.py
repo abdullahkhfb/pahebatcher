@@ -15,7 +15,6 @@ from pathlib import Path
 from rich import box
 from rich.panel import Panel
 from rich.prompt import Prompt
-from rich.rule import Rule
 from rich.table import Table
 
 from pahebatcher.config import VERSION
@@ -25,9 +24,9 @@ from pahebatcher.extract.scanner import AnimePaheScanner, parse_anime_url
 from pahebatcher.http import HttpClient
 from pahebatcher.models import AppContext
 from pahebatcher.sessions import SessionManager
-from pahebatcher.solver import Solver, install_hint
+from pahebatcher.solver import Solver, no_solver_hint
 from pahebatcher.stream import run_stream
-from pahebatcher.ui.console import console, print_banner
+from pahebatcher.ui.console import console, print_banner, section
 from pahebatcher.ui.prompts import (
     confirm_download,
     interactive_discovery,
@@ -43,7 +42,7 @@ log = logging.getLogger(__name__)
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pahebatcher",
-        description=f"pahe-batcher v{VERSION} \u2014 AnimePahe Batch Downloader",
+        description=f"pahe-batcher v{VERSION} \u2014 animepahe Batch Downloader",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
@@ -68,7 +67,7 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
-    parser.add_argument("url", metavar="URL", nargs="?", help="AnimePahe series URL")
+    parser.add_argument("url", metavar="URL", nargs="?", help="animepahe series URL")
     sel = parser.add_mutually_exclusive_group()
     sel.add_argument("--all", "-a", action="store_true", help="Download every episode")
     sel.add_argument("--range", "-r", metavar="RANGE", help='Episode range, e.g. "1-12" "1,4,7" "13-"')
@@ -109,7 +108,7 @@ def build_config_parser() -> argparse.ArgumentParser:
     set_p.add_argument("key", choices=[
         "quality", "audio_lang", "max_parallel", "hls_workers",
         "output_dir", "keep_temp", "resolve_ahead", "cache_ttl", "cookie_string",
-        "auto_retry", "clearance_ttl",
+        "auto_retry", "clearance_ttl", "browser_mode",
     ])
     set_p.add_argument("value")
     cfg_sub.add_parser("reset", help="Reset all settings to defaults")
@@ -146,7 +145,7 @@ def build_watchlist_parser() -> argparse.ArgumentParser:
     p_add = sub.add_parser("add", aliases=["a"], help="Add anime to watchlist")
     p_add.add_argument(
         "url", nargs="?", default=None,
-        help="AnimePahe series URL, search query, or omit to search interactively",
+        help="animepahe series URL, search query, or omit to search interactively",
     )
     p_add.add_argument(
         "-q", "--quality", type=int, choices=[360, 720, 1080],
@@ -200,7 +199,7 @@ def build_watchlist_parser() -> argparse.ArgumentParser:
     )
     p_relink.add_argument(
         "new_url", nargs="?", default=None,
-        help="New AnimePahe series URL (omit to auto-find by title)",
+        help="New animepahe series URL (omit to auto-find by title)",
     )
 
     p_check = sub.add_parser(
@@ -232,31 +231,25 @@ async def run(args: argparse.Namespace) -> None:
     resolve_ahead = int(cm.get("resolve_ahead"))
     cache_ttl = int(cm.get("cache_ttl"))
     cookie_string = str(cm.get("cookie_string"))
-    clearance_ttl = int(cm.get("clearance_ttl"))
     auto_retry = args.retry if args.retry is not None else int(cm.get("auto_retry"))
     auto_retry = max(0, min(2, auto_retry))
-    flaresolverr_url = os.getenv("FLARESOLVERR_URL", "http://localhost:8191/v1")
-    flaresolverr_proxy = os.getenv("FLARESOLVERR_PROXY") or None
     cache_dir = Path("pahe_cache")
 
     # Prerequisites check
-    console.print(Rule("[bold white] Checking Prerequisites [/bold white]", style="brand"))
-    console.print(f"  [dim]FlareSolverr:[/dim] {flaresolverr_url}  ", end="")
+    section("Checking Prerequisites")
+    console.print("  [muted]Cloudflare solver[/muted]  ", end="")
 
-    solver = Solver(
-        flaresolverr_url, proxy=flaresolverr_proxy, user_cookies=cookie_string,
-        clearance_ttl=clearance_ttl * 60,
-    )
+    solver = Solver.from_config(cm)
     await solver.start()
     try:
         if not await solver.ping():
-            console.print("[red]\u2717 not responding[/red]")
+            console.print("[red]\u2717 none available[/red]")
             console.print(
-                "\n  [red bold]FlareSolverr is not running![/red bold]\n"
-                f"  [dim]{install_hint()}[/dim]"
+                "\n  [red]No Cloudflare solver is available[/red]\n"
+                f"  [dim]{no_solver_hint()}[/dim]"
             )
             sys.exit(1)
-        console.print("[green]\u2713 reachable[/green]")
+        console.print(f"[ok]\u2713 {solver.backend_name}[/ok]")
 
         http = HttpClient(workers)
         await http.start()
@@ -317,7 +310,7 @@ async def run(args: argparse.Namespace) -> None:
                     mode = "stream" if args.stream else "download"
                 else:
                     console.print()
-                    console.print(Rule("[bold white] Action [/bold white]", style="brand"))
+                    section("Action")
                     sessions = SessionManager.get_sessions(cache_dir)
                     total_cache = sum(s["size"] for s in sessions)
                     cache_hint = f" [dim]({fmt_bytes(total_cache)})[/dim]" if total_cache > 0 else ""
@@ -401,7 +394,6 @@ async def run(args: argparse.Namespace) -> None:
                         quality=quality, audio_lang=audio_lang,
                         max_parallel=parallel, hls_workers=workers,
                         keep_temp=args.keep_temp, list_only=False,
-                        flaresolverr_url=flaresolverr_url,
                         resolve_ahead=resolve_ahead, cache_ttl=cache_ttl,
                         cookie_string=cookie_string, auto_retry=auto_retry,
                     )
@@ -416,7 +408,6 @@ async def run(args: argparse.Namespace) -> None:
                         quality=quality, audio_lang=audio_lang,
                         max_parallel=parallel, hls_workers=workers,
                         keep_temp=wl_entry.keep_temp, list_only=False,
-                        flaresolverr_url=flaresolverr_url,
                         resolve_ahead=resolve_ahead, cache_ttl=cache_ttl,
                         cookie_string=cookie_string, auto_retry=wl_entry.auto_retry,
                     )
@@ -431,7 +422,6 @@ async def run(args: argparse.Namespace) -> None:
                         quality=quality, audio_lang=audio_lang,
                         max_parallel=parallel, hls_workers=workers,
                         keep_temp=False, list_only=False,
-                        flaresolverr_url=flaresolverr_url,
                         resolve_ahead=resolve_ahead, cache_ttl=cache_ttl,
                         cookie_string=cookie_string, auto_retry=auto_retry,
                     )
@@ -441,7 +431,6 @@ async def run(args: argparse.Namespace) -> None:
                         quality=quality, audio_lang=audio_lang,
                         max_parallel=parallel, hls_workers=workers,
                         keep_temp=False, list_only=False,
-                        flaresolverr_url=flaresolverr_url,
                         resolve_ahead=resolve_ahead, cache_ttl=cache_ttl,
                         cookie_string=cookie_string, auto_retry=auto_retry,
                     )

@@ -57,7 +57,6 @@ def app_context(tmp_path: Path) -> AppContext:
         hls_workers=8,
         keep_temp=False,
         list_only=False,
-        flaresolverr_url="http://localhost:8191/v1",
     )
 
 

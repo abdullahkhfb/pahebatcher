@@ -1,4 +1,4 @@
-"""FlareSolverr client — instance-based with async HTTP and TTL caching."""
+"""Cloudflare solver: the built-in browser, a fast direct path and TTL caching."""
 
 from __future__ import annotations
 
@@ -8,13 +8,16 @@ import json
 import logging
 import os
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
-import aiohttp
-
+from pahebatcher import browser_solver
 from pahebatcher.cache import TTLCache
-from pahebatcher.config import RETRY_ATTEMPTS, RETRY_BASE_DELAY
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from pahebatcher.config_manager import ConfigManager
 
 log = logging.getLogger(__name__)
 
@@ -28,6 +31,7 @@ _CHALLENGE_MARKERS = (
 )
 
 _DIRECT_TIMEOUT = 15
+_BROWSER_BUDGET_MS = 100_000  # one resolve attempt gets 120 s upstream; leave headroom
 _DIRECT_UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -43,12 +47,44 @@ def _is_challenge_body(text: str) -> bool:
     return any(marker in low for marker in _CHALLENGE_MARKERS)
 
 
+def _cookie_applies(cookie_domain: str, host: str) -> bool:
+    d = cookie_domain.lstrip(".").lower()
+    h = host.rsplit(":", 1)[0] if ":" in host else host  # netloc may carry a port
+    return not d or h == d or h.endswith("." + d)
+
+
 def _cookie_header(cookies: list[dict[str, str]]) -> str:
     return "; ".join(f"{c['name']}={c['value']}" for c in cookies)
 
 
+_DEFAULT_IMPERSONATE = "chrome120"
+
+
+def _impersonate_for(user_agent: str) -> str:
+    """Newest curl_cffi Chrome profile not newer than the UA's major version.
+
+    cf_clearance is bound to the UA that earned it, and Cloudflare also compares the
+    TLS fingerprint — so the direct fast path should look like that same browser.
+    """
+    m = re.search(r"Chrome/(\d+)", user_agent)
+    if not m:
+        return _DEFAULT_IMPERSONATE
+    major = int(m.group(1))
+    try:
+        from curl_cffi.requests import BrowserType
+
+        versions = sorted(
+            int(b.value[6:]) for b in BrowserType if re.fullmatch(r"chrome\d+", b.value)
+        )
+    except Exception:
+        return _DEFAULT_IMPERSONATE
+    usable = [v for v in versions if v <= major]
+    return f"chrome{usable[-1]}" if usable else _DEFAULT_IMPERSONATE
+
+
 def _direct_fetch_sync(
-    url: str, cookie_header: str, timeout: int
+    url: str, cookie_header: str, timeout: int,
+    user_agent: str = _DIRECT_UA, impersonate: str = _DEFAULT_IMPERSONATE,
 ) -> tuple[int, str, list[dict[str, str]]] | None:
     """Direct fetch with clearance cookies. Returns (status, body, set-cookies).
 
@@ -61,10 +97,10 @@ def _direct_fetch_sync(
     except ImportError:
         return None
     try:
-        headers = {"User-Agent": _DIRECT_UA}
+        headers = {"User-Agent": user_agent}
         if cookie_header:
             headers["Cookie"] = cookie_header
-        r: Any = curl_cffi.requests.get(url, impersonate="chrome120", headers=headers, timeout=timeout)
+        r: Any = curl_cffi.requests.get(url, impersonate=impersonate, headers=headers, timeout=timeout)
         text = bytes(r.content).decode("utf-8", errors="replace")
         jar: Any = r.cookies
         set_cookies = [{"name": str(k), "value": str(v)} for k, v in jar.items()]
@@ -73,56 +109,31 @@ def _direct_fetch_sync(
         return None
 
 
-def is_termux() -> bool:
-    """True when running inside Termux on Android."""
-    if os.path.exists("/data/data/com.termux"):
-        return True
-    return "com.termux" in os.environ.get("PREFIX", "")
-
-
-def install_hint() -> str:
-    """How to get FlareSolverr running, tailored to the current platform."""
-    if is_termux():
-        return (
-            "Start it on Termux:\n"
-            "    pkg install -y x11-repo && pkg install -y flaresolverr\n"
-            "    flaresolverr &\n"
-            "  Or the smolfiddle fork for native headless / headed LXQt:\n"
-            "    https://github.com/smolfiddle/FlareSolverr (see termux/README-termux.md)"
-        )
-    return (
-        "Start it with Docker:\n"
-        "    docker run -d --name=flaresolverr -p 8191:8191 ghcr.io/flaresolverr/flaresolverr\n"
-        "  Or set FLARESOLVERR_URL env var if it's on a different host."
-    )
-
-
-def update_hint() -> str:
-    """How to update FlareSolverr, tailored to the current platform."""
-    if is_termux():
-        return "Try updating: pkg upgrade flaresolverr (or pull the smolfiddle fork)"
-    return "Try updating: docker pull ghcr.io/flaresolverr/flaresolverr"
+def no_solver_hint() -> str:
+    """What to do when the built-in browser solver cannot start."""
+    return browser_solver.browser_hint()
 
 
 class SolverError(Exception):
-    """FlareSolverr communication or resolution failure."""
+    """Cloudflare solving failure."""
 
 
 class Solver:
     def __init__(
         self,
-        base_url: str,
         proxy: str | None = None,
         user_cookies: str = "",
         clearance_ttl: float = 1200.0,
+        browser_mode: str = "auto",
+        profile_dir: Path | None = None,
     ) -> None:
-        self._base = base_url.rstrip("/")
+        self._browser_mode = browser_mode
+        self._profile_dir = profile_dir
+        self._engine_obj: browser_solver.BrowserEngine | None = None
         self._proxy = proxy
-        self._session_id: str | None = None
         self._sem = asyncio.Semaphore(1)
         self._lock = asyncio.Lock()
         self._solver_cache = TTLCache(ttl=120.0, max_size=256)
-        self._http_session: aiohttp.ClientSession | None = None
         self._user_cookies = self._parse_cookie_string(user_cookies)
         # Clearance store: live cf_clearance per domain, harvested from
         # successful responses. clearance_ttl <= 0 disables the store and
@@ -130,6 +141,32 @@ class Solver:
         self._clearance_ttl = clearance_ttl
         self._clearance = TTLCache(ttl=clearance_ttl, max_size=64)
         self._clearance_dead: set[str] = set()
+        # UA that earned each host's harvested clearance (cf_clearance is UA-bound).
+        self._clearance_ua: dict[str, str] = {}
+
+    @classmethod
+    def from_config(cls, cm: ConfigManager) -> Solver:
+        """Build a solver from persisted settings plus the optional PAHEBATCHER_PROXY env var."""
+        return cls(
+            proxy=os.getenv("PAHEBATCHER_PROXY") or None,
+            user_cookies=str(cm.get("cookie_string")),
+            clearance_ttl=int(cm.get("clearance_ttl")) * 60,
+            browser_mode=str(cm.get("browser_mode")),
+        )
+
+    @property
+    def backend_name(self) -> str:
+        return "built-in browser"
+
+    def _engine(self) -> browser_solver.BrowserEngine:
+        if self._engine_obj is None:
+            profile = self._profile_dir
+            if profile is None:
+                from pahebatcher.ffmpeg_setup import app_dir
+
+                profile = app_dir() / "browser-profile"
+            self._engine_obj = browser_solver.BrowserEngine(profile, self._browser_mode, self._proxy)
+        return self._engine_obj
 
     @staticmethod
     def _parse_cookie_string(s: str) -> list[dict[str, str]]:
@@ -160,7 +197,9 @@ class Solver:
                 return [dict(c) for c in hit if isinstance(c, dict)], "harvested"
         return [], "none"
 
-    async def _note_clearance_success(self, host: str, cookies: list[Any]) -> None:
+    async def _note_clearance_success(
+        self, host: str, cookies: list[Any], user_agent: str | None = None
+    ) -> None:
         """Harvest cf_clearance from a successful response for later reuse."""
         if self._clearance_ttl <= 0:
             return
@@ -173,12 +212,15 @@ class Solver:
                 found.append({"name": name, "value": str(value)})
         if found:
             await self._clearance.set(host, found)
+            if user_agent:
+                self._clearance_ua[host] = user_agent
 
     async def _note_clearance_dead(self, host: str, source: str) -> None:
         """Drop clearance that just failed a challenge for host."""
         if self._clearance_ttl <= 0:
             return
         await self._clearance.discard(host)
+        self._clearance_ua.pop(host, None)
         if source == "user":
             async with self._lock:
                 self._clearance_dead.add(host)
@@ -186,10 +228,15 @@ class Solver:
     async def _direct_request(
         self, url: str, host: str, cookies: list[dict[str, str]], source: str
     ) -> dict[str, Any] | None:
-        """Direct fetch shaped like a FlareSolverr solution, or None to fall back."""
+        """Direct fetch shaped like a browser solution, or None to fall back."""
         loop = asyncio.get_running_loop()
+        ua = self._clearance_ua.get(host, _DIRECT_UA) if source == "harvested" else _DIRECT_UA
         fetched = await loop.run_in_executor(
-            None, _direct_fetch_sync, url, _cookie_header(cookies), _DIRECT_TIMEOUT
+            None,
+            lambda: _direct_fetch_sync(
+                url, _cookie_header(cookies), _DIRECT_TIMEOUT,
+                user_agent=ua, impersonate=_impersonate_for(ua),
+            ),
         )
         if fetched is None:
             return None  # transport error or no curl — transient, keep store
@@ -200,85 +247,38 @@ class Solver:
         if status != 200:
             return None  # e.g. rate limit — transient, keep store
         await self._note_clearance_success(host, set_cookies)
-        return {"response": text, "cookies": set_cookies, "userAgent": _DIRECT_UA}
+        return {"response": text, "cookies": set_cookies, "userAgent": ua}
 
     async def start(self) -> None:
-        self._http_session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=90),
-            headers={"Content-Type": "application/json"},
-        )
+        """Kept for symmetry with close(); the browser itself starts lazily in ping()."""
 
     async def close(self) -> None:
-        await self.destroy_session()
-        if self._http_session:
-            await self._http_session.close()
-            self._http_session = None
-
-    @property
-    def _session(self) -> aiohttp.ClientSession:
-        if not self._http_session:
-            raise RuntimeError("Solver not started — call start() first")
-        return self._http_session
+        if self._engine_obj is not None:
+            await self._engine_obj.close()
+            self._engine_obj = None
 
     async def ping(self) -> bool:
-        base = self._base
-        if base.endswith("/v1"):
-            base = base[:-3]
-        try:
-            async with self._session.get(f"{base}/health", timeout=aiohttp.ClientTimeout(total=5)) as r:
-                data: Any = await r.json()
-                if isinstance(data, dict):
-                    return bool(data.get("status") == "ok")
-                return False
-        except Exception:
+        """True when the built-in browser solver can start."""
+        if not browser_solver.available():
             return False
-
-    async def _post(self, body: dict[str, Any], timeout: int = 90) -> dict[str, Any] | None:
         try:
-            async with self._session.post(
-                self._base, json=body, timeout=aiohttp.ClientTimeout(total=timeout),
-            ) as r:
-                result: Any = await r.json()
-                return result if isinstance(result, dict) else None
-        except Exception as exc:
-            log.debug("FlareSolverr POST error: %s", exc)
-            return None
-
-    async def _ensure_session(self) -> None:
-        async with self._lock:
-            if self._session_id:
-                return
-        data = await self._post({"cmd": "sessions.create"}, timeout=15)
-        if data and data.get("status") == "ok":
-            sid = data.get("session")
-            async with self._lock:
-                self._session_id = sid
-            log.info("FlareSolverr session created: %s", sid)
-
-    async def destroy_session(self) -> None:
-        async with self._lock:
-            sid, self._session_id = self._session_id, None
-        if sid:
-            await self._post({"cmd": "sessions.destroy", "session": sid}, timeout=10)
-            log.info("FlareSolverr session %s destroyed.", sid)
+            await self._engine().start()
+        except browser_solver.BrowserSolverError as exc:
+            log.warning("Built-in browser unavailable: %s", exc)
+            return False
+        return True
 
     async def request(
         self, url: str, cache: bool = True,
         max_timeout: int = 120000, wait: int = 2000,
     ) -> dict[str, Any] | None:
-        """Fetch a page via FlareSolverr.
-
-        ``max_timeout`` and ``wait`` are milliseconds. ``wait`` is sent as
-        FlareSolverr's ``waitInSeconds`` settle delay; the client timeout
-        tracks ``max_timeout`` plus a buffer so slow devices are not cut
-        off while the server is still solving.
-        """
+        """Fetch a page, clearing Cloudflare if needed. ``max_timeout`` and ``wait`` are milliseconds."""
         if cache and (hit := await self._solver_cache.get(url)):
             return hit  # type: ignore[no-any-return]
 
         host = _host_of(url)
-        # Fast path: direct fetch with live clearance (transplant or
-        # harvested). Falls back to the browser path transparently.
+        # Fast path: direct fetch with live clearance (transplant or harvested).
+        # Falls back to the browser transparently.
         if self._clearance_ttl > 0:
             fast_cookies, fast_source = await self._clearance_for(host)
             if fast_cookies:
@@ -289,68 +289,28 @@ class Solver:
                     return sol
 
         async with self._sem:
-            await self._ensure_session()
-            session_rotated = False
-            timeout = max_timeout
-            page_wait = wait
-            for attempt in range(RETRY_ATTEMPTS):
-                send_cookies, send_source = await self._clearance_for(host)
-                body: dict[str, Any] = {
-                    "cmd": "request.get",
-                    "url": url,
-                    "maxTimeout": timeout,
-                    "waitInSeconds": max(1, round(page_wait / 1000)),
-                }
-                if self._proxy:
-                    body["proxy"] = self._proxy
-                if send_cookies:
-                    body["cookies"] = send_cookies
-                async with self._lock:
-                    if self._session_id:
-                        body["session"] = self._session_id
+            return await self._browser_request(url, host, cache, max_timeout, wait)
 
-                data = await self._post(body, timeout=timeout // 1000 + 30)
-                if not data:
-                    if attempt < RETRY_ATTEMPTS - 1:
-                        await asyncio.sleep(RETRY_BASE_DELAY * (2**attempt))
-                    continue
-
-                if data.get("status") == "ok":
-                    sol = data.get("solution")
-                    if sol:
-                        cookies_val = sol.get("cookies", [])
-                        cookies_list: list[dict[str, Any]] = (
-                            list(cookies_val) if isinstance(cookies_val, list) else []
-                        )
-                        await self._note_clearance_success(host, cookies_list)
-                        if cache:
-                            await self._solver_cache.set(url, sol)
-                    return sol
-
-                msg = data.get("message", "")
-                log.warning("FlareSolverr: %s", msg)
-
-                if "session" in msg.lower() or "not found" in msg.lower():
-                    async with self._lock:
-                        self._session_id = None
-                    await self._ensure_session()
-                elif "cloudflare" in msg.lower() or "challenge" in msg.lower():
-                    await self._note_clearance_dead(host, send_source)
-                    if not session_rotated:
-                        log.warning("Cloudflare blocked — rotating session and retrying with longer timeout.")
-                        await self.destroy_session()
-                        session_rotated = True
-                        timeout = min(timeout * 2, 300000)
-                        page_wait = 5000
-                        continue
-                    log.warning(
-                        "Cloudflare still blocking after session rotation.\n"
-                        "  Set FLARESOLVERR_PROXY env var to route through a proxy/VPN."
-                    )
-                    break
-                else:
-                    break
-        return None
+    async def _browser_request(
+        self, url: str, host: str, cache: bool, max_timeout: int, wait: int
+    ) -> dict[str, Any] | None:
+        sol = await self._engine().solve(url, timeout_ms=min(max_timeout, _BROWSER_BUDGET_MS), settle_ms=wait)
+        if not sol:
+            log.warning(
+                "Built-in browser could not clear Cloudflare for %s.\n"
+                "  Try browser_mode=headed (you can tick the checkbox yourself), or set "
+                "PAHEBATCHER_PROXY to route through a proxy/VPN.", host,
+            )
+            return None
+        # Persistent profile holds every domain's cookies; harvest only this host's.
+        mine = [
+            c for c in sol.get("cookies", [])
+            if isinstance(c, dict) and _cookie_applies(str(c.get("domain", "")), host)
+        ]
+        await self._note_clearance_success(host, mine, str(sol.get("userAgent", "")) or None)
+        if cache:
+            await self._solver_cache.set(url, sol)
+        return sol
 
     async def fetch_json(self, url: str) -> dict[str, Any] | None:
         sol = await self.request(url)

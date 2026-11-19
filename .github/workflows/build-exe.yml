@@ -1,0 +1,118 @@
+name: Build executables
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: pytest -q
+
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset: pahebatcher-windows-x64.exe
+            binary: pahebatcher.exe
+            icon: --icon src/pahebatcher/gui/assets/icon.ico
+          - os: ubuntu-latest
+            asset: pahebatcher-linux-x64
+            binary: pahebatcher
+          - os: macos-latest
+            asset: pahebatcher-macos-arm64
+            binary: pahebatcher
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[browser]" pyinstaller
+      - name: Build
+        run: >
+          pyinstaller scripts/pyinstaller_entry.py
+          --onefile --clean --noconfirm
+          --name pahebatcher
+          ${{ matrix.icon }}
+          --paths src
+          --collect-all curl_cffi
+          --collect-all Cryptodome
+          --collect-all patchright
+          --collect-submodules pahebatcher
+      - name: Smoke test
+        run: ./dist/${{ matrix.binary }} --help
+      - name: Rename
+        run: mv "dist/${{ matrix.binary }}" "dist/${{ matrix.asset }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: dist/${{ matrix.asset }}
+
+  build-gui:
+    needs: test
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[browser]" pyinstaller
+      - name: Check Tk is available
+        run: python -c "import tkinter; print('Tk', tkinter.TkVersion)"
+      - name: Build desktop app
+        run: >
+          pyinstaller scripts/pyinstaller_gui_entry.py
+          --onefile --windowed --clean --noconfirm
+          --name pahebatcher-gui
+          --icon src/pahebatcher/gui/assets/icon.ico
+          --add-data "src/pahebatcher/gui/assets;pahebatcher/gui/assets"
+          --paths src
+          --collect-all curl_cffi
+          --collect-all Cryptodome
+          --collect-all patchright
+          --collect-submodules pahebatcher
+      - name: Rename
+        run: mv dist/pahebatcher-gui.exe dist/pahebatcher-gui-windows-x64.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pahebatcher-gui-windows-x64.exe
+          path: dist/pahebatcher-gui-windows-x64.exe
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build, build-gui]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

@@ -1,4 +1,4 @@
-"""AnimePahe series scanner — URL parsing, variant discovery, episode listing."""
+"""animepahe series scanner — URL parsing, variant discovery, episode listing."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ def parse_anime_url(url: str) -> tuple[str, str]:
     if parsed.scheme not in ("http", "https"):
         raise ValueError(f"Unsupported scheme: {parsed.scheme!r}")
     if not parsed.netloc or "animepahe" not in parsed.netloc:
-        raise ValueError(f"Not an AnimePahe URL: {url!r}")
+        raise ValueError(f"Not an animepahe URL: {url!r}")
     m = _UUID_RE.search(parsed.path)
     if not m:
         raise ValueError(
@@ -239,18 +239,16 @@ class AnimePaheScanner:
         all_sessions = await self.discover_all_sessions(self.solver, self.host, self.session)
         title = await self._fetch_title()
         if title == "Unknown Anime":
-            from pahebatcher.solver import update_hint
-
-            proxy_hint = os.getenv("FLARESOLVERR_PROXY")
+            proxy_hint = os.getenv("PAHEBATCHER_PROXY")
             proxy_msg = (
-                " Or route through a proxy/VPN via FLARESOLVERR_PROXY env var."
+                " Or route through a proxy/VPN via the PAHEBATCHER_PROXY env var."
                 if not proxy_hint else
                 " Proxy is set — try a different proxy or check your VPN connection."
             )
             console.print(
                 "\n  [yellow]Could not fetch series information.[/yellow]"
-                f"\n  [dim]FlareSolverr may be unable to bypass Cloudflare."
-                f" {update_hint()}"
+                "\n  [dim]The built-in browser may be unable to get past Cloudflare."
+                " Try browser_mode=headed and tick the checkbox yourself."
                 f"{proxy_msg}[/dim]\n"
             )
         anime = AnimeInfo(session=self.session, title=title, host=self.host)

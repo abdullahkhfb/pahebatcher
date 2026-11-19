@@ -1,4 +1,4 @@
-"""Kwik/AnimePahe extraction — JS unpacking, M3U8 URL resolution, stream building."""
+"""Kwik/animepahe extraction — JS unpacking, M3U8 URL resolution, stream building."""
 
 from __future__ import annotations
 
@@ -122,7 +122,7 @@ def _sync_curl_fetch(url: str, cookies_str: str = "") -> tuple[str, list[dict[st
 
 
 async def _resolve_kwik(solver: Solver, url: str, cookies_str: str = "") -> StreamInfo | None:
-    """Resolve a Kwik URL to an m3u8 StreamInfo via curl_cffi, FlareSolverr, or domain rotation."""
+    """Resolve a Kwik URL to an m3u8 StreamInfo via curl_cffi, the browser solver, or domain rotation."""
 
     # 1. curl_cffi — TLS impersonation bypasses most Cloudflare
     loop = asyncio.get_running_loop()
@@ -142,7 +142,7 @@ async def _resolve_kwik(solver: Solver, url: str, cookies_str: str = "") -> Stre
             video_url, cookies = result
             return StreamInfo(url=video_url, cookies=cookies, user_agent=_HEADERS["User-Agent"], referer=alt)
 
-    # 3. FlareSolverr
+    # 3. Browser solver
     sol = await solver.request(url, cache=False, max_timeout=180000, wait=5000)
     if sol:
         html3 = str(sol.get("response", ""))
@@ -154,7 +154,7 @@ async def _resolve_kwik(solver: Solver, url: str, cookies_str: str = "") -> Stre
         if video_url3:
             return StreamInfo(url=video_url3, cookies=cookies3, user_agent=ua3, referer=url)
 
-    # 4. FlareSolverr + domain rotation
+    # 4. Browser solver + domain rotation
     for tld in KWIK_TLDS:
         if tld == current_tld:
             continue
@@ -217,8 +217,8 @@ async def extract_stream(
     sol = await solver.request(play_url, cache=True)
     if not sol:
         raise RuntimeError(
-            "FlareSolverr failed to fetch episode page.\n"
-            "  Try: set FLARESOLVERR_PROXY=http://user:pass@host:port to route through a proxy/VPN"
+            "The browser solver failed to fetch the episode page.\n"
+            "  Try: set PAHEBATCHER_PROXY=http://user:pass@host:port to route through a proxy/VPN"
         )
     html = str(sol["response"])
     entries = _parse_resolution_buttons(html)

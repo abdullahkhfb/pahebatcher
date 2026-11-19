@@ -8,6 +8,7 @@ import subprocess
 import time
 from pathlib import Path
 
+from pahebatcher.ffmpeg_setup import NO_WINDOW, ffmpeg_exe
 from pahebatcher.utils import sanitize
 
 
@@ -208,8 +209,9 @@ class SegmentStore:
         """Feed all segments as one contiguous MPEG-TS stream via stdin."""
         try:
             proc = subprocess.Popen(
-                ["ffmpeg", "-y", "-i", "pipe:0", "-c", "copy", "-movflags", "+faststart", str(out)],
+                [ffmpeg_exe(), "-y", "-i", "pipe:0", "-c", "copy", "-movflags", "+faststart", str(out)],
                 stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                creationflags=NO_WINDOW,
             )
             assert proc.stdin is not None
             for i in range(n_segments):
@@ -230,9 +232,9 @@ class SegmentStore:
                 f.write(f"file '{self.seg_path(i).as_posix()}'\n")
 
         result = subprocess.run(
-            ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+            [ffmpeg_exe(), "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
              "-c", "copy", "-movflags", "+faststart", str(out)],
-            capture_output=True, timeout=600,
+            capture_output=True, timeout=600, creationflags=NO_WINDOW,
         )
         return result.returncode == 0
 

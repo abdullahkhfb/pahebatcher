@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any
 
 from rich import box
 from rich.panel import Panel
-from rich.rule import Rule
 from rich.table import Table
 
 from pahebatcher.cache import TTLCache
@@ -186,7 +185,7 @@ class BatchOrchestrator:
 
             # Dashboard for this batch attempt
             dash_episodes = remaining if is_retry else episodes
-            dash = Dashboard(len(dash_episodes))
+            dash = Dashboard(len(dash_episodes), title=self.anime.title)
             for ep in dash_episodes:
                 label = f"Ep {ep.ep_str} \u2014 {ep.title or 'Pending...'}"
                 dash.add_ep(ep.ep_str, label)
@@ -327,7 +326,7 @@ class BatchOrchestrator:
         return self._results
 
     def _print_summary(self, episodes: list[EpisodeInfo], elapsed: float) -> None:
-        from pahebatcher.ui.console import console
+        from pahebatcher.ui.console import console, section
 
         h, rem = divmod(int(elapsed), 3600)
         m, s = divmod(rem, 60)
@@ -336,7 +335,7 @@ class BatchOrchestrator:
         fail = len(self._results) - ok
 
         console.print()
-        console.print(Rule("[bold green] Download Complete [/bold green]", style="green"))
+        section("Download Complete")
 
         table = Table(
             box=box.SIMPLE_HEAVY, show_header=True,

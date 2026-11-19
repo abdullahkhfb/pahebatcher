@@ -1,4 +1,4 @@
-"""Brand theme — AnimePahe pink. Single source of truth for chrome colors.
+"""Brand theme — animepahe pink. Single source of truth for chrome colors.
 
 Semantic colors stay where they are used: green/red/yellow for status,
 cyan for SUB vs yellow for DUB. Everything that was bare `cyan` chrome
@@ -14,6 +14,13 @@ ACCENT = "#fb6cab"
 SOFT = "#f9a8cd"
 PALE = "#fbdcef"
 
+# Minimal-UI palette (matches the animepahe look: black ground, one pink accent).
+BAR = "#d5015a"      # progress fill / solid pink surfaces
+MUTED = "#8a8a96"    # secondary text, hints, queued rows
+TRACK = "#1c1c22"    # empty progress track
+OK = "#3ddc97"       # done / healthy
+WARN = "#ffb020"     # resolving / retrying
+
 THEME = Theme({
     # NOTE: Rich >=15 cannot combine an attribute with a theme name
     # ("bold brand" fails to parse), so combined variants are registered
@@ -27,4 +34,10 @@ THEME = Theme({
     "soft.bold": f"bold {SOFT}",
     "pale": PALE,
     "pale.bold": f"bold {PALE}",
+    "muted": MUTED,
+    "ok": OK,
+    "ok.bold": f"bold {OK}",
+    "warn": WARN,
+    "bar": BAR,
+    "track": TRACK,
 })

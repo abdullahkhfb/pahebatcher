@@ -432,10 +432,9 @@ async def run_watchlist_browser() -> tuple[str | None, WatchlistEntry | None]:
     from rich import box
     from rich.panel import Panel
     from rich.prompt import Prompt
-    from rich.rule import Rule
     from rich.table import Table
 
-    from pahebatcher.ui.console import console
+    from pahebatcher.ui.console import console, section
 
     while True:
         entries = WatchlistManager.load()
@@ -449,7 +448,7 @@ async def run_watchlist_browser() -> tuple[str | None, WatchlistEntry | None]:
             return None, None
 
         console.print()
-        console.print(Rule("[bold white] Watchlist [/bold white]", style="brand"))
+        section("Watchlist")
         t = Table(box=box.ROUNDED, header_style="brand.bold", title=f"watchlist ({len(entries)} series)")
         t.add_column("#", justify="right", style="dim", width=4)
         t.add_column("Title", ratio=1)
@@ -521,18 +520,11 @@ def cli_relink(
         async def _relink_all() -> int:
             cm = ConfigManager()
             cm.load()
-            cookie_string = str(cm.get("cookie_string"))
-            clearance_ttl = int(cm.get("clearance_ttl"))
-            flaresolverr_url = os.getenv("FLARESOLVERR_URL", "http://localhost:8191/v1")
-            flaresolverr_proxy = os.getenv("FLARESOLVERR_PROXY") or None
-            solver = Solver(
-                flaresolverr_url, proxy=flaresolverr_proxy, user_cookies=cookie_string,
-                clearance_ttl=clearance_ttl * 60,
-            )
+            solver = Solver.from_config(cm)
             await solver.start()
             try:
                 if not await solver.ping():
-                    console.print("[red]✗ FlareSolverr not responding[/red]")
+                    console.print("[red]✗ no Cloudflare solver available[/red]")
                     return 0
                 relinked = 0
                 for ent in entries:
@@ -628,18 +620,11 @@ def cli_relink(
         async def _auto() -> tuple[str, str] | None:
             cm = ConfigManager()
             cm.load()
-            cookie_string = str(cm.get("cookie_string"))
-            clearance_ttl = int(cm.get("clearance_ttl"))
-            flaresolverr_url = os.getenv("FLARESOLVERR_URL", "http://localhost:8191/v1")
-            flaresolverr_proxy = os.getenv("FLARESOLVERR_PROXY") or None
-            solver = Solver(
-                flaresolverr_url, proxy=flaresolverr_proxy, user_cookies=cookie_string,
-                clearance_ttl=clearance_ttl * 60,
-            )
+            solver = Solver.from_config(cm)
             await solver.start()
             try:
                 if not await solver.ping():
-                    console.print("[red]✗ FlareSolverr not responding[/red]")
+                    console.print("[red]✗ no Cloudflare solver available[/red]")
                     return None
                 console.print(f"  [dim]Searching for '{search_title}'...[/dim]")
                 new_host, new_session, status = await _find_single_new_session(
@@ -743,14 +728,7 @@ def _solver_from_config() -> Any:
 
     cm = ConfigManager()
     cm.load()
-    cookie_string = str(cm.get("cookie_string"))
-    clearance_ttl = int(cm.get("clearance_ttl"))
-    flaresolverr_url = os.getenv("FLARESOLVERR_URL", "http://localhost:8191/v1")
-    flaresolverr_proxy = os.getenv("FLARESOLVERR_PROXY") or None
-    return Solver(
-        flaresolverr_url, proxy=flaresolverr_proxy, user_cookies=cookie_string,
-        clearance_ttl=clearance_ttl * 60,
-    )
+    return Solver.from_config(cm)
 
 
 def _discover_add_url(query: str | None) -> tuple[str | None, str | None]:
@@ -768,7 +746,7 @@ def _discover_add_url(query: str | None) -> tuple[str | None, str | None]:
         await solver.start()
         try:
             if not await solver.ping():
-                console.print("[red]✗ FlareSolverr not responding[/red]")
+                console.print("[red]✗ no Cloudflare solver available[/red]")
                 return None, None
             from pahebatcher.ui.prompts import interactive_discovery
 
@@ -899,14 +877,13 @@ async def run_watchlist_check(
 
     from rich import box
     from rich.panel import Panel
-    from rich.rule import Rule
     from rich.table import Table
 
     from pahebatcher.downloader import BatchOrchestrator
     from pahebatcher.http import HttpClient
     from pahebatcher.models import AppContext
-    from pahebatcher.solver import Solver, install_hint
-    from pahebatcher.ui.console import console, print_banner
+    from pahebatcher.solver import Solver, no_solver_hint
+    from pahebatcher.ui.console import console, print_banner, section
 
     cm = ConfigManager()
     cm.load()
@@ -931,33 +908,27 @@ async def run_watchlist_check(
     else:
         to_check = all_entries
 
-    console.print(Rule(f"[bold white] Watchlist check — {len(to_check)} series [/bold white]", style="brand"))
+    section(f"Watchlist check — {len(to_check)} series")
 
-    flaresolverr_url = os.getenv("FLARESOLVERR_URL", "http://localhost:8191/v1")
-    flaresolverr_proxy = os.getenv("FLARESOLVERR_PROXY") or None
     cache_dir = Path("pahe_cache")
     resolve_ahead = int(cm.get("resolve_ahead"))
     cache_ttl_watch = 0  # force fresh for watchlist check
     cookie_string = str(cm.get("cookie_string"))
-    clearance_ttl = int(cm.get("clearance_ttl"))
 
-    console.print(Rule("[bold white] Checking Prerequisites [/bold white]", style="brand"))
-    console.print(f"  [dim]FlareSolverr:[/dim] {flaresolverr_url}  ", end="")
+    section("Checking Prerequisites")
+    console.print("  [muted]Cloudflare solver[/muted]  ", end="")
 
-    solver = Solver(
-        flaresolverr_url, proxy=flaresolverr_proxy, user_cookies=cookie_string,
-        clearance_ttl=clearance_ttl * 60,
-    )
+    solver = Solver.from_config(cm)
     await solver.start()
     try:
         if not await solver.ping():
-            console.print("[red]✗ not responding[/red]")
+            console.print("[red]✗ none available[/red]")
             console.print(
-                "\n  [red bold]FlareSolverr is not running![/red bold]\n"
-                f"  [dim]{install_hint()}[/dim]"
+                "\n  [red]No Cloudflare solver is available[/red]\n"
+                f"  [dim]{no_solver_hint()}[/dim]"
             )
             sys.exit(1)
-        console.print("[green]✓ reachable[/green]")
+        console.print(f"[ok]✓ {solver.backend_name}[/ok]")
 
         # Use max workers for shared client, but per-entry ctx controls batch parallelism
         max_workers = max((e.hls_workers for e in to_check), default=24)
@@ -1189,7 +1160,6 @@ async def run_watchlist_check(
                     hls_workers=entry.hls_workers,
                     keep_temp=entry.keep_temp,
                     list_only=False,
-                    flaresolverr_url=flaresolverr_url,
                     resolve_ahead=resolve_ahead,
                     cache_ttl=cache_ttl_watch,
                     cookie_string=cookie_string,
@@ -1298,7 +1268,7 @@ async def run_watchlist_check(
 
             # Final summary
             console.print()
-            console.print(Rule("[bold green] Watchlist check complete [/bold green]", style="green"))
+            section("Watchlist check complete")
             table = Table(
                 box=box.SIMPLE_HEAVY, show_header=True,
                 header_style="brand.bold", border_style="dim",

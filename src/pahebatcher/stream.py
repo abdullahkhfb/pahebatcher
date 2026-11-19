@@ -233,7 +233,7 @@ async def run_stream(
     chosen_episodes: list[EpisodeInfo],
     solver: Solver,
 ) -> None:
-    from pahebatcher.ui.console import console
+    from pahebatcher.ui.console import console, section
 
     if not shutil.which("mpv"):
         console.print("\n  [red]\u2717 MPV not found![/red]")
@@ -254,7 +254,7 @@ async def run_stream(
     idx = 0
 
     console.print()
-    console.print(Rule("[bold white] Streaming via MPV [/bold white]", style="brand"))
+    section("Streaming via MPV")
 
     def render_play_panel(
         ep: EpisodeInfo, state: str = "playing", choices_ui: str = "",

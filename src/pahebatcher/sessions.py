@@ -9,7 +9,6 @@ from typing import Any
 
 from rich import box
 from rich.prompt import Confirm, IntPrompt, Prompt
-from rich.rule import Rule
 from rich.table import Table
 
 from pahebatcher.utils import fmt_bytes
@@ -47,11 +46,11 @@ class SessionManager:
 
     @staticmethod
     def run(cache_dir: Path) -> str | None:
-        from pahebatcher.ui.console import console
+        from pahebatcher.ui.console import console, section
 
         while True:
             console.clear()
-            console.print(Rule("[bold white] Session & Cache Manager [/bold white]", style="brand"))
+            section("Session & Cache Manager")
 
             sessions = SessionManager.get_sessions(cache_dir)
             total_size = sum(s["size"] for s in sessions)

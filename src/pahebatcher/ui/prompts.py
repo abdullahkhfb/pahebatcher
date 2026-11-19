@@ -7,13 +7,12 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from rich import box
-from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Confirm, IntPrompt, Prompt
-from rich.rule import Rule
 from rich.table import Table
+from rich.text import Text
 
+from pahebatcher.ui.console import PAD, heading, hint_bar, menu, prompt_label, section
 from pahebatcher.utils import compact_ep_range
 
 if TYPE_CHECKING:
@@ -39,54 +38,56 @@ def _parse_ep_range(raw: str, all_eps: list[EpisodeInfo]) -> list[float]:
     return sorted(result)
 
 
-def _print_ep_table(anime: AnimeInfo, episodes: list[EpisodeInfo], selected: set[str]) -> None:
+def _print_ep_table(anime: AnimeInfo, episodes: list[EpisodeInfo], selected: set[str]) -> int:
+    """Minimal checklist: ``[x] Episode 3   title``. Returns the number selected."""
     from pahebatcher.ui.console import console
 
-    t = Table(box=box.SIMPLE, show_header=True, header_style="brand.bold", padding=(0, 1))
-    t.add_column("", width=2, justify="center")
-    t.add_column("Ep", width=6, justify="right", style="dim")
-    t.add_column("Title", style="white")
+    t = Table.grid(padding=(0, 2))
+    t.add_column(width=5)
+    t.add_column(width=12)
+    t.add_column()
 
     seen_nums = set()
+    count = 0
     for ep in episodes:
         if ep.number in seen_nums:
             continue
         seen_nums.add(ep.number)
         variants = anime.get_all_variants(ep.number)
-        check = "[green]\u2713[/green]" if ep.session in selected else " "
-        if any(v.session in selected for v in variants):
-            check = "[green]\u2713[/green]"
-        t.add_row(check, ep.ep_str, ep.title or "\u2014")
+        on = ep.session in selected or any(v.session in selected for v in variants)
+        count += on
+        t.add_row(
+            Text(f"{PAD}[x]" if on else f"{PAD}[ ]", style="brand" if on else "muted"),
+            Text(f"Episode {ep.ep_str}", style="white" if on else "muted"),
+            Text(ep.title or "\u2014", style="muted"),
+        )
     console.print(t)
+    return count
 
 
 def select_episodes(anime: AnimeInfo) -> list[EpisodeInfo]:
     from pahebatcher.ui.console import console
 
-    console.print()
-    console.print(Rule(f"[bold white] Episode Selection \u2014 {anime.title} [/bold white]", style="brand"))
-
     unique_eps: list[EpisodeInfo] = list({ep.number: ep for ep in anime.episodes}.values())
     unique_eps.sort(key=lambda e: e.number)
 
     available = compact_ep_range(unique_eps)
-    console.print(
-        f"  [brand]{anime.total}[/brand] episodes: "
-        f"[brand.bold]{available}[/brand.bold]"
-        f"  [dim]({anime.total} total in series)[/dim]\n"
+    heading(anime.title, f"{anime.total} episodes \u00b7 {available}")
+    console.print()
+    menu(
+        [
+            ("a", "All", "every episode"),
+            ("r", "Range", "e.g. 1-12  or  1,4,7  or  13-"),
+            ("l", "Pick", "interactive checklist"),
+            ("n", "Latest N", "most recently aired"),
+            ("s", "Skip", ""),
+        ],
+        selected="a",
     )
-    console.print(Panel(
-        "  [bold white]A[/bold white]  All episodes\n"
-        "  [bold white]R[/bold white]  Range    [dim]e.g. 1-12  or  1,4,7  or  13-[/dim]\n"
-        "  [bold white]L[/bold white]  Toggle   [dim]interactive checklist[/dim]\n"
-        "  [bold white]N[/bold white]  Latest N [dim]most recently aired[/dim]\n"
-        "  [bold white]S[/bold white]  Skip",
-        title="[brand]Select mode[/brand]", border_style="brand.dim",
-        box=box.ROUNDED, padding=(0, 2),
-    ))
+    console.print()
 
     mode = Prompt.ask(
-        "  [brand]Select mode[/brand]",
+        prompt_label("select"),
         choices=["A", "a", "R", "r", "L", "l", "N", "n", "S", "s"],
         default="A", show_choices=False,
     ).upper()
@@ -96,39 +97,40 @@ def select_episodes(anime: AnimeInfo) -> list[EpisodeInfo]:
     if mode == "S":
         return []
     if mode == "A":
-        console.print(f"  [green]\u2713[/green] All [brand]{anime.total}[/brand] episodes selected.")
+        console.print(f"{PAD}[ok]\u2713[/ok] [muted]all[/muted] {anime.total} [muted]selected[/muted]")
         return unique_eps
     if mode == "N":
-        n = IntPrompt.ask("  Latest [brand]N[/brand] episodes", default=1)
+        n = IntPrompt.ask(prompt_label("latest how many"), default=1)
         chosen = unique_eps[-max(1, min(n, len(unique_eps))):]
-        console.print(f"  [green]\u2713[/green] Latest [brand]{len(chosen)}[/brand] selected.")
+        console.print(f"{PAD}[ok]\u2713[/ok] {len(chosen)} [muted]latest selected[/muted]")
         return chosen
     if mode == "R":
-        console.print(
-            "  Enter numbers or ranges \u2014 e.g. [dim]1-12[/dim]  "
-            "[dim]1,4,7[/dim]  [dim]5-[/dim]  [dim]1-6,10[/dim]"
-        )
-        raw = Prompt.ask("  [brand]Episodes[/brand]").strip()
+        hint = "[muted]1-12 \u00b7 1,4,7 \u00b7 5- \u00b7 1-6,10[/muted]"
+        raw = Prompt.ask(prompt_label(f"episodes {hint}")).strip()
         nums = _parse_ep_range(raw, unique_eps)
         chosen = [eps_by_num[n] for n in nums if n in eps_by_num]
         if not chosen:
-            console.print(f"  [yellow]\u26a0 Nothing matched [bold]{raw}[/bold]. "
-                          f"Available: [brand]{available}[/brand][/yellow]")
+            console.print(
+                f"{PAD}[warn]nothing matched[/warn] {raw} [muted]\u00b7 available: {available}[/muted]",
+            )
         else:
-            console.print(f"  [green]\u2713[/green] [brand]{len(chosen)}[/brand] episodes selected.")
+            console.print(f"{PAD}[ok]\u2713[/ok] {len(chosen)} [muted]episodes selected[/muted]")
         return chosen
 
-    # Toggle mode
+    # Pick mode
     selected: set[str] = set()
     while True:
         console.clear()
-        console.print(Rule(f"[bold white] {anime.title} [/bold white]", style="brand"))
-        _print_ep_table(anime, unique_eps, selected)
-        console.print(
-            "  [dim]a[/dim]=all  [dim]n[/dim]=none  "
-            "[dim]<num>[/dim]=toggle  [dim]done[/dim]=confirm"
-        )
-        cmd = Prompt.ask("  [brand]>[/brand]").strip().lower()
+        heading(anime.title, "pick episodes")
+        console.print()
+        count = _print_ep_table(anime, unique_eps, selected)
+        console.print()
+        if count:
+            console.print(f"{PAD}[brand]\u25b8 Download {count} episode{'s' if count != 1 else ''}[/brand]")
+        else:
+            console.print(f"{PAD}[muted]nothing selected[/muted]")
+        hint_bar(("<num>", "toggle"), ("a", "all"), ("n", "none"), ("enter", "done"))
+        cmd = Prompt.ask(prompt_label("")).strip().lower()
         if cmd in ("done", "d", ""):
             break
         elif cmd == "a":
@@ -147,7 +149,7 @@ def select_episodes(anime: AnimeInfo) -> list[EpisodeInfo]:
                     selected.add(variants[0].session)
 
     chosen = [ep for ep in unique_eps if ep.session in selected]
-    console.print(f"  [green]\u2713[/green] [brand]{len(chosen)}[/brand] episodes selected.")
+    console.print(f"{PAD}[ok]\u2713[/ok] {len(chosen)} [muted]episodes selected[/muted]")
     return chosen
 
 
@@ -184,29 +186,22 @@ def confirm_download(anime: AnimeInfo, episodes: list[EpisodeInfo], ctx: AppCont
 
     est_mb_per = {360: 50, 720: 90, 1080: 150}.get(ctx.quality, 120)
     est_total = n * est_mb_per
-    audio_str = "[cyan]SUB[/cyan]" if ctx.audio_lang == "jpn" else "[yellow]DUB[/yellow]"
+    audio_str = "sub" if ctx.audio_lang == "jpn" else "dub"
 
-    stats = [
-        f"  [dim]Series:[/dim]    [bold white]{anime.title}[/bold white]",
-        f"  [dim]Episodes:[/dim]  [brand]{n}[/brand]  ({ep_range_str})",
-        f"  [dim]Audio:[/dim]     {audio_str}",
-        f"  [dim]Quality:[/dim]   [brand]{ctx.quality}p[/brand]",
-        f"  [dim]Output:[/dim]    {ctx.output_dir}",
-    ]
-    if reused_count > 0:
-        stats.append(
-            f"  [dim]Reusing:[/dim]   [bold green]{reused_count}[/bold green] segments from previous session",
-        )
-    est_line = f"~{est_total} MB  (~{est_mb_per} MB/ep \u00d7 {n} eps)"
-    stats.append(f"  [dim]Est. size:[/dim] [brand]{est_line}[/brand]")
-
+    heading(anime.title, f"{n} episode{'s' if n != 1 else ''} \u00b7 {ep_range_str}")
     console.print()
-    console.print(Panel(
-        "\n".join(stats),
-        title=f"[bold green]Ready to Download \u2014 {n} episode{'s' if n != 1 else ''}[/bold green]",
-        border_style="green", box=box.ROUNDED,
-    ))
-    return Confirm.ask("  [brand]Start download?[/brand]", default=True)
+    kv = Table.grid(padding=(0, 3))
+    kv.add_column(style="muted")
+    kv.add_column()
+    kv.add_row(f"{PAD}quality", f"[brand]{ctx.quality}p[/brand]")
+    kv.add_row(f"{PAD}audio", audio_str)
+    kv.add_row(f"{PAD}output", str(ctx.output_dir))
+    kv.add_row(f"{PAD}size", f"\u2248 {est_total} MB [muted](~{est_mb_per} MB/ep)[/muted]")
+    if reused_count > 0:
+        kv.add_row(f"{PAD}reusing", f"[ok]{reused_count}[/ok] [muted]segments from previous session[/muted]")
+    console.print(kv)
+    console.print()
+    return Confirm.ask(prompt_label("[brand]Start download?[/brand]"), default=True)
 
 
 def wizard_config(defaults: AppContext, mode: str = "download") -> AppContext:
@@ -214,55 +209,38 @@ def wizard_config(defaults: AppContext, mode: str = "download") -> AppContext:
 
     from pahebatcher.ui.console import console
 
-    console.print()
-    console.print(Rule("[bold white] Download Settings [/bold white]", style="brand"))
-    console.print(
-        "  [dim]Settings are saved to [bold]pahebatcher.toml[/bold] and reused on future runs.[/dim]\n"
-        "  [dim]After this setup, run [bold]pahebatcher config set KEY VALUE[/bold]"
-        " to change defaults.[/dim]\n",
-    )
+    heading("Settings", "saved to pahebatcher.toml \u00b7 change later: pahebatcher config set KEY VALUE")
 
     q_default = {360: "1", 720: "2", 1080: "3"}.get(defaults.quality, "3")
-    console.print(Panel(
-        "  [bold white]1[/bold white]  [brand.dim]360p [/brand.dim]  [dim]~50 MB/ep[/dim]\n"
-        "  [bold white]2[/bold white]  [brand]720p [/brand]  [dim]~90 MB/ep   \u00b7 recommended[/dim]\n"
-        "  [bold white]3[/bold white]  [brand.bold]1080p[/brand.bold]  [dim]~150 MB/ep[/dim]"
-        "  \u00b7 best quality",
-        title="[brand]Quality[/brand]", border_style="brand.dim", box=box.ROUNDED, padding=(0, 2),
-    ))
+    section("Quality")
+    menu([("1", "360p", "~50 MB/ep"), ("2", "720p", "~90 MB/ep \u00b7 recommended"),
+          ("3", "1080p", "~150 MB/ep \u00b7 best")], selected=q_default)
+    console.print()
     quality = {1: 360, 2: 720, 3: 1080}[int(
-        Prompt.ask(
-            "  [brand]Select quality[/brand]", choices=["1", "2", "3"],
-            default=q_default, show_choices=False,
-        ),
+        Prompt.ask(prompt_label("quality"), choices=["1", "2", "3"], default=q_default, show_choices=False),
     )]
 
     audio_default = "1" if defaults.audio_lang == "jpn" else "2"
-    console.print(Panel(
-        "  [bold white]1[/bold white]  [cyan]Subbed[/cyan]  [dim](Japanese audio)[/dim]\n"
-        "  [bold white]2[/bold white]  [yellow]Dubbed[/yellow]  [dim](English audio)[/dim]",
-        title="[brand]Audio Language[/brand]", border_style="brand.dim", box=box.ROUNDED, padding=(0, 2),
-    ))
+    section("Audio")
+    menu([("1", "Sub", "Japanese audio"), ("2", "Dub", "English audio")], selected=audio_default)
+    console.print()
     audio_lang = "jpn" if Prompt.ask(
-        "  [brand]Select audio[/brand]", choices=["1", "2"], default=audio_default, show_choices=False,
+        prompt_label("audio"), choices=["1", "2"], default=audio_default, show_choices=False,
     ) == "1" else "eng"
 
     if mode == "download":
-        output_dir = Prompt.ask("  [brand]Output directory[/brand]", default=defaults.output_dir).strip()
+        section("Output")
+        output_dir = Prompt.ask(prompt_label("directory"), default=defaults.output_dir).strip()
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-        console.print(Panel(
-            "  [bold white]1[/bold white]  [dim]1 download   \u00b7 safest[/dim]\n"
-            "  [bold white]2[/bold white]  [brand]2 simultaneous  \u00b7 recommended[/brand]\n"
-            "  [bold white]4[/bold white]  [dim]4 simultaneous  \u00b7 faster, more RAM[/dim]\n"
-            "  [bold white]6[/bold white]  [dim]6 simultaneous  \u00b7 may trigger rate-limits[/dim]",
-            title="[brand]Concurrent Downloads[/brand]", border_style="brand.dim",
-            box=box.ROUNDED, padding=(0, 2),
-        ))
-        max_parallel = max(1, min(6, IntPrompt.ask("  [brand]Select[/brand]", default=defaults.max_parallel)))
+        section("Parallel downloads")
+        menu([("1", "1 at a time", "safest"), ("2", "2 at a time", "recommended"),
+              ("4", "4 at a time", "faster, more RAM"), ("6", "6 at a time", "may trigger rate limits")],
+             selected="2")
+        console.print()
+        max_parallel = max(1, min(6, IntPrompt.ask(prompt_label("parallel"), default=defaults.max_parallel)))
         hls_workers_val = max(8, min(32, IntPrompt.ask(
-            "  [brand]HLS workers per episode[/brand] [dim](8-32, default 24)[/dim]",
-            default=defaults.hls_workers,
+            prompt_label("workers per episode [muted](8-32)[/muted]"), default=defaults.hls_workers,
         )))
         return replace(defaults, output_dir=output_dir, quality=quality, audio_lang=audio_lang,
                        max_parallel=max_parallel, hls_workers=hls_workers_val)
@@ -272,7 +250,7 @@ def wizard_config(defaults: AppContext, mode: str = "download") -> AppContext:
 async def interactive_discovery(
     solver: Solver, host: str, initial: str | None = None,
 ) -> tuple[str | None, str | None]:
-    """Interactive AnimePahe search. Returns (series URL, result title) or (None, None)."""
+    """Interactive animepahe search. Returns (series URL, result title) or (None, None)."""
     from pahebatcher.extract.scanner import AnimePaheScanner
     from pahebatcher.ui.console import console
     from pahebatcher.ui.tables import search_results_table
@@ -280,29 +258,29 @@ async def interactive_discovery(
     pending = initial.strip() if initial and initial.strip() else None
     while True:
         console.print()
-        console.print(Rule("[bold white] Search & Discovery [/bold white]", style="brand"))
         if pending is None:
-            query = Prompt.ask("  [brand]Search Anime[/brand] [dim](or 'q' to quit)[/dim]").strip()
+            hint = "[muted]or paste a url \u00b7 q to quit[/muted]"
+            query = Prompt.ask(prompt_label(f"search anime {hint}")).strip()
         else:
             query, pending = pending, None
-            console.print(f"  [brand]Search Anime[/brand] [dim]{query}[/dim]")
+            console.print(f"{PAD}[brand]\u203a[/brand] [muted]{query}[/muted]")
         if not query or query.lower() == "q":
             return None, None
 
         with Progress(
-            SpinnerColumn(), TextColumn(f"[bold white]Searching for '{query}'..."),
+            SpinnerColumn(style="brand"), TextColumn(f"[muted]searching {query}\u2026[/muted]"),
             console=console, transient=True,
         ) as prog:
             prog.add_task("", total=None)
             results = await AnimePaheScanner.search(solver, host, query)
 
         if not results:
-            console.print(f"  [yellow]\u26a0 No results found for '[bold]{query}[/bold]'[/yellow]")
+            console.print(f"{PAD}[warn]no results[/warn] [muted]for[/muted] {query}")
             continue
 
         console.print(search_results_table(results, query))
         choice = Prompt.ask(
-            f"  [brand]Select # (1-{len(results)})[/brand] [dim](or 's' to search again, 'q' to quit)[/dim]",
+            prompt_label(f"select 1-{len(results)} [muted]s search again \u00b7 q quit[/muted]"),
             default="1",
         ).lower()
         if choice == "q":
@@ -317,4 +295,4 @@ async def interactive_discovery(
                 if session:
                     title = str(target.get("title", "") or "").strip()
                     return f"https://{AnimePaheScanner._current_host}/anime/{session}", title or None
-        console.print("  [red]\u26a0 Invalid selection.[/red]")
+        console.print(f"{PAD}[red]invalid selection[/red]")

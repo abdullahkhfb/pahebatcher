@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+  <defs>
+    <g id="shapes">
+      <rect x="180" y="330" width="160" height="470" rx="80"/>
+      <circle cx="380" cy="450" r="210"/>
+      <rect x="600" y="300" width="90" height="400" rx="45"/>
+      <polygon points="552,650 738,650 645,790" stroke-linejoin="round"/>
+      <circle cx="770" cy="560" r="150"/>
+    </g>
+  </defs>
+  <!-- sticker outline: pink outer, black inner (same look as the original logo) -->
+  <use href="#shapes" fill="#fb035e" stroke="#fb035e" stroke-width="116" stroke-linejoin="round"/>
+  <use href="#shapes" fill="#000" stroke="#000" stroke-width="36" stroke-linejoin="round"/>
+  <!-- P -->
+  <g fill="#fb035e">
+    <rect x="180" y="330" width="160" height="470" rx="80"/>
+    <circle cx="380" cy="450" r="210"/>
+  </g>
+  <path d="M520 330 A210 210 0 0 1 440 655 A210 210 0 0 0 580 440 A205 205 0 0 0 520 330z" fill="#cc034a"/>
+  <path d="M232 410 A150 150 0 0 1 335 295" fill="none" stroke="#fe95bd" stroke-width="16" stroke-linecap="round"/>
+  <path d="M226 540 V700" fill="none" stroke="#fd5c9a" stroke-width="16" stroke-linecap="round"/>
+  <polygon points="350,392 350,508 452,450" fill="#fff" stroke="#fff" stroke-width="22" stroke-linejoin="round"/>
+  <!-- b built on the download arrow -->
+  <g fill="#fcf9f9" stroke="#fcf9f9" stroke-linejoin="round" stroke-width="2">
+    <rect x="600" y="300" width="90" height="400" rx="45"/>
+    <polygon points="552,650 738,650 645,790" stroke-width="22"/>
+    <circle cx="770" cy="560" r="150"/>
+  </g>
+  <path d="M870 640 A150 150 0 0 1 720 705 A150 150 0 0 0 905 575 Z" fill="#edeaed"/>
+  <circle cx="775" cy="562" r="64" fill="#fb035e"/>
+  <path d="M722 540 A56 56 0 0 1 760 510" fill="none" stroke="#fe95bd" stroke-width="12" stroke-linecap="round"/>
+</svg>

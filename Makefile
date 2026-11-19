@@ -1,12 +1,8 @@
 # WSL one-command setup idea + initial Makefile_HellHar/setup-wsl.sh by u/HellHarbinger on Reddit
 VENV := venv
 PYTHON := $(VENV)/bin/python
-FLARESOLVERR_IMAGE := ghcr.io/flaresolverr/flaresolverr:v3.3.21
-# Upstream tags carry a `v` prefix (v3.3.21, not 3.3.21). Pinned (not :latest)
-# so fresh installs don't silently drift; bump after testing new releases:
-# https://github.com/FlareSolverr/FlareSolverr/releases (thanks u/HellHarbinger for catching the missing `v`)
 
-.PHONY: help install run config-show watchlist-list watchlist-check test lint typecheck benchmark clean docker-daemon docker-up docker-down
+.PHONY: help install run config-show watchlist-list watchlist-check test lint typecheck benchmark clean
 
 help:
 	@echo "Usage: make <target>"
@@ -18,10 +14,6 @@ help:
 	@echo "  make config-show                        display current settings"
 	@echo "  make watchlist-list                     list watchlist entries"
 	@echo "  make watchlist-check                    check watchlist for new episodes"
-	@echo ""
-	@echo "Docker Management:"
-	@echo "  make docker-up                          ensure FlareSolverr container is running"
-	@echo "  make docker-down                        stop FlareSolverr container"
 	@echo ""
 	@echo "Config (set once, reused every session):"
 	@echo "  $(PYTHON) -m pahebatcher config set quality 720"
@@ -37,50 +29,13 @@ help:
 	@echo '  $(PYTHON) -m pahebatcher watchlist remove 1 --yes'
 	@echo ""
 	@echo "Dev:"
-	@echo "  make test         run 255 tests"
+	@echo "  make test         run the test suite"
 	@echo "  make lint         ruff check (0 errors)"
 	@echo "  make typecheck    mypy strict (0 errors)"
 	@echo "  make benchmark    full coherence benchmark"
 	@echo "  make clean        remove venv + caches"
 
-# 1. Docker Application Layer
-docker-daemon:
-	@if ! docker info >/dev/null 2>&1; then \
-		echo "ERROR: Docker daemon not running."; \
-		echo "  WSL: sudo service docker start"; \
-		echo "  SYSTEMD: sudo systemctl start docker"; \
-		echo "  Docker Desktop: start Docker Desktop and wait for it to be running."; \
-		echo ""; \
-		echo "Then re-run: make docker-up"; \
-		exit 1; \
-	fi
-
-# Use exact-name filter to avoid matching my-flaresolverr2 etc.
-# --restart unless-stopped keeps FlareSolverr up across reboots.
-docker-up: docker-daemon
-	@echo "==> [Docker] Checking FlareSolverr container..."
-	@if [ "$$(docker ps -q -f name=^/flaresolverr$$ 2>/dev/null)" ]; then \
-		echo "    FlareSolverr already running."; \
-	elif [ "$$(docker ps -aq -f name=^/flaresolverr$$ 2>/dev/null)" ]; then \
-		echo "    Starting stopped FlareSolverr container..."; \
-		if ! docker start flaresolverr; then \
-			echo "ERROR: Failed to start existing container. Try: docker rm -f flaresolverr && make docker-up"; \
-			exit 1; \
-		fi; \
-	else \
-		echo "    Creating FlareSolverr container ($(FLARESOLVERR_IMAGE))..."; \
-		if ! docker run -d --restart unless-stopped --name flaresolverr -p 8191:8191 $(FLARESOLVERR_IMAGE); then \
-			echo "ERROR: Failed to create container. Check: docker images | grep flaresolverr"; \
-			exit 1; \
-		fi; \
-	fi
-	@echo "    FlareSolverr is up at http://localhost:8191/v1"
-
-docker-down:
-	@docker stop flaresolverr > /dev/null 2>&1 || true
-	@echo "==> [Docker] FlareSolverr stopped."
-
-# 2. Python Application Layer
+# 1. Python Application Layer
 $(VENV):
 	@echo "==> [Python] Preparing virtual environment..."
 	@if [ ! -d "$(VENV)" ]; then \
@@ -95,8 +50,8 @@ $(VENV):
 			echo "ERROR: pip upgrade failed. Check network/proxy."; \
 			exit 1; \
 		fi; \
-		if ! $(PYTHON) -m pip install -e ".[dev]"; then \
-			echo "ERROR: pip install -e .[dev] failed. See output above."; \
+		if ! $(PYTHON) -m pip install -e ".[dev,browser]"; then \
+			echo "ERROR: pip install -e .[dev,browser] failed. See output above."; \
 			exit 1; \
 		fi; \
 		echo "    Environment ready."; \
@@ -104,8 +59,8 @@ $(VENV):
 
 install: $(VENV)
 
-# 3. Execution Layer — only run/watchlist-check need Docker, never lint/typecheck/test
-run: install docker-up
+# 2. Execution Layer
+run: install
 	@if [ -f pahebatcher.toml ]; then \
 		$(PYTHON) -c "from pahebatcher.config_manager import ConfigManager; c=ConfigManager(); c.load(); a='SUB' if c.get('audio_lang')=='jpn' else 'DUB'; print(f'  Config: {a}  {c.get(\"quality\")}p  ({c.get(\"max_parallel\")} concurrent)')"; \
 	else \
@@ -120,7 +75,7 @@ config-show: install
 watchlist-list: install
 	@$(PYTHON) -m pahebatcher watchlist list
 
-watchlist-check: install docker-up
+watchlist-check: install
 	@$(PYTHON) -m pahebatcher watchlist check
 
 test: install

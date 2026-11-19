@@ -1,6 +1,6 @@
 #!/bin/bash
 # System provisioning script for Ubuntu/WSL — WSL + native Linux (Ubuntu/Debian/Mint)
-# Idempotent: safe to re-run. Requires sudo for apt/usermod/wsl.conf.
+# Idempotent: safe to re-run. Requires sudo for apt/wsl.conf.
 # Original idea + initial Makefile/setup-wsl.sh by u/HellHarbinger on Reddit (https://www.reddit.com/user/HellHarbinger/) — vibecoded with Gemini, refined by maintainer.
 
 set -euo pipefail
@@ -8,20 +8,12 @@ set -euo pipefail
 echo "==> Setting up system prerequisites..."
 
 # 1. Install system dependencies
-echo "==> Installing apt packages (ffmpeg, docker.io, python3-venv)..."
-# Note: docker.io is Ubuntu's Docker package (outdated vs Docker's official repo).
-# Fine for FlareSolverr; for latest Docker see https://docs.docker.com/engine/install/ubuntu/
+echo "==> Installing apt packages (ffmpeg, python3-venv)..."
 # util-linux-extra was previously listed but is unused by pahebatcher — not installed.
 sudo apt-get update
-sudo apt-get install -y make ffmpeg docker.io curl python3-venv
+sudo apt-get install -y make ffmpeg curl python3-venv
 
-# 2. Configure Docker permissions (needs re-login to take effect)
-# Use SUDO_USER so `sudo ./setup-wsl.sh` adds the invoking user, not root.
-TARGET_USER="${SUDO_USER:-$USER}"
-echo "==> Adding user '$TARGET_USER' to docker group..."
-sudo usermod -aG docker "$TARGET_USER"
-
-# 3. Apply WSL NTFS metadata fix (only if running on a mounted Windows drive)
+# 2. Apply WSL NTFS metadata fix (only if running on a mounted Windows drive)
 # Needed so venv symlinks + exec bits work on /mnt/c, /mnt/d, etc.
 if grep -qi microsoft /proc/version 2>/dev/null && pwd | grep -q "^/mnt/"; then
     WSL_CONF="/etc/wsl.conf"
@@ -69,16 +61,15 @@ if grep -qi microsoft /proc/version 2>/dev/null && pwd | grep -q "^/mnt/"; then
     fi
 fi
 
-# 4. Verify
+# 3. Verify
 echo ""
 echo "==> Verifying installs..."
 python3 --version 2>/dev/null && echo "  python3: OK" || echo "  python3: MISSING"
 ffmpeg -version 2>/dev/null | head -n1 && echo "  ffmpeg: OK" || echo "  ffmpeg: MISSING (sudo apt install ffmpeg)"
-docker --version 2>/dev/null && echo "  docker: OK" || echo "  docker: MISSING"
 make --version 2>/dev/null | head -n1 && echo "  make: OK" || echo "  make: MISSING"
 
 echo ""
 echo "==> Setup complete!"
 echo "  Next: make run"
-echo "  Note: If you were just added to the docker group, restart your terminal (or log out/in) for it to take effect."
-echo "  Check: docker ps (should work without sudo) and groups | grep docker"
+echo "  Note: the Cloudflare solver drives Chrome or Edge, so install one in WSL (e.g. google-chrome-stable)"
+echo "        or set PAHEBATCHER_BROWSER to a browser executable."
