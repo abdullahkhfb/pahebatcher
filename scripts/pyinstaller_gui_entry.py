@@ -1,6 +1,6 @@
 """PyInstaller entry point for the desktop (Tkinter) app."""
 
-from pahebatcher.gui.app import main
+from pahebatcher.gui import app
 
 if __name__ == "__main__":
-    main()
+    app.main()

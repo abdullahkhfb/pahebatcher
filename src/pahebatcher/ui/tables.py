@@ -1,33 +1,43 @@
-"""Rich table rendering helpers — borderless, muted headers, one pink accent."""
+"""Rich table helpers: borderless, muted headers, one pink accent."""
 
 from __future__ import annotations
 
-from pathlib import Path
+import pathlib
 from typing import TYPE_CHECKING, Any
 
 from rich import box
-from rich.table import Table
+import rich.table
 
-from pahebatcher.utils import fmt_bytes
+from pahebatcher import utils
 
 if TYPE_CHECKING:
-    from pahebatcher.models import AnimeInfo, EpisodeInfo
+    from pahebatcher import models
 
 
-def _table(**kw: Any) -> Table:
-    return Table(
+def _table(**kw: Any) -> rich.table.Table:
+    return rich.table.Table(
         box=box.SIMPLE_HEAD, show_edge=False, pad_edge=True, padding=(0, 2),
         header_style="muted", border_style="track", **kw,
     )
 
 
 def episode_table(
-    anime: AnimeInfo,
-    episodes: list[EpisodeInfo],
+    anime: models.AnimeInfo,
+    episodes: list[models.EpisodeInfo],
     selected_set: set[str] | None = None,
     show_audio: bool = True,
-) -> Table:
-    """Render episode list as Rich Table."""
+) -> rich.table.Table:
+    """Builds a table listing episodes.
+
+    Args:
+        anime: The series the episodes belong to.
+        episodes: The episodes to list.
+        selected_set: The keys of selected episodes to mark, or None.
+        show_audio: Whether to show a SUB/DUB column.
+
+    Returns:
+        The table.
+    """
     t = _table()
     t.add_column("", width=2, justify="center", style="brand")
     t.add_column("Ep", width=6, justify="right", style="muted")
@@ -43,19 +53,29 @@ def episode_table(
         check = "\u2713" if selected_set and ep.session in selected_set else " "
         row = [check, ep.ep_str, ep.title or "\u2014"]
         if show_audio:
-            from pahebatcher.utils import audio_badge
-            row.append(audio_badge(ep.audio))
+            from pahebatcher import utils
+            row.append(utils.audio_badge(ep.audio))
         t.add_row(*row)
     return t
 
 
 def summary_table(
-    results: dict[str, Path | None],
-    episodes: list[EpisodeInfo],
+    results: dict[str, pathlib.Path | None],
+    episodes: list[models.EpisodeInfo],
     output_dir: str,
-) -> Table:
-    """Render download completion summary."""
-    from pahebatcher.utils import audio_badge
+) -> rich.table.Table:
+    """Builds the download completion summary.
+
+    Args:
+        results: A dict mapping episode sessions to files, or to None for
+            failures.
+        episodes: The episodes that were requested.
+        output_dir: The directory the files were written to.
+
+    Returns:
+        The table.
+    """
+    from pahebatcher import utils
 
     table = _table()
     table.add_column("Ep", style="muted", width=6, justify="right")
@@ -68,15 +88,39 @@ def summary_table(
     for ep in episodes:
         path = results.get(ep.session)
         badge = "[ok]\u2713 done[/ok]" if path else "[red]\u2717 failed[/red]"
-        size = fmt_bytes(path.stat().st_size) if path and path.exists() else "\u2014"
+        size = (
+            utils.fmt_bytes(path.stat().st_size)
+            if path and path.exists()
+            else "\u2014"
+        )
         fname = path.name if path else "\u2014"
-        table.add_row(ep.ep_str, ep.title or "\u2014", audio_badge(ep.audio), badge, size, fname)
+        table.add_row(
+            ep.ep_str,
+            ep.title or "\u2014",
+            utils.audio_badge(ep.audio),
+            badge,
+            size,
+            fname,
+        )
     return table
 
 
-def search_results_table(results: list[dict[str, Any]], query: str) -> Table:
-    """Render interactive search results."""
-    table = _table(title=f"[muted]results for[/muted] {query}", title_justify="left")
+def search_results_table(
+    results: list[dict[str, Any]],
+    query: str,
+) -> rich.table.Table:
+    """Builds the table of search results.
+
+    Args:
+        results: The raw search results.
+        query: The search text, shown as a title.
+
+    Returns:
+        The table.
+    """
+    table = _table(
+        title=f"[muted]results for[/muted] {query}", title_justify="left"
+    )
     table.add_column("#", justify="right", style="brand", width=3)
     table.add_column("Title", ratio=1)
     table.add_column("Type", justify="left", width=7, style="muted")

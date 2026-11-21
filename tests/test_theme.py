@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+import pathlib
 
-from rich.console import Console
+import rich.console
 
-from pahebatcher.models import AnimeInfo, EpisodeInfo
-from pahebatcher.ui.tables import episode_table, search_results_table, summary_table
-from pahebatcher.ui.theme import THEME
+from pahebatcher import models
+from pahebatcher.ui import tables, theme
 
 
-def _themed_console() -> Console:
-    return Console(theme=THEME, force_terminal=True, color_system="truecolor", width=100)
+def _themed_console() -> rich.console.Console:
+    return rich.console.Console(
+        theme=theme.THEME,
+        force_terminal=True,
+        color_system="truecolor",
+        width=100,
+    )
 
 
 class TestThemeNames:
@@ -28,7 +32,7 @@ class TestThemeNames:
         # Rich>=15 cannot parse "bold brand"/"dim brand" — dotted names only.
         import pahebatcher.ui.console as console_mod
 
-        src = Path(console_mod.__file__).read_text(encoding="utf-8")
+        src = pathlib.Path(console_mod.__file__).read_text(encoding="utf-8")
         assert "bold brand" not in src
         assert "dim brand" not in src
 
@@ -47,27 +51,37 @@ class TestThemeRenders:
             console_mod.console = old
         assert "255;63;144" in out  # brand pink ANSI present
 
-    def test_tables_render(self, sample_anime: AnimeInfo, tmp_path: Path) -> None:
+    def test_tables_render(
+        self,
+        sample_anime: models.AnimeInfo,
+        tmp_path: pathlib.Path,
+    ) -> None:
         console = _themed_console()
         out = tmp_path / "out.mp4"
         out.write_bytes(b"data")
         eps = [
-            EpisodeInfo(1, "s1", "T1", "F", "jpn", "u"),
-            EpisodeInfo(2, "s2", "T2", "F", "eng", "u"),
+            models.EpisodeInfo(1, "s1", "T1", "F", "jpn", "u"),
+            models.EpisodeInfo(2, "s2", "T2", "F", "eng", "u"),
         ]
         with console.capture():
-            console.print(episode_table(sample_anime, sample_anime.episodes))
-            console.print(search_results_table([{
+            console.print(
+                tables.episode_table(sample_anime, sample_anime.episodes)
+            )
+            console.print(tables.search_results_table([{
                 "title": "A", "type": "TV", "year": "2020",
                 "episodes": "12", "score": "8.5",
             }], "q"))
-            console.print(summary_table({"s1": out, "s2": None}, eps, str(tmp_path)))
+            console.print(
+                tables.summary_table(
+                    {"s1": out, "s2": None}, eps, str(tmp_path)
+                )
+            )
 
     def test_dashboard_renders(self) -> None:
-        from pahebatcher.ui.dashboard import Dashboard
+        from pahebatcher.ui import dashboard
 
         console = _themed_console()
-        dash = Dashboard(1, console=console)
+        dash = dashboard.Dashboard(1, console=console)
         dash.start()
         try:
             dash.add_ep("1", "Ep 1")

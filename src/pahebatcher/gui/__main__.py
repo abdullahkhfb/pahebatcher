@@ -1,3 +1,5 @@
-from pahebatcher.gui.app import main
+"""Entry point for ``python -m pahebatcher.gui``."""
 
-main()
+from pahebatcher.gui import app
+
+app.main()

@@ -1,9 +1,18 @@
-"""Hardened TLS context."""
+"""Hardened TLS context for outgoing HTTPS connections."""
 
 import ssl
 
 
 def make_ssl_ctx() -> ssl.SSLContext:
+    """Builds a hardened client-side TLS context.
+
+    The context requires TLS 1.2 or newer, disables TLS compression,
+    restricts ciphers to ECDHE/DHE suites with AES-GCM or ChaCha20, and
+    enforces certificate and host name verification.
+
+    Returns:
+        The configured context.
+    """
     ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
     ctx.minimum_version = ssl.TLSVersion.TLSv1_2
     ctx.options |= ssl.OP_NO_COMPRESSION

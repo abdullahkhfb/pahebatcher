@@ -1,5 +1,5 @@
 """Entry point for `python -m pahebatcher`."""
 
-from pahebatcher.main import main
+from pahebatcher import main
 
-main()
+main.main()

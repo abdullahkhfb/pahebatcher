@@ -1,6 +1,9 @@
-"""PyInstaller entry point (absolute import so the frozen app resolves the package)."""
+"""PyInstaller entry point.
 
-from pahebatcher.main import main
+Uses an absolute import so the frozen app resolves the package.
+"""
+
+from pahebatcher import main
 
 if __name__ == "__main__":
-    main()
+    main.main()

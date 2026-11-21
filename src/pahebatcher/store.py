@@ -1,19 +1,32 @@
-"""Persistent HLS segment store with atomic writes and ffmpeg assembly."""
+"""Persistent HLS segment store with atomic writes and assembly."""
 
 from __future__ import annotations
 
 import contextlib
 import json
+import pathlib
 import subprocess
 import time
-from pathlib import Path
 
-from pahebatcher.ffmpeg_setup import NO_WINDOW, ffmpeg_exe
-from pahebatcher.utils import sanitize
+from pahebatcher import ffmpeg_setup, utils
 
 
-def _read_box(data: bytearray, off: int, end: int) -> tuple[str, int, int] | None:
-    """Read an MP4 box header at off. Returns (type, payload_off, box_end) or None."""
+def _read_box(
+    data: bytearray,
+    off: int,
+    end: int,
+) -> tuple[str, int, int] | None:
+    """Reads an MP4 box header.
+
+    Args:
+        data: The MP4 data.
+        off: Offset of the box header.
+        end: Offset at which to stop reading.
+
+    Returns:
+        A tuple ``(type, payload_offset, box_end)``, or None if the header
+        is truncated or invalid.
+    """
     if off + 8 > end:
         return None
     size = int.from_bytes(data[off:off + 4], "big")
@@ -33,8 +46,22 @@ def _read_box(data: bytearray, off: int, end: int) -> tuple[str, int, int] | Non
     return typ, payload_off, off + size
 
 
-def _read_descr_len(data: bytearray, off: int, end: int) -> tuple[int, int] | None:
-    """Read an MPEG-4 descriptor tag+length. Returns (payload_off, payload_len) or None."""
+def _read_descr_len(
+    data: bytearray,
+    off: int,
+    end: int,
+) -> tuple[int, int] | None:
+    """Reads an MPEG-4 descriptor tag and its length.
+
+    Args:
+        data: The data containing the descriptor.
+        off: Offset of the descriptor tag.
+        end: Offset at which to stop reading.
+
+    Returns:
+        A tuple ``(payload_offset, payload_length)``, or None if the length
+        is truncated or invalid.
+    """
     if off + 1 > end:
         return None
     pos = off + 1  # skip tag
@@ -55,11 +82,19 @@ def _read_descr_len(data: bytearray, off: int, end: int) -> tuple[int, int] | No
 
 
 def _patch_aac_main_to_lc(data: bytearray) -> bool:
-    """Find audio esds boxes declaring AAC Main (AOT 1) and relabel to AAC-LC (AOT 2).
+    """Relabels AAC Main audio as AAC-LC in every audio esds box.
 
-    Only patches when the full descriptor chain validates
-    (esds -> ES_Descriptor 0x03 -> DecoderConfig 0x04 with objectType 0x40
-    -> DecSpecificInfo 0x05 with >= 2 bytes). Returns True if patched.
+    Walks the box tree for esds boxes declaring AAC Main (audio object type
+    1) and changes them to AAC-LC (type 2). A box is only patched when the
+    full descriptor chain validates: esds, ES_Descriptor (0x03),
+    DecoderConfig (0x04, object type 0x40) and DecSpecificInfo (0x05, at
+    least 2 bytes).
+
+    Args:
+        data: The MP4 file contents. Modified in place.
+
+    Returns:
+        True if at least one box was patched.
     """
     patched_any = False
     # Walk the box tree to find esds boxes. Containers have known child offsets:
@@ -105,7 +140,16 @@ def _patch_aac_main_to_lc(data: bytearray) -> bool:
 
 
 def _patch_esds_payload(data: bytearray, off: int, end: int) -> bool:
-    """Patch a single esds payload. Returns True if patched."""
+    """Patches a single esds payload.
+
+    Args:
+        data: The MP4 file contents. Modified in place.
+        off: Offset of the esds payload.
+        end: Offset at which the payload ends.
+
+    Returns:
+        True if the payload was patched.
+    """
     if off + 4 > end:  # version + flags
         return False
     pos = off + 4
@@ -128,7 +172,8 @@ def _patch_esds_payload(data: bytearray, off: int, end: int) -> bool:
         return False
     dc_off, dc_len = parsed
     dc_end = dc_off + dc_len
-    # objectTypeIndication(1) + streamType(1) + bufferSizeDB(3) + maxBitrate(4) + avgBitrate(4)
+    # objectTypeIndication(1) + streamType(1) + bufferSizeDB(3) + maxBitrate(4)
+    # + avgBitrate(4)
     if dc_off + 13 > dc_end:
         return False
     if data[dc_off] != 0x40:  # 0x40 = MPEG-4 AAC; leave other codecs alone
@@ -151,23 +196,56 @@ def _patch_esds_payload(data: bytearray, off: int, end: int) -> bool:
 
 
 class SegmentStore:
+    """On-disk store for the HLS segments of one episode.
+
+    Segments are written atomically so an interrupted download can resume.
+    Finished segments are assembled into an MP4 with FFmpeg.
+
+    Attributes:
+        root: The series directory inside the cache.
+        dir: The directory holding this episode's segments.
+    """
+
     def __init__(
-        self, cache_root: Path, anime_title: str, anime_session: str, ep_num: str, audio: str = "jpn",
+        self,
+        cache_root: pathlib.Path,
+        anime_title: str,
+        anime_session: str,
+        ep_num: str,
+        audio: str = "jpn",
     ) -> None:
-        safe_title = sanitize(anime_title)
+        """Creates the episode's segment directory if needed.
+
+        Args:
+            cache_root: The cache directory.
+            anime_title: The series title, used in the directory name.
+            anime_session: The series' session identifier.
+            ep_num: The episode number as text.
+            audio: The audio language code.
+        """
+        safe_title = utils.sanitize(anime_title)
         self.root = cache_root / f"{safe_title}_{anime_session}"
         self.dir = self.root / f"Ep_{ep_num}_{audio.upper()}"
         self.dir.mkdir(parents=True, exist_ok=True)
 
     def save_metadata(self, anime_title: str, url: str) -> None:
+        """Writes ``session.json`` for the series unless it already exists.
+
+        Args:
+            anime_title: The series title.
+            url: The series URL, so the session can be resumed later.
+        """
         meta = self.root / "session.json"
         if not meta.exists():
             meta.write_text(
-                json.dumps({"title": anime_title, "url": url, "updated": time.time()}, indent=2),
+                json.dumps(
+                    {"title": anime_title, "url": url, "updated": time.time()},
+                    indent=2,
+                ),
                 encoding="utf-8",
             )
 
-    def seg_path(self, idx: int) -> Path:
+    def seg_path(self, idx: int) -> pathlib.Path:
         return self.dir / f"{idx:06d}.ts"
 
     def has_seg(self, idx: int) -> bool:
@@ -177,13 +255,33 @@ class SegmentStore:
         return {int(p.stem) for p in self.dir.glob("??????.ts")}
 
     def write_seg(self, idx: int, data: bytes) -> None:
+        """Atomically writes one segment.
+
+        Args:
+            idx: The segment index.
+            data: The segment bytes.
+        """
         tmp = self.seg_path(idx).with_suffix(".tmp")
         tmp.write_bytes(data)
         tmp.rename(self.seg_path(idx))
 
-    def assemble(self, n_segments: int, out: Path) -> bool:
-        """Assemble segments to MP4 via contiguous pipe (primary) or concat demuxer (fallback)."""
-        missing = [i for i in range(n_segments) if not self.seg_path(i).exists()]
+    def assemble(self, n_segments: int, out: pathlib.Path) -> bool:
+        """Assembles the segments into an MP4.
+
+        Streams all segments to FFmpeg as one contiguous MPEG-TS stream and
+        falls back to FFmpeg's concat demuxer if that fails.
+
+        Args:
+            n_segments: The number of segments in the episode.
+            out: The MP4 file to write.
+
+        Returns:
+            True on success, or False if a segment is missing or both methods
+            fail.
+        """
+        missing = [
+            i for i in range(n_segments) if not self.seg_path(i).exists()
+        ]
         if missing:
             return False
 
@@ -205,13 +303,33 @@ class SegmentStore:
             with contextlib.suppress(Exception):
                 lst.unlink()
 
-    def _assemble_pipe(self, n_segments: int, out: Path) -> bool:
-        """Feed all segments as one contiguous MPEG-TS stream via stdin."""
+    def _assemble_pipe(self, n_segments: int, out: pathlib.Path) -> bool:
+        """Feeds all segments to FFmpeg as one contiguous MPEG-TS stream.
+
+        Args:
+            n_segments: The number of segments.
+            out: The MP4 file to write.
+
+        Returns:
+            True if FFmpeg exited successfully.
+        """
         try:
             proc = subprocess.Popen(
-                [ffmpeg_exe(), "-y", "-i", "pipe:0", "-c", "copy", "-movflags", "+faststart", str(out)],
-                stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                creationflags=NO_WINDOW,
+                [
+                    ffmpeg_setup.ffmpeg_exe(),
+                    "-y",
+                    "-i",
+                    "pipe:0",
+                    "-c",
+                    "copy",
+                    "-movflags",
+                    "+faststart",
+                    str(out),
+                ],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=ffmpeg_setup.NO_WINDOW,
             )
             assert proc.stdin is not None
             for i in range(n_segments):
@@ -225,27 +343,64 @@ class SegmentStore:
         except Exception:
             return False
 
-    def _assemble_concat(self, n_segments: int, out: Path, lst: Path) -> bool:
-        """Concatenate segments to MP4 via ffmpeg concat demuxer."""
+    def _assemble_concat(
+        self,
+        n_segments: int,
+        out: pathlib.Path,
+        lst: pathlib.Path,
+    ) -> bool:
+        """Concatenates the segments with FFmpeg's concat demuxer.
+
+        Args:
+            n_segments: The number of segments.
+            out: The MP4 file to write.
+            lst: The concat list file to write.
+
+        Returns:
+            True if FFmpeg exited successfully.
+        """
         with open(lst, "w", encoding="utf-8") as f:
             for i in range(n_segments):
                 f.write(f"file '{self.seg_path(i).as_posix()}'\n")
 
         result = subprocess.run(
-            [ffmpeg_exe(), "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
-             "-c", "copy", "-movflags", "+faststart", str(out)],
-            capture_output=True, timeout=600, creationflags=NO_WINDOW,
+            [
+                ffmpeg_setup.ffmpeg_exe(),
+                "-y",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
+                "-i",
+                str(lst),
+                "-c",
+                "copy",
+                "-movflags",
+                "+faststart",
+                str(out),
+            ],
+            capture_output=True,
+            timeout=600,
+            creationflags=ffmpeg_setup.NO_WINDOW,
         )
         return result.returncode == 0
 
     @staticmethod
-    def fix_aac_esds(out: Path) -> bool:
-        """Correct mislabeled AAC Main esds to AAC-LC (metadata only, no re-encode).
+    def fix_aac_esds(out: pathlib.Path) -> bool:
+        """Corrects AAC audio mislabeled as AAC Main to AAC-LC.
 
-        Some sources declare AAC Main (AOT 1) while the payload is HE-AAC;
-        strict decoders (Android MediaCodec) reject Main, while VLC tolerates
-        it. Flipping AOT 1 -> 2 preserves all other bits. Best-effort:
-        returns False (and leaves the file untouched) on any mismatch.
+        Some sources declare AAC Main (audio object type 1) while the payload
+        is HE-AAC. Strict decoders such as Android's MediaCodec reject Main,
+        while VLC tolerates it. Changing the type from 1 to 2 preserves all
+        other bits. Only metadata changes; nothing is re-encoded. This is
+        best-effort.
+
+        Args:
+            out: The MP4 file to fix in place.
+
+        Returns:
+            True if the file was patched. False, leaving the file untouched, if
+            it did not match the expected structure.
         """
         try:
             data = bytearray(out.read_bytes())
@@ -264,6 +419,7 @@ class SegmentStore:
         return True
 
     def cleanup(self) -> None:
+        """Deletes the episode's segment directory, ignoring errors."""
         with contextlib.suppress(Exception):
             import shutil
             shutil.rmtree(self.dir)

@@ -1,4 +1,4 @@
-"""animepahe series scanner — URL parsing, variant discovery, episode listing."""
+"""Scans animepahe for a series' episodes and their variants."""
 
 from __future__ import annotations
 
@@ -9,20 +9,19 @@ import os
 import re
 import time
 from typing import TYPE_CHECKING, Any
-from urllib.parse import urlparse
+import urllib.parse
 
-from pahebatcher.config import REQUEST_DELAY
-from pahebatcher.models import AnimeInfo, EpisodeInfo
-from pahebatcher.utils import sanitize
+from pahebatcher import config, models, utils
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    import pathlib
 
-    from pahebatcher.solver import Solver
+    import pahebatcher.solver
 
 log = logging.getLogger(__name__)
 
-_PAGE_FETCH_ATTEMPTS = 3  # per-page fetch attempts before giving up (solver retries internally too)
+# per-page fetch attempts before giving up (solver retries internally too)
+_PAGE_FETCH_ATTEMPTS = 3
 
 _UUID_RE = re.compile(
     r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", re.I,
@@ -30,7 +29,19 @@ _UUID_RE = re.compile(
 
 
 def parse_anime_url(url: str) -> tuple[str, str]:
-    parsed = urlparse(url)
+    """Splits an animepahe series URL into its host and series UUID.
+
+    Args:
+        url: A URL such as ``https://animepahe.pw/anime/<uuid>``.
+
+    Returns:
+        A tuple ``(host, uuid)``.
+
+    Raises:
+        ValueError: If the scheme is not http or https, the host is not an
+            animepahe domain, or the path contains no UUID.
+    """
+    parsed = urllib.parse.urlparse(url)
     if parsed.scheme not in ("http", "https"):
         raise ValueError(f"Unsupported scheme: {parsed.scheme!r}")
     if not parsed.netloc or "animepahe" not in parsed.netloc:
@@ -46,19 +57,65 @@ def parse_anime_url(url: str) -> tuple[str, str]:
 
 
 class AnimePaheScanner:
+    """Discovers a series' episodes through animepahe's API.
+
+    Every request goes through a ``Solver`` so Cloudflare challenges are
+    handled.
+
+    Attributes:
+        solver: The solver used for every request.
+        host: The animepahe host to query.
+        session: The series' session identifier.
+    """
+
     # Working site first: animepahe.pw (verified live; .com/.org are fallbacks).
     _current_host: str = "animepahe.pw"
 
-    def __init__(self, solver: Solver, host: str, session: str) -> None:
+    def __init__(
+        self,
+        solver: pahebatcher.solver.Solver,
+        host: str,
+        session: str,
+    ) -> None:
+        """Initializes the scanner for one series.
+
+        Args:
+            solver: The solver used for every request.
+            host: The animepahe host to query.
+            session: The series' session identifier.
+        """
         self.solver = solver
         self.host = host
         self.session = session
 
     @classmethod
-    async def search(cls, solver: Solver, host: str, query: str) -> list[dict[str, Any]]:
+    async def search(
+        cls,
+        solver: pahebatcher.solver.Solver,
+        host: str,
+        query: str,
+    ) -> list[dict[str, Any]]:
+        """Searches animepahe for series matching a query.
+
+        Tries ``host`` first, then the known animepahe mirrors, and stops at the
+        first one that answers. The working host is remembered on the class.
+
+        Args:
+            solver: The solver used for requests.
+            host: The preferred host.
+            query: The search text.
+
+        Returns:
+            The raw result dicts from the API. The list is empty if every host
+            fails.
+        """
         import urllib.parse
 
-        hosts = list(dict.fromkeys([host, "animepahe.pw", "animepahe.com", "animepahe.org"]))
+        hosts = list(
+            dict.fromkeys(
+                [host, "animepahe.pw", "animepahe.com", "animepahe.org"]
+            )
+        )
         for h in hosts:
             url = f"https://{h}/api?m=search&q={urllib.parse.quote(query)}"
             try:
@@ -73,6 +130,16 @@ class AnimePaheScanner:
         return []
 
     async def _fetch_page(self, page: int) -> dict[str, Any] | None:
+        """Fetches one page of the series' release list.
+
+        Falls back to an alternate API route if the first one returns nothing.
+
+        Args:
+            page: The 1-based page number.
+
+        Returns:
+            The decoded JSON, or None if both routes fail.
+        """
         url = (
             f"https://{self.host}/api?m=release&id={self.session}"
             f"&sort=episode_asc&page={page}"
@@ -87,7 +154,15 @@ class AnimePaheScanner:
         return data
 
     async def _fetch_title(self) -> str:
-        result = await self.solver.fetch_html(f"https://{self.host}/anime/{self.session}")
+        """Scrapes the series title from its web page.
+
+        Returns:
+            The ``<h1>`` text (de-duplicated if the site repeats it), else the
+            cleaned ``<title>``, else ``"Unknown Anime"``.
+        """
+        result = await self.solver.fetch_html(
+            f"https://{self.host}/anime/{self.session}"
+        )
         if not result:
             return "Unknown Anime"
         html, _ = result
@@ -106,8 +181,25 @@ class AnimePaheScanner:
         return "Unknown Anime"
 
     @staticmethod
-    def _parse_episode_page(data: dict[str, Any], host: str, session: str) -> list[EpisodeInfo]:
-        eps: list[EpisodeInfo] = []
+    def _parse_episode_page(
+        data: dict[str, Any],
+        host: str,
+        session: str,
+    ) -> list[models.EpisodeInfo]:
+        """Converts one page of release data into episodes.
+
+        A SUB or DUB marker in the title overrides the reported audio language.
+        Entries without a session are skipped.
+
+        Args:
+            data: The decoded API page.
+            host: The host used to build play URLs.
+            session: The series' session identifier, used in play URLs.
+
+        Returns:
+            The episodes found on the page.
+        """
+        eps: list[models.EpisodeInfo] = []
         for item in data.get("data", []):
             ep_sess = item.get("session", "")
             if not ep_sess:
@@ -118,7 +210,7 @@ class AnimePaheScanner:
                 audio = "eng"
             elif audio == "eng" and "sub" in title.lower():
                 audio = "jpn"
-            eps.append(EpisodeInfo(
+            eps.append(models.EpisodeInfo(
                 number=float(item.get("episode", 0) or 0),
                 session=ep_sess,
                 title=("" if title == "?" else title),
@@ -129,8 +221,30 @@ class AnimePaheScanner:
         return eps
 
     @classmethod
-    async def discover_all_sessions(cls, solver: Solver, host: str, session: str) -> list[str]:
-        url = f"https://{host}/api?m=release&id={session}&sort=episode_asc&page=1"
+    async def discover_all_sessions(
+        cls,
+        solver: pahebatcher.solver.Solver,
+        host: str,
+        session: str,
+    ) -> list[str]:
+        """Finds every session that belongs to the same series.
+
+        animepahe can list one title under several sessions, such as separate
+        SUB and DUB entries. This searches for the series' title and keeps the
+        results whose normalized title matches.
+
+        Args:
+            solver: The solver used for requests.
+            host: The animepahe host.
+            session: The known session identifier.
+
+        Returns:
+            The matching session identifiers, including ``session``. Just
+            ``[session]`` if the lookup fails.
+        """
+        url = (
+            f"https://{host}/api?m=release&id={session}&sort=episode_asc&page=1"
+        )
         data = await solver.fetch_json(url)
         if not data or "anime" not in data:
             return [session]
@@ -141,7 +255,9 @@ class AnimePaheScanner:
             return [session]
 
         def _norm(t: str) -> str:
-            return re.sub(r"\s+", " ", re.sub(r"[^\w\s]", "", t.lower())).strip()
+            return re.sub(
+                r"\s+", " ", re.sub(r"[^\w\s]", "", t.lower())
+            ).strip()
 
         norm_title = _norm(title)
         search_results = await cls.search(solver, host, title)
@@ -154,12 +270,30 @@ class AnimePaheScanner:
         return list(sessions)
 
     @staticmethod
-    def _cache_path(cache_dir: Path, session: str, title: str) -> Path:
-        safe = sanitize(title) or session
+    def _cache_path(
+        cache_dir: pathlib.Path,
+        session: str,
+        title: str,
+    ) -> pathlib.Path:
+        safe = utils.sanitize(title) or session
         return cache_dir / f"{safe}_{session}" / "_scan_cache.json"
 
     @staticmethod
-    def _load_cache(cache_path: Path, cache_ttl: int) -> AnimeInfo | None:
+    def _load_cache(
+        cache_path: pathlib.Path,
+        cache_ttl: int,
+    ) -> models.AnimeInfo | None:
+        """Loads a scan cache if it exists and is still fresh.
+
+        Args:
+            cache_path: The cache file.
+            cache_ttl: The maximum age in minutes. A value of 0 or less disables
+                the cache.
+
+        Returns:
+            The cached series, or None if the cache is missing, unreadable or
+            expired.
+        """
         if not cache_path.exists() or cache_ttl <= 0:
             return None
         try:
@@ -170,9 +304,9 @@ class AnimePaheScanner:
         if age > cache_ttl * 60:
             return None
         episodes = [
-            EpisodeInfo(**ep) for ep in raw.get("episodes", [])
+            models.EpisodeInfo(**ep) for ep in raw.get("episodes", [])
         ]
-        return AnimeInfo(
+        return models.AnimeInfo(
             session=raw["session"],
             title=raw["title"],
             host=raw["host"],
@@ -181,7 +315,16 @@ class AnimePaheScanner:
         )
 
     @staticmethod
-    def _save_cache(cache_path: Path, anime: AnimeInfo) -> None:
+    def _save_cache(cache_path: pathlib.Path, anime: models.AnimeInfo) -> None:
+        """Writes a scan to its cache file.
+
+        Errors while writing are ignored, since the cache is only an
+        optimization.
+
+        Args:
+            cache_path: The cache file to write.
+            anime: The scan result to store.
+        """
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         data = {
             "cached_at": time.time(),
@@ -200,79 +343,114 @@ class AnimePaheScanner:
         except Exception:
             pass
 
-    async def scan(self, cache_dir: Path, prefer_audio: str = "jpn", cache_ttl: int = 60) -> AnimeInfo:
-        """Scan all sessions, keeping every (number, audio) variant.
+    async def scan(
+        self,
+        cache_dir: pathlib.Path,
+        prefer_audio: str = "jpn",
+        cache_ttl: int = 60,
+    ) -> models.AnimeInfo:
+        """Scans all sessions of the series, keeping every audio variant.
 
-        NOTE: prefer_audio is intentionally NOT used to filter here.
-        Audio selection happens downstream at resolve time
-        (AnimeInfo.get_variant + extract_stream button filtering), so all
-        variants must survive the scan. Do not "optimize" this into a
-        filter — that would break the SUB/DUB fallback chain.
+        A fresh on-disk cache is used when one exists. If some pages keep
+        failing, the partial result is returned but not cached.
+
+        ``prefer_audio`` is intentionally not used to filter here. Audio
+        selection happens downstream at resolve time (``AnimeInfo.get_variant``
+        and the button filtering in ``extract_stream``), so every variant must
+        survive the scan. Do not turn this into a filter: that would break the
+        SUB/DUB fallback chain.
+
+        Args:
+            cache_dir: The directory holding per-series scan caches.
+            prefer_audio: Not used for filtering; see above.
+            cache_ttl: How long a cache stays valid, in minutes. 0 disables it.
+
+        Returns:
+            The series with all discovered episode variants.
         """
-        from pahebatcher.ui.console import console
+        from pahebatcher.ui import console
 
-        # Try cache first — stable lookup via glob so title variation doesn't invalidate cache
+        # Try cache first — stable lookup via glob so title variation doesn't
+        # invalidate cache
         if cache_ttl > 0:
-            # Prefer exact expected path but also scan for any prior cache with same session
-            candidates: list[Path] = []
+            # Prefer exact expected path but also scan for any prior cache with
+            # same session
+            candidates: list[pathlib.Path] = []
             # 1. legacy placeholder path (for completeness)
-            candidates.append(self._cache_path(cache_dir, self.session, "Unknown Anime"))
+            candidates.append(
+                self._cache_path(cache_dir, self.session, "Unknown Anime")
+            )
             # 2. any folder ending with _{session}/_scan_cache.json
             if cache_dir.exists():
-                candidates.extend(cache_dir.glob(f"*_{self.session}/_scan_cache.json"))
-            seen: set[Path] = set()
+                candidates.extend(
+                    cache_dir.glob(f"*_{self.session}/_scan_cache.json")
+                )
+            seen: set[pathlib.Path] = set()
             for cp in candidates:
                 if cp in seen or not cp.exists():
                     continue
                 seen.add(cp)
                 cached = self._load_cache(cp, cache_ttl)
                 if cached:
-                    safe_title = sanitize(cached.title)
+                    safe_title = utils.sanitize(cached.title)
                     session_path = cache_dir / f"{safe_title}_{self.session}"
                     cached.has_session = session_path.exists()
-                    console.print(f"  [dim]Using cached scan ({cache_ttl} min TTL)[/dim]")
+                    console.console.print(
+                        f"  [dim]Using cached scan ({cache_ttl} min TTL)[/dim]"
+                    )
                     return cached
 
         title = "Unknown Anime"
 
-        console.print("  [dim]Discovering all variants ...[/dim]", end="\r")
-        all_sessions = await self.discover_all_sessions(self.solver, self.host, self.session)
+        console.console.print(
+            "  [dim]Discovering all variants ...[/dim]", end="\r"
+        )
+        all_sessions = await self.discover_all_sessions(
+            self.solver, self.host, self.session
+        )
         title = await self._fetch_title()
         if title == "Unknown Anime":
             proxy_hint = os.getenv("PAHEBATCHER_PROXY")
             proxy_msg = (
-                " Or route through a proxy/VPN via the PAHEBATCHER_PROXY env var."
-                if not proxy_hint else
-                " Proxy is set — try a different proxy or check your VPN connection."
+                " Or route through a proxy/VPN via the PAHEBATCHER_PROXY env "
+                "var."
+                if not proxy_hint
+                else " Proxy is set — try a different proxy or check your VPN "
+                "connection."
             )
-            console.print(
+            console.console.print(
                 "\n  [yellow]Could not fetch series information.[/yellow]"
-                "\n  [dim]The built-in browser may be unable to get past Cloudflare."
+                "\n  [dim]The built-in browser may be unable to get past "
+                "Cloudflare."
                 " Try browser_mode=headed and tick the checkbox yourself."
                 f"{proxy_msg}[/dim]\n"
             )
-        anime = AnimeInfo(session=self.session, title=title, host=self.host)
+        anime = models.AnimeInfo(
+            session=self.session, title=title, host=self.host
+        )
 
-        safe_title = sanitize(title)
+        safe_title = utils.sanitize(title)
         session_path = cache_dir / f"{safe_title}_{self.session}"
         anime.has_session = session_path.exists()
 
-        unique_episodes: dict[tuple[float, str], EpisodeInfo] = {}
+        unique_episodes: dict[tuple[float, str], models.EpisodeInfo] = {}
         completed_all = True
         for s in all_sessions:
-            console.print(f"  [dim]Scanning session {s} ...[/dim]", end="\r")
+            console.console.print(
+                f"  [dim]Scanning session {s} ...[/dim]", end="\r"
+            )
             sub_scanner = AnimePaheScanner(self.solver, self.host, s)
             page = 1
             while True:
-                # Retry transport failures (None); a valid-but-empty page
-                # means the session genuinely has no releases — don't retry that.
+                # Retry transport failures (None); a valid-but-empty page means
+                # the session genuinely has no releases — don't retry that.
                 data: dict[str, Any] | None = None
                 for attempt in range(_PAGE_FETCH_ATTEMPTS):
                     data = await sub_scanner._fetch_page(page)
                     if data is not None:
                         break
                     if attempt < _PAGE_FETCH_ATTEMPTS - 1:
-                        await asyncio.sleep(REQUEST_DELAY * (2**attempt))
+                        await asyncio.sleep(config.REQUEST_DELAY * (2**attempt))
                 if data is None:
                     # Episodes past this page are missing — never silently
                     # truncate (e.g. long series cut at 270 after one hiccup).
@@ -281,8 +459,9 @@ class AnimePaheScanner:
                         "Scan page %d failed for session %s after %d attempts",
                         page, s, _PAGE_FETCH_ATTEMPTS,
                     )
-                    console.print(
-                        f"\n  [yellow]\u26a0 Page {page} failed for session {s} — "
+                    console.console.print(
+                        f"\n  [yellow]\u26a0 Page {page} failed for session "
+                        f"{s} — "
                         f"episodes past this page are missing.[/yellow]",
                     )
                     break
@@ -295,19 +474,23 @@ class AnimePaheScanner:
                 if page >= int(data.get("last_page", 1)):
                     break
                 page += 1
-                await asyncio.sleep(REQUEST_DELAY)
+                await asyncio.sleep(config.REQUEST_DELAY)
 
-        anime.episodes = sorted(unique_episodes.values(), key=lambda e: (e.number, e.audio))
+        anime.episodes = sorted(
+            unique_episodes.values(), key=lambda e: (e.number, e.audio)
+        )
         anime.total = len({e.number for e in anime.episodes})
-        console.print(" " * 60, end="\r")
+        console.console.print(" " * 60, end="\r")
 
         if completed_all:
             cache_path = self._cache_path(cache_dir, self.session, title)
             self._save_cache(cache_path, anime)
         else:
-            console.print(
-                f"\n  [yellow]\u26a0 Scan incomplete — {len(unique_episodes)} episodes collected.[/yellow]"
-                f"\n  [dim]Partial results were NOT cached. Re-run to retry.[/dim]\n",
+            console.console.print(
+                f"\n  [yellow]\u26a0 Scan incomplete — {len(unique_episodes)} "
+                "episodes collected.[/yellow]"
+                "\n  [dim]Partial results were NOT cached. Re-run to "
+                "retry.[/dim]\n",
             )
 
         return anime

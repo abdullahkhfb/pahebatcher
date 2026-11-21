@@ -1,26 +1,31 @@
-"""Built-in browser solver — a real local browser (Chrome or Edge) that clears Cloudflare.
+"""Built-in browser solver: a local Chrome or Edge that clears Cloudflare.
 
-Returns solutions shaped as ``response``, ``cookies``, ``userAgent`` so
-:class:`pahebatcher.solver.Solver` can use either backend interchangeably.
+Solutions are shaped as ``response``, ``cookies`` and ``userAgent`` so
+that ``pahebatcher.solver.Solver`` can use either backend
+interchangeably.
 
-Optional dependency (the control library only — no browser is downloaded or bundled)::
+This needs an optional dependency, the control library only. No browser
+is downloaded or bundled::
 
     pip install "pahebatcher[browser]"
 
-Requires Google Chrome or Microsoft Edge on the machine (Edge ships with Windows 10/11).
-Browser choice, best first:
+It requires Google Chrome or Microsoft Edge on the machine (Edge ships
+with Windows 10 and 11). The browser is chosen in this order:
 
-1. Your installed Chrome or Edge, started as a normal process (no automation flags) with a
-   dedicated profile and controlled over the DevTools port. Looks like an ordinary browser.
-   Set ``PAHEBATCHER_BROWSER`` to an executable path to pick a specific one.
-2. The same Chrome/Edge launched through Playwright.
+1.  Your installed Chrome or Edge, started as a normal process (no
+    automation flags) with a dedicated profile and controlled over the
+    DevTools port. It looks like an ordinary browser. Set
+    ``PAHEBATCHER_BROWSER`` to an executable path to pick a specific
+    one.
+2.  The same Chrome or Edge launched through Playwright.
 
-``mode`` controls window behaviour:
+``mode`` controls window behavior:
 
-* ``auto``     — headless first; if the challenge doesn't clear, retry once with a visible
-                 window (where an interactive checkbox can also be clicked by hand).
-* ``headless`` — never show a window.
-* ``headed``   — always show a window.
+*   ``auto``: headless first; if the challenge does not clear, retry
+    once with a visible window, where an interactive checkbox can also
+    be clicked by hand.
+*   ``headless``: never show a window.
+*   ``headed``: always show a window.
 """
 
 from __future__ import annotations
@@ -29,15 +34,15 @@ import asyncio
 import importlib
 import logging
 import os
+import pathlib
 import shutil
 import socket
 import subprocess
 import sys
 import time
-import urllib.request
-from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+import urllib.parse
+import urllib.request
 
 log = logging.getLogger(__name__)
 
@@ -52,12 +57,13 @@ _CHALLENGE_MARKERS = (
 )
 
 MODES = ("auto", "headless", "headed")
-_HEADLESS_TRY_MS = 45_000  # in auto mode, how long headless gets before the headed retry
+# in auto mode, how long headless gets before the headed retry
+_HEADLESS_TRY_MS = 45_000
 _CHANNELS: tuple[str, ...] = ("chrome", "msedge")
 
 
 class BrowserSolverError(Exception):
-    """Browser could not be started."""
+    """Raised when the browser could not be started."""
 
 
 def _is_challenge(html: str) -> bool:
@@ -66,7 +72,14 @@ def _is_challenge(html: str) -> bool:
 
 
 def _import_playwright() -> Any:
-    """patchright (stealth-patched Playwright) if present, else plain playwright."""
+    """Imports the browser-control library.
+
+    Prefers patchright (a stealth-patched Playwright) and falls back to
+    plain Playwright.
+
+    Returns:
+        The ``async_playwright`` factory, or None if neither is installed.
+    """
     for module in ("patchright.async_api", "playwright.async_api"):
         try:
             return importlib.import_module(module).async_playwright
@@ -76,11 +89,18 @@ def _import_playwright() -> Any:
 
 
 def available() -> bool:
-    """True if a Playwright-compatible package is importable (says nothing about browsers)."""
+    """Whether a Playwright-compatible package can be imported.
+
+    This says nothing about whether a browser is installed.
+
+    Returns:
+        True if one can be imported.
+    """
     return _import_playwright() is not None
 
 
 def browser_hint() -> str:
+    """Returns installation advice for the built-in browser solver."""
     return (
         "Install the built-in browser solver:\n"
         '    pip install "pahebatcher[browser]"\n'
@@ -92,20 +112,37 @@ _BROWSER_RANK = {"custom": 0, "chrome": 1, "edge": 2, "chromium": 3}
 
 
 def find_system_browser() -> tuple[str, str] | None:
-    """(kind, executable) of an installed Chromium-family browser, or None."""
+    """Finds an installed Chromium-family browser.
+
+    The ``PAHEBATCHER_BROWSER`` environment variable overrides the search.
+
+    Returns:
+        A tuple ``(kind, executable)``, or None if none was found.
+    """
     override = os.environ.get("PAHEBATCHER_BROWSER")
-    if override and Path(override).is_file():
+    if override and pathlib.Path(override).is_file():
         return "custom", override
     found: list[tuple[str, str]] = []
     if sys.platform.startswith("win"):
         for key in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA"):
             if root := os.environ.get(key):
-                found.append(("chrome", rf"{root}\Google\Chrome\Application\chrome.exe"))
-                found.append(("edge", rf"{root}\Microsoft\Edge\Application\msedge.exe"))
+                found.append(
+                    ("chrome", rf"{root}\Google\Chrome\Application\chrome.exe")
+                )
+                found.append(
+                    ("edge", rf"{root}\Microsoft\Edge\Application\msedge.exe")
+                )
     elif sys.platform == "darwin":
         found += [
-            ("chrome", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
-            ("edge", "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"),
+            (
+                "chrome",
+                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            ),
+            (
+                "edge",
+                "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft "
+                "Edge",
+            ),
         ]
     else:
         for kind, exe in (
@@ -128,8 +165,18 @@ def _free_port() -> int:
 
 
 def _devtools_up(port: int) -> bool:
+    """Checks whether a DevTools endpoint answers on a local port.
+
+    Args:
+        port: The remote debugging port.
+
+    Returns:
+        True if it answers with HTTP 200.
+    """
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/json/version", timeout=1) as r:
+        with urllib.request.urlopen(
+            f"http://127.0.0.1:{port}/json/version", timeout=1
+        ) as r:
             return bool(r.status == 200)
     except Exception:
         return False
@@ -144,13 +191,25 @@ def _platform_info() -> tuple[str, str]:
 
 
 def _proxy_dict(proxy: str | None) -> dict[str, str] | None:
-    """Playwright wants credentials split out of the proxy URL."""
+    """Converts a proxy URL to Playwright's proxy settings.
+
+    Playwright wants credentials split out of the proxy URL.
+
+    Args:
+        proxy: The proxy URL, or None.
+
+    Returns:
+        The settings dict, or None if there is no proxy.
+    """
     if not proxy:
         return None
-    u = urlparse(proxy)
+    u = urllib.parse.urlparse(proxy)
     if not u.hostname:
         return {"server": proxy}
-    out = {"server": f"{u.scheme or 'http'}://{u.hostname}" + (f":{u.port}" if u.port else "")}
+    out = {
+        "server": f"{u.scheme or 'http'}://{u.hostname}"
+        + (f":{u.port}" if u.port else "")
+    }
     if u.username:
         out["username"] = u.username
         out["password"] = u.password or ""
@@ -158,15 +217,33 @@ def _proxy_dict(proxy: str | None) -> dict[str, str] | None:
 
 
 class BrowserEngine:
-    def __init__(self, profile_dir: Path, mode: str = "auto", proxy: str | None = None) -> None:
-        self._profile = Path(profile_dir)
+    """Drives a real browser to clear Cloudflare challenges.
+
+    See the module docstring for how the browser is chosen.
+    """
+
+    def __init__(
+        self,
+        profile_dir: pathlib.Path,
+        mode: str = "auto",
+        proxy: str | None = None,
+    ) -> None:
+        """Initializes the engine without starting a browser.
+
+        Args:
+            profile_dir: The browser profile directory.
+            mode: ``"auto"``, ``"headless"`` or ``"headed"``.
+            proxy: A proxy URL, or None.
+        """
+        self._profile = pathlib.Path(profile_dir)
         self._mode = mode if mode in MODES else "auto"
         self._proxy = proxy
         self._pw_cm: Any = None
         self._pw: Any = None
         self._ctx: Any = None
         self._ctx_headless: bool | None = None
-        self._proc: subprocess.Popen[bytes] | None = None  # system browser we spawned (CDP mode)
+        # system browser we spawned (CDP mode)
+        self._proc: subprocess.Popen[bytes] | None = None
         self._cdp_browser: Any = None
         self.launch_kind = ""  # what actually started, for logs/UI
         self._headed_sticky = self._mode == "headed"
@@ -175,7 +252,14 @@ class BrowserEngine:
 
     # ── lifecycle ──────────────────────────────────────────────────────────
     async def start(self, headless: bool | None = None) -> None:
-        """Launch (or re-launch with a different window mode). Raises BrowserSolverError."""
+        """Starts the browser, or restarts it with a different window mode.
+
+        Args:
+            headless: Whether to hide the window. None uses the mode's default.
+
+        Raises:
+            BrowserSolverError: If no browser could be started.
+        """
         want = headless if headless is not None else not self._headed_sticky
         if self._mode == "headless":
             want = True
@@ -196,7 +280,9 @@ class BrowserEngine:
                 if await self._start_system_browser(want):
                     return
             except Exception as exc:
-                errors.append(f"system browser: {str(exc).splitlines()[0][:120]}")
+                errors.append(
+                    f"system browser: {str(exc).splitlines()[0][:120]}"
+                )
                 await self._close_ctx()
             for channel in _CHANNELS:
                 kwargs: dict[str, Any] = {
@@ -210,31 +296,52 @@ class BrowserEngine:
                 if px := _proxy_dict(self._proxy):
                     kwargs["proxy"] = px
                 try:
-                    self._ctx = await self._pw.chromium.launch_persistent_context(**kwargs)
+                    self._ctx = (
+                        await self._pw.chromium.launch_persistent_context(
+                            **kwargs
+                        )
+                    )
                     self._ctx_headless = want
                     self.launch_kind = channel
-                    log.info("Browser solver started (%s, headless=%s)", self.launch_kind, want)
+                    log.info(
+                        "Browser solver started (%s, headless=%s)",
+                        self.launch_kind,
+                        want,
+                    )
                     self.last_error = ""
                     return
                 except Exception as exc:
-                    errors.append(f"{channel}: {str(exc).splitlines()[0][:120]}")
+                    errors.append(
+                        f"{channel}: {str(exc).splitlines()[0][:120]}"
+                    )
             self.last_error = "; ".join(errors)
             raise BrowserSolverError(
-                "no Chrome or Edge found — install one (or set PAHEBATCHER_BROWSER to a browser executable)"
+                "no Chrome or Edge found — install one (or set "
+                "PAHEBATCHER_BROWSER to a browser executable)"
             )
 
     async def _start_system_browser(self, headless: bool) -> bool:
-        """Spawn the user's Chrome/Edge as a plain process and attach over CDP.
+        """Starts the user's Chrome or Edge and attaches over CDP.
 
-        Returns False when no such browser exists (caller falls back to Playwright's launcher).
-        Raises if one exists but could not be driven.
+        The browser is spawned as a plain process.
+
+        Args:
+            headless: Whether to hide the window.
+
+        Returns:
+            True if attached. False if no such browser exists, in which case
+            the caller falls back to Playwright's launcher.
+
+        Raises:
+            BrowserSolverError: If a browser exists but could not be driven.
         """
         found = find_system_browser()
         if found is None:
             return False
         px = _proxy_dict(self._proxy)
         if px and "username" in px:
-            return False  # --proxy-server can't carry credentials; use Playwright's launcher
+            # --proxy-server can't carry credentials; use Playwright's launcher
+            return False
         kind, exe = found
         port = _free_port()
         args = [
@@ -249,31 +356,51 @@ class BrowserEngine:
             args.append("--headless=new")
         if px:
             args.append(f"--proxy-server={px['server']}")
-        if sys.platform.startswith("linux") and hasattr(os, "geteuid") and os.geteuid() == 0:
-            args.append("--no-sandbox")  # Chromium refuses to run as root otherwise
+        if (
+            sys.platform.startswith("linux")
+            and hasattr(os, "geteuid")
+            and os.geteuid() == 0
+        ):
+            # Chromium refuses to run as root otherwise
+            args.append("--no-sandbox")
         args.append("about:blank")
         proc = subprocess.Popen(
-            args, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            args,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
         self._proc = proc
         deadline = time.monotonic() + 20
         while not await asyncio.to_thread(_devtools_up, port):
             if proc.poll() is not None or time.monotonic() > deadline:
-                # Typically: the same profile is already open in a leftover window.
+                # Typically: the same profile is already open in a leftover
+                # window.
                 raise BrowserSolverError(
-                    f"{kind} did not open its debugging port — close any leftover pahebatcher browser window"
+                    f"{kind} did not open its debugging port — close any "
+                    "leftover pahebatcher browser window"
                 )
             await asyncio.sleep(0.25)
-        self._cdp_browser = await self._pw.chromium.connect_over_cdp(f"http://127.0.0.1:{port}")
+        self._cdp_browser = await self._pw.chromium.connect_over_cdp(
+            f"http://127.0.0.1:{port}"
+        )
         contexts = self._cdp_browser.contexts
-        self._ctx = contexts[0] if contexts else await self._cdp_browser.new_context()
+        self._ctx = (
+            contexts[0] if contexts else await self._cdp_browser.new_context()
+        )
         self._ctx_headless = headless
         self.launch_kind = f"{kind} (own process)"
         self.last_error = ""
-        log.info("Browser solver started (%s at %s, headless=%s)", self.launch_kind, exe, headless)
+        log.info(
+            "Browser solver started (%s at %s, headless=%s)",
+            self.launch_kind,
+            exe,
+            headless,
+        )
         return True
 
     async def _close_ctx(self) -> None:
+        """Closes the browser context and page, ignoring errors."""
         if self._cdp_browser is not None:
             try:
                 await self._cdp_browser.close()
@@ -298,6 +425,7 @@ class BrowserEngine:
         self._ctx_headless = None
 
     async def close(self) -> None:
+        """Shuts the browser down."""
         async with self._lock:
             await self._close_ctx()
             if self._pw_cm is not None:
@@ -311,10 +439,24 @@ class BrowserEngine:
     async def solve(
         self, url: str, timeout_ms: int = 120_000, settle_ms: int = 2_000
     ) -> dict[str, Any] | None:
-        """Load ``url`` until Cloudflare lets us through. Returns a solution dict, or None."""
+        """Loads a URL until Cloudflare lets us through.
+
+        In ``auto`` mode a headless attempt is followed by a headed one.
+
+        Args:
+            url: The URL to load.
+            timeout_ms: Total time allowed, in milliseconds.
+            settle_ms: Time to let the page settle after clearance, in
+                milliseconds.
+
+        Returns:
+            A dict with ``response``, ``cookies`` and ``userAgent``, or None if
+            the challenge did not clear.
+        """
         if self._mode == "auto" and not self._headed_sticky:
             first = min(_HEADLESS_TRY_MS, int(timeout_ms * 0.4))
-            plan = [(True, first), (False, timeout_ms - first)]  # total stays within timeout_ms
+            # total stays within timeout_ms
+            plan = [(True, first), (False, timeout_ms - first)]
         elif self._headed_sticky:
             plan = [(False, timeout_ms)]
         else:
@@ -329,13 +471,32 @@ class BrowserEngine:
             sol = await self._solve_in_page(url, budget, settle_ms)
             if sol is not None:
                 if not headless and self._mode == "auto":
-                    self._headed_sticky = True  # headless got blocked; don't waste time next round
+                    # headless got blocked; don't waste time next round
+                    self._headed_sticky = True
                 return sol
             if headless:
-                log.warning("Headless browser didn't clear the challenge — retrying with a visible window.")
+                log.warning(
+                    "Headless browser didn't clear the challenge — retrying "
+                    "with a visible window."
+                )
         return None
 
-    async def _solve_in_page(self, url: str, timeout_ms: int, settle_ms: int) -> dict[str, Any] | None:
+    async def _solve_in_page(
+        self,
+        url: str,
+        timeout_ms: int,
+        settle_ms: int,
+    ) -> dict[str, Any] | None:
+        """Loads a URL in the current page and waits for the challenge to clear.
+
+        Args:
+            url: The URL to load.
+            timeout_ms: Time allowed, in milliseconds.
+            settle_ms: Time to let the page settle afterwards, in milliseconds.
+
+        Returns:
+            The solution dict, or None if the challenge did not clear.
+        """
         ctx = self._ctx
         if ctx is None:
             return None
@@ -345,8 +506,13 @@ class BrowserEngine:
         try:
             ua = await self._mask_headless(ctx, page)
             try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=min(timeout_ms, 60_000))
-            except Exception as exc:  # slow/blocked navigation — the poll loop decides
+                await page.goto(
+                    url,
+                    wait_until="domcontentloaded",
+                    timeout=min(timeout_ms, 60_000),
+                )
+            # slow/blocked navigation — the poll loop decides
+            except Exception as exc:
                 log.debug("goto %s: %s", url, exc)
 
             html = ""
@@ -361,7 +527,8 @@ class BrowserEngine:
                     return None
                 await asyncio.sleep(0.75)
 
-            await asyncio.sleep(max(0, settle_ms) / 1000)  # let post-clearance redirects/XHR land
+            # let post-clearance redirects/XHR land
+            await asyncio.sleep(max(0, settle_ms) / 1000)
             try:
                 html = await page.content()
             except Exception:
@@ -388,14 +555,27 @@ class BrowserEngine:
 
     @staticmethod
     async def _mask_headless(ctx: Any, page: Any) -> str:
-        """Return the page's UA; if headless, rewrite UA + client hints to a normal Chrome's."""
+        """Returns the page's user agent, disguising headless Chrome.
+
+        If the browser is headless, the user agent and client hints are
+        rewritten to those of a normal Chrome.
+
+        Args:
+            ctx: The browser context.
+            page: The page.
+
+        Returns:
+            The user agent in effect.
+        """
         ua = str(await page.evaluate("navigator.userAgent"))
         if "Headless" not in ua:
             return ua
         ua = ua.replace("HeadlessChrome", "Chrome")
         try:
             cdp = await ctx.new_cdp_session(page)
-            product = str((await cdp.send("Browser.getVersion")).get("product", ""))
+            product = str(
+                (await cdp.send("Browser.getVersion")).get("product", "")
+            )
             full = product.split("/", 1)[1] if "/" in product else ""
             major = full.split(".", 1)[0] or "0"
             platform, platform_ver = _platform_info()

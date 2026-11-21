@@ -1,4 +1,4 @@
-"""Main entry point — CLI args, service wiring, action dispatch."""
+"""Main entry point: CLI arguments, service wiring and dispatch."""
 
 from __future__ import annotations
 
@@ -7,74 +7,114 @@ import asyncio
 import contextlib
 import logging
 import os
+import pathlib
 import shutil
 import sys
 import time
-from pathlib import Path
 
 from rich import box
-from rich.panel import Panel
-from rich.prompt import Prompt
-from rich.table import Table
+import rich.panel
+import rich.prompt
+import rich.table
 
-from pahebatcher.config import VERSION
-from pahebatcher.config_manager import ConfigManager
-from pahebatcher.downloader import BatchOrchestrator
-from pahebatcher.extract.scanner import AnimePaheScanner, parse_anime_url
-from pahebatcher.http import HttpClient
-from pahebatcher.models import AppContext
-from pahebatcher.sessions import SessionManager
-from pahebatcher.solver import Solver, no_solver_hint
-from pahebatcher.stream import run_stream
-from pahebatcher.ui.console import console, print_banner, section
-from pahebatcher.ui.prompts import (
-    confirm_download,
-    interactive_discovery,
-    noninteractive_episodes,
-    select_episodes,
-    wizard_config,
+from pahebatcher import (
+    config,
+    config_manager,
+    downloader,
+    models,
+    stream,
+    utils,
 )
-from pahebatcher.utils import audio_badge, compact_ep_range, fmt_bytes, sanitize
+import pahebatcher.extract.scanner
+import pahebatcher.http
+import pahebatcher.sessions
+import pahebatcher.solver
+from pahebatcher.ui import console, prompts
 
 log = logging.getLogger(__name__)
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Builds the main command-line parser.
+
+    Returns:
+        The parser.
+    """
     parser = argparse.ArgumentParser(
         prog="pahebatcher",
-        description=f"pahe-batcher v{VERSION} \u2014 animepahe Batch Downloader",
+        description=f"pahe-batcher v{config.VERSION} \u2014 animepahe Batch "
+        "Downloader",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid>                        # wizard\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> --all                  # all eps\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> --range 1-12           # season 1\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> --latest 3             # last 3\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> --list                 # list only\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> --audio eng --all      # dubbed\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> -s                     # stream\n"
+            "  %(prog)s https://animepahe.pw/anime/<uuid> "
+            "                       # wizard\n"
+            "  %(prog)s https://animepahe.pw/anime/<uuid> --all "
+            "                 # all eps\n"
+            "  %(prog)s https://animepahe.pw/anime/<uuid> --range 1-12 "
+            "          # season 1\n"
+            "  %(prog)s https://animepahe.pw/anime/<uuid> --latest 3 "
+            "            # last 3\n"
+            "  %(prog)s https://animepahe.pw/anime/<uuid> --list "
+            "                # list only\n"
+            "  %(prog)s https://animepahe.pw/anime/<uuid> --audio eng --all "
+            "     # dubbed\n"
+            "  %(prog)s https://animepahe.pw/anime/<uuid> -s "
+            "                    # stream\n"
             "\n"
             "Configuration:\n"
-            "  %(prog)s config show                                               # view settings\n"
-            "  %(prog)s config set quality 720                                    # save default quality\n"
-            "  %(prog)s config reset                                              # reset to defaults\n"
+            "  %(prog)s config show "
+            "                                              # view settings\n"
+            "  %(prog)s config set quality 720 "
+            "                                   # save default quality\n"
+            "  %(prog)s config reset "
+            "                                             # reset to "
+            "defaults\n"
             "\n"
-            "Watchlist (auto-download ongoing series) — shorthand: wl, w, check:\n"
-            "  %(prog)s watchlist add <URL> [-q 720] [--audio eng] [-o DIR]      # add\n"
+            "Watchlist (auto-download ongoing series) — shorthand: wl, w, "
+            "check:\n"
+            "  %(prog)s watchlist add <URL> [-q 720] [--audio eng] [-o DIR] "
+            "     # add\n"
             "  %(prog)s wl add <URL>                  # same as watchlist\n"
-            "  %(prog)s check                         # same as watchlist check\n"
+            "  %(prog)s check                         # same as watchlist "
+            "check\n"
             "  %(prog)s wl list / wl show 1 / wl remove 1 / wl reset 1\n"
         ),
     )
 
-    parser.add_argument("url", metavar="URL", nargs="?", help="animepahe series URL")
+    parser.add_argument(
+        "url", metavar="URL", nargs="?", help="animepahe series URL"
+    )
     sel = parser.add_mutually_exclusive_group()
-    sel.add_argument("--all", "-a", action="store_true", help="Download every episode")
-    sel.add_argument("--range", "-r", metavar="RANGE", help='Episode range, e.g. "1-12" "1,4,7" "13-"')
-    sel.add_argument("--latest", "-n", metavar="N", type=int, help="Download the latest N episodes")
-    sel.add_argument("--stream", "-s", action="store_true", help="Stream episodes via MPV")
-    parser.add_argument("--list", "-l", action="store_true", dest="list_only", help="List episodes and exit")
-    parser.add_argument("-o", "--output", default="./downloads", help="Output directory")
+    sel.add_argument(
+        "--all", "-a", action="store_true", help="Download every episode"
+    )
+    sel.add_argument(
+        "--range",
+        "-r",
+        metavar="RANGE",
+        help='Episode range, e.g. "1-12" "1,4,7" "13-"',
+    )
+    sel.add_argument(
+        "--latest",
+        "-n",
+        metavar="N",
+        type=int,
+        help="Download the latest N episodes",
+    )
+    sel.add_argument(
+        "--stream", "-s", action="store_true", help="Stream episodes via MPV"
+    )
+    parser.add_argument(
+        "--list",
+        "-l",
+        action="store_true",
+        dest="list_only",
+        help="List episodes and exit",
+    )
+    parser.add_argument(
+        "-o", "--output", default="./downloads", help="Output directory"
+    )
     parser.add_argument(
         "-q", "--quality", metavar="Q", type=int, choices=[360, 720, 1080],
         default=None, help="Quality: 360, 720, or 1080",
@@ -91,61 +131,97 @@ def build_parser() -> argparse.ArgumentParser:
         "-w", "--workers", metavar="N", type=int, default=None,
         help="HLS segment workers per episode (8-32)",
     )
-    parser.add_argument("--keep-temp", action="store_true", help="Keep raw segment files")
+    parser.add_argument(
+        "--keep-temp", action="store_true", help="Keep raw segment files"
+    )
     parser.add_argument(
         "--retry", type=int, choices=[0, 1, 2], default=None,
         help="Auto-retry failed episodes (0-2, default 2)",
     )
-    parser.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Enable debug logging"
+    )
     return parser
 
 
 def build_config_parser() -> argparse.ArgumentParser:
+    """Builds the parser for the ``config`` subcommand.
+
+    Returns:
+        The parser.
+    """
     cfg = argparse.ArgumentParser(prog="pahebatcher config", add_help=True)
     cfg_sub = cfg.add_subparsers(dest="config_action")
     cfg_sub.add_parser("show", help="Show current configuration")
     set_p = cfg_sub.add_parser("set", help="Set a configuration value")
-    set_p.add_argument("key", choices=[
-        "quality", "audio_lang", "max_parallel", "hls_workers",
-        "output_dir", "keep_temp", "resolve_ahead", "cache_ttl", "cookie_string",
-        "auto_retry", "clearance_ttl", "browser_mode",
-    ])
+    set_p.add_argument(
+        "key",
+        choices=[
+            "quality",
+            "audio_lang",
+            "max_parallel",
+            "hls_workers",
+            "output_dir",
+            "keep_temp",
+            "resolve_ahead",
+            "cache_ttl",
+            "cookie_string",
+            "auto_retry",
+            "clearance_ttl",
+            "browser_mode",
+        ],
+    )
     set_p.add_argument("value")
     cfg_sub.add_parser("reset", help="Reset all settings to defaults")
     return cfg
 
 
 def build_watchlist_parser() -> argparse.ArgumentParser:
+    """Builds the parser for the ``watchlist`` subcommand.
+
+    Returns:
+        The parser.
+    """
     parser = argparse.ArgumentParser(
         prog="pahebatcher watchlist",
         description="Manage watchlist for auto-downloading ongoing anime",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  pahebatcher watchlist add https://animepahe.pw/anime/<uuid> -q 1080 --audio jpn -o ~/anime\n"
+            "  pahebatcher watchlist add https://animepahe.pw/anime/<uuid> -q "
+            "1080 --audio jpn -o ~/anime\n"
             "  pahebatcher wl add https://... -q 720  # wl/w = shorthand\n"
-            "  pahebatcher watchlist list  |  pahebatcher wl list  |  pahebatcher wl ls\n"
-            "  pahebatcher watchlist check |  pahebatcher check   |  pahebatcher wl c\n"
+            "  pahebatcher watchlist list  |  pahebatcher wl list  |  "
+            "pahebatcher wl ls\n"
+            "  pahebatcher watchlist check |  pahebatcher check   |  "
+            "pahebatcher wl c\n"
             "  pahebatcher watchlist remove https://animepahe.pw/anime/<uuid>\n"
-            "  pahebatcher wl relink 1 https://animepahe.pw/anime/<new-uuid>  # fix dead link\n"
+            "  pahebatcher wl relink 1 https://animepahe.pw/anime/<new-uuid>  "
+            "# fix dead link\n"
             "\n"
-            "Shorthand: wl, w, watch = watchlist; check/sync = watchlist check\n"
+            "Shorthand: wl, w, watch = watchlist; check/sync = watchlist "
+            "check\n"
             "Sub-aliases: a=add, ls/l=list, s=show, rm/r/del=remove,\n"
             "             rst=reset, c/sync=check, link/migrate=relink\n"
             "\n"
             "Cron example (run hourly):\n"
-            "  0 * * * * cd /path/to/pahebatcher && venv/bin/python -m pahebatcher \\\n"
+            "  0 * * * * cd /path/to/pahebatcher && venv/bin/python -m "
+            "pahebatcher \\\n"
             "    watchlist check >> watchlist.log 2>&1\n"
             "  # or shorter:\n"
-            "  0 * * * * cd /path/to/pahebatcher && make watchlist-check >> watchlist.log 2>&1\n"
+            "  0 * * * * cd /path/to/pahebatcher && make watchlist-check >> "
+            "watchlist.log 2>&1\n"
         ),
     )
     sub = parser.add_subparsers(dest="watchlist_action", required=True)
 
     p_add = sub.add_parser("add", aliases=["a"], help="Add anime to watchlist")
     p_add.add_argument(
-        "url", nargs="?", default=None,
-        help="animepahe series URL, search query, or omit to search interactively",
+        "url",
+        nargs="?",
+        default=None,
+        help="animepahe series URL, search query, or omit to search "
+        "interactively",
     )
     p_add.add_argument(
         "-q", "--quality", type=int, choices=[360, 720, 1080],
@@ -156,42 +232,70 @@ def build_watchlist_parser() -> argparse.ArgumentParser:
         default=None, help="Audio: jpn=subbed, eng=dubbed",
     )
     p_add.add_argument("-o", "--output", default=None, help="Output directory")
-    p_add.add_argument("-j", "--parallel", type=int, default=None, help="Concurrent downloads (1-6)")
+    p_add.add_argument(
+        "-j",
+        "--parallel",
+        type=int,
+        default=None,
+        help="Concurrent downloads (1-6)",
+    )
     p_add.add_argument(
         "-w", "--workers", type=int, default=None,
         help="HLS segment workers per episode (8-32)",
     )
-    p_add.add_argument("--keep-temp", action="store_true", help="Keep raw segment files")
+    p_add.add_argument(
+        "--keep-temp", action="store_true", help="Keep raw segment files"
+    )
     p_add.add_argument(
         "--retry", type=int, choices=[0, 1, 2], default=None,
         help="Auto-retry failed episodes (0-2)",
     )
-    p_add.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
+    p_add.add_argument(
+        "--verbose", "-v", action="store_true", help="Enable debug logging"
+    )
 
     sub.add_parser("list", aliases=["ls", "l"], help="List watchlist entries")
 
-    p_show = sub.add_parser("show", aliases=["s", "info"], help="Show watchlist entry details")
-    p_show.add_argument("identifier", help="URL, session UUID, title substring, or 1-based index")
+    p_show = sub.add_parser(
+        "show", aliases=["s", "info"], help="Show watchlist entry details"
+    )
+    p_show.add_argument(
+        "identifier",
+        help="URL, session UUID, title substring, or 1-based index",
+    )
 
     p_remove = sub.add_parser(
-        "remove", aliases=["rm", "r", "del", "delete"], help="Remove entry from watchlist",
+        "remove",
+        aliases=["rm", "r", "del", "delete"],
+        help="Remove entry from watchlist",
     )
-    p_remove.add_argument("identifier", help="URL, session UUID, title substring, or 1-based index")
-    p_remove.add_argument("--yes", "-y", action="store_true", help="Skip confirmation")
+    p_remove.add_argument(
+        "identifier",
+        help="URL, session UUID, title substring, or 1-based index",
+    )
+    p_remove.add_argument(
+        "--yes", "-y", action="store_true", help="Skip confirmation"
+    )
 
     p_reset = sub.add_parser(
-        "reset", aliases=["rst", "clear"],
-        help="Clear skip history for an entry (re-download deleted) — --all for all entries",
+        "reset",
+        aliases=["rst", "clear"],
+        help="Clear skip history for an entry (re-download deleted) — --all "
+        "for all entries",
     )
     p_reset.add_argument(
         "identifier", nargs="?", default=None,
         help="URL, session UUID, title substring, 1-based index, or 'all'",
     )
-    p_reset.add_argument("--all", action="store_true", help="Reset skip history for all entries")
+    p_reset.add_argument(
+        "--all", action="store_true", help="Reset skip history for all entries"
+    )
 
     p_relink = sub.add_parser(
-        "relink", aliases=["link", "migrate", "update-url"],
-        help="Relink dead entry to new URL (preserves history) — no args = relink all",
+        "relink",
+        aliases=["link", "migrate", "update-url"],
+        help="Relink dead entry to new URL (preserves history) — no args = "
+        "relink all",
     )
     p_relink.add_argument(
         "identifier", nargs="?", default=None,
@@ -206,66 +310,100 @@ def build_watchlist_parser() -> argparse.ArgumentParser:
         "check", aliases=["c", "sync", "update"],
         help="Check all watched anime for new episodes and download",
     )
-    p_check.add_argument("identifier", nargs="?", default=None, help="Optional: check only this URL/#")
-    p_check.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging")
+    p_check.add_argument(
+        "identifier",
+        nargs="?",
+        default=None,
+        help="Optional: check only this URL/#",
+    )
+    p_check.add_argument(
+        "--verbose", "-v", action="store_true", help="Enable debug logging"
+    )
 
     return parser
 
 
 async def run(args: argparse.Namespace) -> None:
+    """Runs the command described by the parsed arguments.
+
+    Args:
+        args: The parsed command-line arguments.
+    """
     # ── Load persistent config as defaults (CLI args override) ──────────────
-    cm = ConfigManager()
+    cm = config_manager.ConfigManager()
     cm.load()
 
-    print_banner()
+    console.print_banner()
 
     if args.verbose:
-        logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        )
 
-    quality = args.quality if args.quality is not None else int(cm.get("quality"))
-    audio_lang = args.audio_lang if args.audio_lang is not None else str(cm.get("audio_lang"))
-    parallel = args.parallel if args.parallel is not None else int(cm.get("max_parallel"))
-    workers = args.workers if args.workers is not None else int(cm.get("hls_workers"))
+    quality = (
+        args.quality if args.quality is not None else int(cm.get("quality"))
+    )
+    audio_lang = (
+        args.audio_lang
+        if args.audio_lang is not None
+        else str(cm.get("audio_lang"))
+    )
+    parallel = (
+        args.parallel
+        if args.parallel is not None
+        else int(cm.get("max_parallel"))
+    )
+    workers = (
+        args.workers if args.workers is not None else int(cm.get("hls_workers"))
+    )
     parallel = max(1, min(6, parallel))
     workers = max(8, min(32, workers))
     resolve_ahead = int(cm.get("resolve_ahead"))
     cache_ttl = int(cm.get("cache_ttl"))
     cookie_string = str(cm.get("cookie_string"))
-    auto_retry = args.retry if args.retry is not None else int(cm.get("auto_retry"))
+    auto_retry = (
+        args.retry if args.retry is not None else int(cm.get("auto_retry"))
+    )
     auto_retry = max(0, min(2, auto_retry))
-    cache_dir = Path("pahe_cache")
+    cache_dir = pathlib.Path("pahe_cache")
 
     # Prerequisites check
-    section("Checking Prerequisites")
-    console.print("  [muted]Cloudflare solver[/muted]  ", end="")
+    console.section("Checking Prerequisites")
+    console.console.print("  [muted]Cloudflare solver[/muted]  ", end="")
 
-    solver = Solver.from_config(cm)
+    solver = pahebatcher.solver.Solver.from_config(cm)
     await solver.start()
     try:
         if not await solver.ping():
-            console.print("[red]\u2717 none available[/red]")
-            console.print(
+            console.console.print("[red]\u2717 none available[/red]")
+            console.console.print(
                 "\n  [red]No Cloudflare solver is available[/red]\n"
-                f"  [dim]{no_solver_hint()}[/dim]"
+                f"  [dim]{pahebatcher.solver.no_solver_hint()}[/dim]"
             )
             sys.exit(1)
-        console.print(f"[ok]\u2713 {solver.backend_name}[/ok]")
+        console.console.print(f"[ok]\u2713 {solver.backend_name}[/ok]")
 
-        http = HttpClient(workers)
+        http = pahebatcher.http.HttpClient(workers)
         await http.start()
 
         try:
             # Discovery
             url = args.url
             if not url:
-                url, _ = await interactive_discovery(solver, "animepahe.pw")
+                url, _ = await prompts.interactive_discovery(
+                    solver, "animepahe.pw"
+                )
                 if not url:
-                    console.print("\n  [yellow]No anime selected. Exiting.[/yellow]")
+                    console.console.print(
+                        "\n  [yellow]No anime selected. Exiting.[/yellow]"
+                    )
                     return
 
-            host, session = parse_anime_url(url)
+            host, session = pahebatcher.extract.scanner.parse_anime_url(url)
 
-            # Watchlist jump (wizard browser): entry prefs win unless a CLI flag was explicit.
+            # Watchlist jump (wizard browser): entry prefs win unless a CLI flag
+            # was explicit.
             wl_entry = getattr(args, "_watchlist_entry", None)
             if wl_entry is not None and wl_entry.session != session:
                 wl_entry = None
@@ -280,70 +418,110 @@ async def run(args: argparse.Namespace) -> None:
                     workers = max(8, min(32, wl_entry.hls_workers))
 
             # Scan
-            scanner = AnimePaheScanner(solver, host, session)
-            anime = await scanner.scan(cache_dir, prefer_audio=audio_lang, cache_ttl=cache_ttl)
+            scanner = pahebatcher.extract.scanner.AnimePaheScanner(
+                solver, host, session
+            )
+            anime = await scanner.scan(
+                cache_dir, prefer_audio=audio_lang, cache_ttl=cache_ttl
+            )
 
-            badge = " [bold yellow][PARTIAL DOWNLOAD FOUND][/bold yellow]" if anime.has_session else ""
-            console.print(
+            badge = (
+                " [bold yellow][PARTIAL DOWNLOAD FOUND][/bold yellow]"
+                if anime.has_session
+                else ""
+            )
+            console.console.print(
                 f"  [green]\u2713[/green] [bold]{anime.title}[/bold]{badge}\n"
                 f"  \u2014 [brand]{len(anime.episodes)}[/brand] episodes  "
-                f"({compact_ep_range(anime.episodes)})"
+                f"({utils.compact_ep_range(anime.episodes)})"
             )
 
             if args.list_only:
-                t = Table(box=box.SIMPLE, show_header=True, header_style="brand.bold")
+                t = rich.table.Table(
+                    box=box.SIMPLE, show_header=True, header_style="brand.bold"
+                )
                 t.add_column("Ep", width=6, justify="right")
                 t.add_column("Title", style="white")
                 t.add_column("Audio", width=5)
                 for ep in anime.episodes:
-                    t.add_row(ep.ep_str, ep.title or "\u2014", audio_badge(ep.audio))
-                console.print(t)
+                    t.add_row(
+                        ep.ep_str,
+                        ep.title or "\u2014",
+                        utils.audio_badge(ep.audio),
+                    )
+                console.console.print(t)
                 return
 
-            _scripted = bool(args.all or args.range or args.latest or args.stream)
-            safe_title = sanitize(anime.title)
-            output_base = wl_entry.output_dir if wl_entry is not None else args.output
+            _scripted = bool(
+                args.all or args.range or args.latest or args.stream
+            )
+            safe_title = utils.sanitize(anime.title)
+            output_base = (
+                wl_entry.output_dir if wl_entry is not None else args.output
+            )
             default_output = os.path.join(output_base, safe_title)
 
             while True:
                 if _scripted:
                     mode = "stream" if args.stream else "download"
                 else:
-                    console.print()
-                    section("Action")
-                    sessions = SessionManager.get_sessions(cache_dir)
+                    console.console.print()
+                    console.section("Action")
+                    sessions = pahebatcher.sessions.SessionManager.get_sessions(
+                        cache_dir
+                    )
                     total_cache = sum(s["size"] for s in sessions)
-                    cache_hint = f" [dim]({fmt_bytes(total_cache)})[/dim]" if total_cache > 0 else ""
+                    cache_hint = (
+                        f" [dim]({utils.fmt_bytes(total_cache)})[/dim]"
+                        if total_cache > 0
+                        else ""
+                    )
                     wl_count = 0
                     with contextlib.suppress(Exception):
-                        from pahebatcher.watchlist import WatchlistManager
+                        from pahebatcher import watchlist
 
-                        wl_count = len(WatchlistManager.load())
-                    wl_hint = f" [dim]({wl_count} tracked)[/dim]" if wl_count > 0 else ""
+                        wl_count = len(watchlist.WatchlistManager.load())
+                    wl_hint = (
+                        f" [dim]({wl_count} tracked)[/dim]"
+                        if wl_count > 0
+                        else ""
+                    )
 
-                    console.print(Panel(
-                        "  [bold white]1[/bold white]  [brand]Download[/brand]"
-                        "  [dim]\u00b7 save .mp4 files[/dim]\n"
-                        "  [bold white]2[/bold white]  [brand]Stream[/brand]"
-                        "    [dim]\u00b7 play in MPV[/dim]\n"
-                        f"  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]{cache_hint}\n"
-                        "  [bold white]4[/bold white]  [brand]List[/brand]"
-                        "      [dim]\u00b7 show episode table[/dim]\n"
-                        f"  [bold white]W[/bold white]  [brand]Watchlist[/brand]{wl_hint}\n"
-                        "  [bold white]5[/bold white]  [red]Exit[/red]",
-                        title=f"[brand.bold]{anime.title}[/brand.bold]",
-                        border_style="brand", box=box.ROUNDED, padding=(0, 2),
-                    ))
-                    choice = Prompt.ask(
+                    console.console.print(
+                        rich.panel.Panel(
+                            "  [bold white]1[/bold white]  "
+                            "[brand]Download[/brand]"
+                            "  [dim]\u00b7 save .mp4 files[/dim]\n"
+                            "  [bold white]2[/bold white]  "
+                            "[brand]Stream[/brand]"
+                            "    [dim]\u00b7 play in MPV[/dim]\n"
+                            "  [bold white]3[/bold white]  [brand]Sessions & "
+                            f"Cache[/brand]{cache_hint}\n"
+                            "  [bold white]4[/bold white]  [brand]List[/brand]"
+                            "      [dim]\u00b7 show episode table[/dim]\n"
+                            "  [bold white]W[/bold white]  "
+                            f"[brand]Watchlist[/brand]{wl_hint}\n"
+                            "  [bold white]5[/bold white]  [red]Exit[/red]",
+                            title=f"[brand.bold]{anime.title}[/brand.bold]",
+                            border_style="brand",
+                            box=box.ROUNDED,
+                            padding=(0, 2),
+                        )
+                    )
+                    choice = rich.prompt.Prompt.ask(
                         "  [brand]Select action[/brand]",
-                        choices=["1", "2", "3", "4", "5", "W", "w"], default="1", show_choices=False,
+                        choices=["1", "2", "3", "4", "5", "W", "w"],
+                        default="1",
+                        show_choices=False,
                     )
                     if choice == "5":
                         break
                     if choice.upper() == "W":
-                        from pahebatcher.watchlist import run_watchlist_browser
+                        from pahebatcher import watchlist
 
-                        new_url, wl_ent = await run_watchlist_browser()
+                        new_url, wl_ent = (
+                            await watchlist.run_watchlist_browser()
+                        )
                         if new_url and new_url != args.url:
                             args.url = new_url
                             if wl_ent is not None:
@@ -351,16 +529,26 @@ async def run(args: argparse.Namespace) -> None:
                             return await run(args)
                         continue
                     if choice == "4":
-                        t = Table(box=box.SIMPLE, show_header=True, header_style="brand.bold")
+                        t = rich.table.Table(
+                            box=box.SIMPLE,
+                            show_header=True,
+                            header_style="brand.bold",
+                        )
                         t.add_column("Ep", width=6, justify="right")
                         t.add_column("Title", style="white")
                         t.add_column("Audio", width=5)
                         for ep in anime.episodes:
-                            t.add_row(ep.ep_str, ep.title or "\u2014", audio_badge(ep.audio))
-                        console.print(t)
+                            t.add_row(
+                                ep.ep_str,
+                                ep.title or "\u2014",
+                                utils.audio_badge(ep.audio),
+                            )
+                        console.console.print(t)
                         continue
                     if choice == "3":
-                        new_url = SessionManager.run(cache_dir)
+                        new_url = pahebatcher.sessions.SessionManager.run(
+                            cache_dir
+                        )
                         if new_url and new_url != args.url:
                             args.url = new_url
                             return await run(args)
@@ -369,19 +557,31 @@ async def run(args: argparse.Namespace) -> None:
 
                 # Episode selection
                 if args.all:
-                    chosen = noninteractive_episodes(anime, "all")
+                    chosen = prompts.noninteractive_episodes(anime, "all")
                 elif args.range:
-                    chosen = noninteractive_episodes(anime, "range", range_str=args.range)
+                    chosen = prompts.noninteractive_episodes(
+                        anime, "range", range_str=args.range
+                    )
                     if not chosen:
-                        console.print(f"  [red]\u2717 No episodes matched:[/red] {args.range}")
-                        console.print(f"    Available: [brand]{compact_ep_range(anime.episodes)}[/brand]")
+                        console.console.print(
+                            "  [red]\u2717 No episodes matched:[/red] "
+                            f"{args.range}"
+                        )
+                        console.console.print(
+                            "    Available: "
+                            "[brand]"
+                            f"{utils.compact_ep_range(anime.episodes)}"
+                            "[/brand]"
+                        )
                         if _scripted:
                             sys.exit(1)
                         continue
                 elif args.latest:
-                    chosen = noninteractive_episodes(anime, "latest", latest_n=args.latest)
+                    chosen = prompts.noninteractive_episodes(
+                        anime, "latest", latest_n=args.latest
+                    )
                 else:
-                    chosen = select_episodes(anime)
+                    chosen = prompts.select_episodes(anime)
 
                 if not chosen:
                     if _scripted:
@@ -389,7 +589,7 @@ async def run(args: argparse.Namespace) -> None:
                     continue
 
                 if _scripted:
-                    ctx = AppContext(
+                    ctx = models.AppContext(
                         output_dir=default_output, cache_dir=cache_dir,
                         quality=quality, audio_lang=audio_lang,
                         max_parallel=parallel, hls_workers=workers,
@@ -398,26 +598,43 @@ async def run(args: argparse.Namespace) -> None:
                         cookie_string=cookie_string, auto_retry=auto_retry,
                     )
                 elif wl_entry is not None:
-                    audio_badge_text = "[cyan]SUB[/cyan]" if audio_lang == "jpn" else "[yellow]DUB[/yellow]"
-                    console.print(
-                        f"\n  [dim]Using watchlist prefs for '{wl_entry.title}':"
-                        f"  {audio_badge_text}  {quality}p  {parallel} concurrent  {workers} workers[/dim]\n"
+                    audio_badge_text = (
+                        "[cyan]SUB[/cyan]"
+                        if audio_lang == "jpn"
+                        else "[yellow]DUB[/yellow]"
                     )
-                    ctx = AppContext(
-                        output_dir=default_output, cache_dir=cache_dir,
-                        quality=quality, audio_lang=audio_lang,
-                        max_parallel=parallel, hls_workers=workers,
-                        keep_temp=wl_entry.keep_temp, list_only=False,
-                        resolve_ahead=resolve_ahead, cache_ttl=cache_ttl,
-                        cookie_string=cookie_string, auto_retry=wl_entry.auto_retry,
+                    console.console.print(
+                        "\n  [dim]Using watchlist prefs for "
+                        f"'{wl_entry.title}':"
+                        f"  {audio_badge_text}  {quality}p  {parallel} "
+                        f"concurrent  {workers} workers[/dim]\n"
+                    )
+                    ctx = models.AppContext(
+                        output_dir=default_output,
+                        cache_dir=cache_dir,
+                        quality=quality,
+                        audio_lang=audio_lang,
+                        max_parallel=parallel,
+                        hls_workers=workers,
+                        keep_temp=wl_entry.keep_temp,
+                        list_only=False,
+                        resolve_ahead=resolve_ahead,
+                        cache_ttl=cache_ttl,
+                        cookie_string=cookie_string,
+                        auto_retry=wl_entry.auto_retry,
                     )
                 elif cm.is_customized():
-                    audio_badge_text = "[cyan]SUB[/cyan]" if audio_lang == "jpn" else "[yellow]DUB[/yellow]"
-                    console.print(
-                        f"\n  [dim]Using saved settings from pahebatcher.toml:"
-                        f"  {audio_badge_text}  {quality}p  {parallel} concurrent  {workers} workers[/dim]\n"
+                    audio_badge_text = (
+                        "[cyan]SUB[/cyan]"
+                        if audio_lang == "jpn"
+                        else "[yellow]DUB[/yellow]"
                     )
-                    ctx = AppContext(
+                    console.console.print(
+                        f"\n  [dim]Using saved settings from pahebatcher.toml:"
+                        f"  {audio_badge_text}  {quality}p  {parallel} "
+                        f"concurrent  {workers} workers[/dim]\n"
+                    )
+                    ctx = models.AppContext(
                         output_dir=default_output, cache_dir=cache_dir,
                         quality=quality, audio_lang=audio_lang,
                         max_parallel=parallel, hls_workers=workers,
@@ -426,7 +643,7 @@ async def run(args: argparse.Namespace) -> None:
                         cookie_string=cookie_string, auto_retry=auto_retry,
                     )
                 else:
-                    _defaults = AppContext(
+                    _defaults = models.AppContext(
                         output_dir=default_output, cache_dir=cache_dir,
                         quality=quality, audio_lang=audio_lang,
                         max_parallel=parallel, hls_workers=workers,
@@ -434,7 +651,7 @@ async def run(args: argparse.Namespace) -> None:
                         resolve_ahead=resolve_ahead, cache_ttl=cache_ttl,
                         cookie_string=cookie_string, auto_retry=auto_retry,
                     )
-                    ctx = wizard_config(_defaults, mode=mode)
+                    ctx = prompts.wizard_config(_defaults, mode=mode)
                     # Persist choices from wizard
                     cm.set("quality", ctx.quality)
                     cm.set("audio_lang", ctx.audio_lang)
@@ -442,27 +659,42 @@ async def run(args: argparse.Namespace) -> None:
                     cm.set("hls_workers", ctx.hls_workers)
                     try:
                         cm.save()
-                        console.print("  [dim]Settings saved to [bold]pahebatcher.toml[/bold][/dim]\n")
+                        console.console.print(
+                            "  [dim]Settings saved to "
+                            "[bold]pahebatcher.toml[/bold][/dim]\n"
+                        )
                     except Exception:
                         pass
 
                 if mode == "stream":
-                    await run_stream(ctx, anime, chosen, solver)
+                    await stream.run_stream(ctx, anime, chosen, solver)
                 else:
-                    if not _scripted and not confirm_download(anime, chosen, ctx):
+                    if (
+                        not _scripted
+                        and not prompts.confirm_download(anime, chosen, ctx)
+                    ):
                         continue
-                    orch = BatchOrchestrator(ctx, anime, http, solver)
+                    orch = downloader.BatchOrchestrator(
+                        ctx, anime, http, solver
+                    )
                     results = await orch.download(chosen)
                     if wl_entry is not None:
-                        from pahebatcher.watchlist import record_watchlist_download
+                        from pahebatcher import watchlist
 
-                        done_nums = [ep.number for ep in chosen if results.get(ep.session) is not None]
+                        done_nums = [
+                            ep.number
+                            for ep in chosen
+                            if results.get(ep.session) is not None
+                        ]
                         updated = False
                         with contextlib.suppress(Exception):
-                            updated = record_watchlist_download(anime.session, anime.title, done_nums)
+                            updated = watchlist.record_watchlist_download(
+                                anime.session, anime.title, done_nums
+                            )
                         if updated:
-                            console.print(
-                                f"  [dim]Watchlist history updated for '{anime.title}'[/dim]",
+                            console.console.print(
+                                "  [dim]Watchlist history updated for "
+                                f"'{anime.title}'[/dim]",
                             )
 
                 break
@@ -480,7 +712,7 @@ async def run(args: argparse.Namespace) -> None:
                 with contextlib.suppress(Exception):
                     shutil.rmtree(p.parent.parent)
 
-    console.print("\n  [brand.bold]Session finished.[/brand.bold]")
+    console.console.print("\n  [brand.bold]Session finished.[/brand.bold]")
 
 
 WATCHLIST_ALIASES = {"watchlist", "wl", "w", "watch"}
@@ -489,23 +721,31 @@ RELINK_ALIASES = {"relink", "link", "migrate"}
 
 
 def main() -> None:
+        """Runs the command-line interface.
+
+        Parses ``sys.argv``, dispatches to the requested command and exits the
+        process on fatal errors.
+        """
         # Config / watchlist subcommands use own parsers to avoid argparse
         # subparser greediness with URL positional arguments.
         if len(sys.argv) > 1 and sys.argv[1] == "config":
             cfg_parser = build_config_parser()
             cfg_args = cfg_parser.parse_args(sys.argv[2:])
             if cfg_args.config_action == "show":
-                ConfigManager.cli_show()
+                config_manager.ConfigManager.cli_show()
             elif cfg_args.config_action == "set":
-                ConfigManager.cli_set(cfg_args.key, cfg_args.value)
+                config_manager.ConfigManager.cli_set(
+                    cfg_args.key, cfg_args.value
+                )
             elif cfg_args.config_action == "reset":
-                ConfigManager.cli_reset()
+                config_manager.ConfigManager.cli_reset()
             return
 
-        # Top-level shorthand: `pahebatcher check` → `pahebatcher watchlist check`
-        # and `pahebatcher relink` → `pahebatcher watchlist relink` (no id = relink all)
+        # Top-level shorthand: `pahebatcher check` → `pahebatcher watchlist
+        # check` and `pahebatcher relink` → `pahebatcher watchlist relink` (no
+        # id = relink all)
         if len(sys.argv) > 1 and sys.argv[1] in CHECK_ALIASES:
-            from pahebatcher.watchlist import run_watchlist_check
+            from pahebatcher import watchlist
 
             # Parse check flags (identifier, --verbose) via watchlist parser
             wl_parser = build_watchlist_parser()
@@ -515,23 +755,25 @@ def main() -> None:
             except SystemExit:
                 raise
             try:
-                asyncio.run(run_watchlist_check(
+                asyncio.run(watchlist.run_watchlist_check(
                     verbose=bool(wl_args.verbose), filter_id=wl_args.identifier,
                 ))
             except (KeyboardInterrupt, asyncio.CancelledError):
-                console.print("\n  [yellow]Interrupted.[/yellow]")
+                console.console.print("\n  [yellow]Interrupted.[/yellow]")
                 sys.exit(0)
             except SystemExit:
                 raise
             except Exception as exc:
-                console.print(f"\n  [red]\u2717 Fatal Error:[/red] {exc}")
+                console.console.print(
+                    f"\n  [red]\u2717 Fatal Error:[/red] {exc}"
+                )
                 if getattr(wl_args, "verbose", False):
                     raise
                 sys.exit(1)
             return
 
         if len(sys.argv) > 1 and sys.argv[1] in RELINK_ALIASES:
-            from pahebatcher.watchlist import cli_relink
+            from pahebatcher import watchlist
 
             # Top-level relink: `pahebatcher relink [id] [new-url]`
             wl_parser = build_watchlist_parser()
@@ -541,14 +783,16 @@ def main() -> None:
             except SystemExit:
                 raise
             try:
-                cli_relink(wl_args.identifier, wl_args.new_url)
+                watchlist.cli_relink(wl_args.identifier, wl_args.new_url)
             except (KeyboardInterrupt, asyncio.CancelledError):
-                console.print("\n  [yellow]Interrupted.[/yellow]")
+                console.console.print("\n  [yellow]Interrupted.[/yellow]")
                 sys.exit(0)
             except SystemExit:
                 raise
             except Exception as exc:
-                console.print(f"\n  [red]\u2717 Fatal Error:[/red] {exc}")
+                console.console.print(
+                    f"\n  [red]\u2717 Fatal Error:[/red] {exc}"
+                )
                 sys.exit(1)
             return
 
@@ -558,9 +802,9 @@ def main() -> None:
             try:
                 act = wl_args.watchlist_action
                 if act in ("add", "a"):
-                    from pahebatcher.watchlist import cli_add
+                    from pahebatcher import watchlist
 
-                    cli_add(
+                    watchlist.cli_add(
                         url=wl_args.url,
                         quality=wl_args.quality,
                         audio_lang=wl_args.audio_lang,
@@ -571,53 +815,63 @@ def main() -> None:
                         retry=wl_args.retry,
                     )
                 elif act in ("list", "ls", "l"):
-                    from pahebatcher.watchlist import cli_list
+                    from pahebatcher import watchlist
 
-                    cli_list()
+                    watchlist.cli_list()
                 elif act in ("show", "s", "info"):
-                    from pahebatcher.watchlist import cli_show
+                    from pahebatcher import watchlist
 
-                    cli_show(wl_args.identifier)
+                    watchlist.cli_show(wl_args.identifier)
                 elif act in ("remove", "rm", "r", "del", "delete"):
                     if not wl_args.yes:
-                        from rich.prompt import Confirm
+                        import rich.prompt
 
-                        from pahebatcher.watchlist import WatchlistManager
+                        from pahebatcher import watchlist
 
-                        entries = WatchlistManager.load()
-                        found = WatchlistManager.find_entry(entries, wl_args.identifier)
+                        entries = watchlist.WatchlistManager.load()
+                        found = watchlist.WatchlistManager.find_entry(
+                            entries, wl_args.identifier
+                        )
                         if found:
                             _, ent = found
-                            if not Confirm.ask(
-                                f"  [red]Remove '{ent.title}' from watchlist?[/red]",
+                            if not rich.prompt.Confirm.ask(
+                                f"  [red]Remove '{ent.title}' from "
+                                "watchlist?[/red]",
                                 default=False,
                             ):
-                                console.print("  [dim]Cancelled.[/dim]")
+                                console.console.print("  [dim]Cancelled.[/dim]")
                                 return
-                    from pahebatcher.watchlist import cli_remove
+                    from pahebatcher import watchlist
 
-                    cli_remove(wl_args.identifier)
+                    watchlist.cli_remove(wl_args.identifier)
                 elif act in ("reset", "rst", "clear"):
-                    from pahebatcher.watchlist import cli_reset
+                    from pahebatcher import watchlist
 
-                    cli_reset(wl_args.identifier, reset_all=bool(wl_args.all))
+                    watchlist.cli_reset(
+                        wl_args.identifier, reset_all=bool(wl_args.all)
+                    )
                 elif act in ("relink", "link", "migrate", "update-url"):
-                    from pahebatcher.watchlist import cli_relink
+                    from pahebatcher import watchlist
 
-                    cli_relink(wl_args.identifier, wl_args.new_url)
+                    watchlist.cli_relink(wl_args.identifier, wl_args.new_url)
                 elif act in ("check", "c", "sync", "update"):
-                    from pahebatcher.watchlist import run_watchlist_check
+                    from pahebatcher import watchlist
 
-                    asyncio.run(run_watchlist_check(
-                        verbose=bool(wl_args.verbose), filter_id=wl_args.identifier,
-                    ))
+                    asyncio.run(
+                        watchlist.run_watchlist_check(
+                            verbose=bool(wl_args.verbose),
+                            filter_id=wl_args.identifier,
+                        )
+                    )
             except (KeyboardInterrupt, asyncio.CancelledError):
-                console.print("\n  [yellow]Interrupted.[/yellow]")
+                console.console.print("\n  [yellow]Interrupted.[/yellow]")
                 sys.exit(0)
             except SystemExit:
                 raise
             except Exception as exc:
-                console.print(f"\n  [red]\u2717 Fatal Error:[/red] {exc}")
+                console.console.print(
+                    f"\n  [red]\u2717 Fatal Error:[/red] {exc}"
+                )
                 if getattr(wl_args, "verbose", False):
                     raise
                 sys.exit(1)
@@ -628,10 +882,10 @@ def main() -> None:
         try:
             asyncio.run(run(args))
         except (KeyboardInterrupt, asyncio.CancelledError):
-            console.print("\n  [yellow]Interrupted.[/yellow]")
+            console.console.print("\n  [yellow]Interrupted.[/yellow]")
             sys.exit(0)
         except Exception as exc:
-            console.print(f"\n  [red]\u2717 Fatal Error:[/red] {exc}")
+            console.console.print(f"\n  [red]\u2717 Fatal Error:[/red] {exc}")
             if args.verbose:
                 raise
             sys.exit(1)

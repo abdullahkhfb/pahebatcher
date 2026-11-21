@@ -3,27 +3,55 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+import pathlib
+from unittest import mock
 
 import pytest
 
-from pahebatcher.models import AnimeInfo, AppContext, EpisodeInfo, StreamInfo
+from pahebatcher import models
 
 
 @pytest.fixture
-def sample_episodes() -> list[EpisodeInfo]:
+def sample_episodes() -> list[models.EpisodeInfo]:
     return [
-        EpisodeInfo(1, "s1", "Episode 1", "SubsPlease", "jpn", "https://animepahe.com/play/uuid/s1"),
-        EpisodeInfo(2, "s2", "Episode 2", "SubsPlease", "jpn", "https://animepahe.com/play/uuid/s2"),
-        EpisodeInfo(3, "s3", "Episode 3", "SubsPlease", "jpn", "https://animepahe.com/play/uuid/s3"),
-        EpisodeInfo(4, "s4", "Episode 4", "SubsPlease", "jpn", "https://animepahe.com/play/uuid/s4"),
+        models.EpisodeInfo(
+            1,
+            "s1",
+            "Episode 1",
+            "SubsPlease",
+            "jpn",
+            "https://animepahe.com/play/uuid/s1",
+        ),
+        models.EpisodeInfo(
+            2,
+            "s2",
+            "Episode 2",
+            "SubsPlease",
+            "jpn",
+            "https://animepahe.com/play/uuid/s2",
+        ),
+        models.EpisodeInfo(
+            3,
+            "s3",
+            "Episode 3",
+            "SubsPlease",
+            "jpn",
+            "https://animepahe.com/play/uuid/s3",
+        ),
+        models.EpisodeInfo(
+            4,
+            "s4",
+            "Episode 4",
+            "SubsPlease",
+            "jpn",
+            "https://animepahe.com/play/uuid/s4",
+        ),
     ]
 
 
 @pytest.fixture
-def sample_anime(sample_episodes: list[EpisodeInfo]) -> AnimeInfo:
-    return AnimeInfo(
+def sample_anime(sample_episodes: list[models.EpisodeInfo]) -> models.AnimeInfo:
+    return models.AnimeInfo(
         session="test-session",
         title="Test Anime",
         host="animepahe.com",
@@ -34,8 +62,8 @@ def sample_anime(sample_episodes: list[EpisodeInfo]) -> AnimeInfo:
 
 
 @pytest.fixture
-def sample_stream_info() -> StreamInfo:
-    return StreamInfo(
+def sample_stream_info() -> models.StreamInfo:
+    return models.StreamInfo(
         url="http://test.m3u8",
         cookies=[{"name": "test", "value": "val"}],
         user_agent="TestUA/1.0",
@@ -47,8 +75,8 @@ def sample_stream_info() -> StreamInfo:
 
 
 @pytest.fixture
-def app_context(tmp_path: Path) -> AppContext:
-    return AppContext(
+def app_context(tmp_path: pathlib.Path) -> models.AppContext:
+    return models.AppContext(
         output_dir=str(tmp_path / "downloads"),
         cache_dir=tmp_path / "cache",
         quality=1080,
@@ -61,24 +89,24 @@ def app_context(tmp_path: Path) -> AppContext:
 
 
 @pytest.fixture
-def mock_solver() -> MagicMock:
-    solver = MagicMock()
-    solver.request = AsyncMock()
-    solver.fetch_json = AsyncMock()
-    solver.fetch_html = AsyncMock()
-    solver.ping = AsyncMock(return_value=True)
-    solver.start = AsyncMock()
-    solver.close = AsyncMock()
-    solver.destroy_session = AsyncMock()
+def mock_solver() -> mock.MagicMock:
+    solver = mock.MagicMock()
+    solver.request = mock.AsyncMock()
+    solver.fetch_json = mock.AsyncMock()
+    solver.fetch_html = mock.AsyncMock()
+    solver.ping = mock.AsyncMock(return_value=True)
+    solver.start = mock.AsyncMock()
+    solver.close = mock.AsyncMock()
+    solver.destroy_session = mock.AsyncMock()
     return solver
 
 
 @pytest.fixture
-def mock_http() -> MagicMock:
-    http = MagicMock()
-    http.get = AsyncMock(return_value=b"fake segment data")
-    http.start = AsyncMock()
-    http.close = AsyncMock()
+def mock_http() -> mock.MagicMock:
+    http = mock.MagicMock()
+    http.get = mock.AsyncMock(return_value=b"fake segment data")
+    http.start = mock.AsyncMock()
+    http.close = mock.AsyncMock()
     return http
 
 

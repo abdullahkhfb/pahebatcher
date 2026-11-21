@@ -1,4 +1,4 @@
-"""Kwik/animepahe extraction — JS unpacking, M3U8 URL resolution, stream building."""
+"""Kwik extraction: JS unpacking, m3u8 lookup and stream building."""
 
 from __future__ import annotations
 
@@ -7,24 +7,33 @@ import contextlib
 import logging
 import re
 from typing import TYPE_CHECKING
-from urllib.parse import urlparse
+import urllib.parse
 
-from pahebatcher.config import _KWIK_DOMAINS
-from pahebatcher.models import StreamInfo
+from pahebatcher import config, models
 
 if TYPE_CHECKING:
-    from pahebatcher.solver import Solver
+    import pahebatcher.solver
 
 log = logging.getLogger(__name__)
 
 
 class JsPacker:
-    """Decode eval-based JS packer (p,a,c,k,e,d) used by Kwik."""
+    """Decoder for the eval-based JS packer (p,a,c,k,e,d) Kwik uses."""
 
     @staticmethod
     def unpack(packed: str) -> str:
+        """Decodes a packed JavaScript snippet.
+
+        Args:
+            packed: JavaScript containing a packer call.
+
+        Returns:
+            The decoded source, or ``packed`` unchanged if no packer call is
+            found.
+        """
         m = re.search(
-            r"\}\s*\(\s*'(.*)'\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*'(.*?)'\.split\('\|'\)",
+            r"\}\s*\(\s*'(.*)'\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*"
+            r"'(.*?)'\.split\('\|'\)",
             packed, re.DOTALL,
         )
         if not m:
@@ -32,7 +41,9 @@ class JsPacker:
         payload, base_s, count_s, mapping_s = m.groups()
         base, count = int(base_s), int(count_s)
         mapping = mapping_s.split("|")
-        digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        digits = (
+            "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        )
 
         def enc(c: int) -> str:
             return digits[c] if c < base else enc(c // base) + digits[c % base]
@@ -41,11 +52,26 @@ class JsPacker:
             enc(i): (mapping[i] if i < len(mapping) and mapping[i] else enc(i))
             for i in range(count)
         }
-        return re.sub(r"\b\w+\b", lambda mo: lookup.get(mo.group(0), mo.group(0)), payload)
+        return re.sub(
+            r"\b\w+\b", lambda mo: lookup.get(mo.group(0), mo.group(0)), payload
+        )
 
 
 def _extract_m3u8(html: str) -> str | None:
-    m = re.search(r"(https?://[^\s'\"\\>]+(?:uwu\.m3u8|\.m3u8)[^\s'\"\\>]*)", html)
+    """Finds the HLS playlist URL in a Kwik player page.
+
+    Looks for a plain playlist URL first, then for ones hidden in packed
+    JavaScript in the page's scripts.
+
+    Args:
+        html: The page source.
+
+    Returns:
+        The playlist URL with JSON escapes removed, or None if not found.
+    """
+    m = re.search(
+        r"(https?://[^\s'\"\\>]+(?:uwu\.m3u8|\.m3u8)[^\s'\"\\>]*)", html
+    )
     if m:
         return m.group(1).replace("\\/", "/").rstrip("\\")
 
@@ -57,18 +83,24 @@ def _extract_m3u8(html: str) -> str | None:
         for _ in range(6):
             inner = re.search(r'eval\s*\(\s*"((?:[^"\\]|\\.)*)"\s*\)', cur)
             if inner:
-                cur = inner.group(1).encode().decode("unicode_escape", errors="ignore")
+                cur = inner.group(1).encode().decode(
+                    "unicode_escape", errors="ignore"
+                )
                 continue
             unpacked = JsPacker.unpack(cur)
             if unpacked != cur:
                 cur = unpacked
                 continue
             break
-        m = re.search(r"(https?://[^\s'\"\\>]+(?:uwu\.m3u8|\.m3u8)[^\s'\"\\>]*)", cur)
+        m = re.search(
+            r"(https?://[^\s'\"\\>]+(?:uwu\.m3u8|\.m3u8)[^\s'\"\\>]*)", cur
+        )
         if m:
             return m.group(1).replace("\\/", "/").rstrip("\\")
 
-    m = re.search(r'<source[^>]+src=["\']([^"\']+\.m3u8[^"\']*)["\']', html, re.IGNORECASE)
+    m = re.search(
+        r'<source[^>]+src=["\']([^"\']+\.m3u8[^"\']*)["\']', html, re.IGNORECASE
+    )
     return m.group(1) if m else None
 
 
@@ -83,14 +115,30 @@ _HEADERS = {
 
 
 def _swap_kwik_domain(url: str, tld: str) -> str:
-    p = urlparse(url)
+    p = urllib.parse.urlparse(url)
     parts = p.netloc.split(".")
     if len(parts) >= 2:
         parts[-1] = tld
     return f"{p.scheme}://{'.'.join(parts)}{p.path}"
 
 
-def _sync_curl_fetch(url: str, cookies_str: str = "") -> tuple[str, list[dict[str, str]]] | None:
+def _sync_curl_fetch(
+    url: str,
+    cookies_str: str = "",
+) -> tuple[str, list[dict[str, str]]] | None:
+    """Fetches a Kwik page with curl_cffi and extracts the playlist URL.
+
+    Blocking, so call it from an executor.
+
+    Args:
+        url: The Kwik page URL.
+        cookies_str: Extra cookies as a ``name=value; ...`` string.
+
+    Returns:
+        A tuple ``(playlist_url, cookies)`` where each cookie is a dict with
+        ``name`` and ``value``. None if curl_cffi is unavailable or the
+        request or extraction fails.
+    """
     try:
         import curl_cffi.requests
     except ImportError:
@@ -121,62 +169,120 @@ def _sync_curl_fetch(url: str, cookies_str: str = "") -> tuple[str, list[dict[st
         return None
 
 
-async def _resolve_kwik(solver: Solver, url: str, cookies_str: str = "") -> StreamInfo | None:
-    """Resolve a Kwik URL to an m3u8 StreamInfo via curl_cffi, the browser solver, or domain rotation."""
+async def _resolve_kwik(
+    solver: pahebatcher.solver.Solver,
+    url: str,
+    cookies_str: str = "",
+) -> models.StreamInfo | None:
+    """Resolves a Kwik URL to a stream.
+
+    Tries, in order: curl_cffi, curl_cffi with domain rotation, the browser
+    solver, and the browser solver with domain rotation.
+
+    Args:
+        solver: The solver used for browser-based attempts.
+        url: The Kwik page URL.
+        cookies_str: Extra cookies as a ``name=value; ...`` string.
+
+    Returns:
+        The stream, or None if every strategy fails.
+    """
 
     # 1. curl_cffi — TLS impersonation bypasses most Cloudflare
     loop = asyncio.get_running_loop()
-    result = await loop.run_in_executor(None, _sync_curl_fetch, url, cookies_str)
+    result = await loop.run_in_executor(
+        None, _sync_curl_fetch, url, cookies_str
+    )
     if result:
         video_url, cookies = result
-        return StreamInfo(url=video_url, cookies=cookies, user_agent=_HEADERS["User-Agent"], referer=url)
+        return models.StreamInfo(
+            url=video_url,
+            cookies=cookies,
+            user_agent=_HEADERS["User-Agent"],
+            referer=url,
+        )
 
     # 2. curl_cffi + domain rotation
-    current_tld = urlparse(url).netloc.rsplit(".", 1)[-1]
+    current_tld = urllib.parse.urlparse(url).netloc.rsplit(".", 1)[-1]
     for tld in KWIK_TLDS:
         if tld == current_tld:
             continue
         alt = _swap_kwik_domain(url, tld)
-        result = await loop.run_in_executor(None, _sync_curl_fetch, alt, cookies_str)
+        result = await loop.run_in_executor(
+            None, _sync_curl_fetch, alt, cookies_str
+        )
         if result:
             video_url, cookies = result
-            return StreamInfo(url=video_url, cookies=cookies, user_agent=_HEADERS["User-Agent"], referer=alt)
+            return models.StreamInfo(
+                url=video_url,
+                cookies=cookies,
+                user_agent=_HEADERS["User-Agent"],
+                referer=alt,
+            )
 
     # 3. Browser solver
     sol = await solver.request(url, cache=False, max_timeout=180000, wait=5000)
     if sol:
         html3 = str(sol.get("response", ""))
         raw_cookies3 = sol.get("cookies", [])
-        cookies3: list[dict[str, str]] = list(raw_cookies3) if isinstance(raw_cookies3, list) else []
+        cookies3: list[dict[str, str]] = (
+            list(raw_cookies3) if isinstance(raw_cookies3, list) else []
+        )
         ua3 = str(sol.get("userAgent", _HEADERS["User-Agent"]))
-        direct = re.search(r"(https?://[^\s\"']+\.(?:m3u8|mp4)[^\s\"']*)", html3)
+        direct = re.search(
+            r"(https?://[^\s\"']+\.(?:m3u8|mp4)[^\s\"']*)", html3
+        )
         video_url3 = direct.group(1) if direct else _extract_m3u8(html3)
         if video_url3:
-            return StreamInfo(url=video_url3, cookies=cookies3, user_agent=ua3, referer=url)
+            return models.StreamInfo(
+                url=video_url3, cookies=cookies3, user_agent=ua3, referer=url
+            )
 
     # 4. Browser solver + domain rotation
     for tld in KWIK_TLDS:
         if tld == current_tld:
             continue
         alt = _swap_kwik_domain(url, tld)
-        sol2 = await solver.request(alt, cache=False, max_timeout=120000, wait=3000)
+        sol2 = await solver.request(
+            alt, cache=False, max_timeout=120000, wait=3000
+        )
         if sol2:
             html4 = str(sol2.get("response", ""))
             raw_cookies4 = sol2.get("cookies", [])
-            cookies4: list[dict[str, str]] = list(raw_cookies4) if isinstance(raw_cookies4, list) else []
+            cookies4: list[dict[str, str]] = (
+                list(raw_cookies4) if isinstance(raw_cookies4, list) else []
+            )
             ua4 = str(sol2.get("userAgent", _HEADERS["User-Agent"]))
-            direct2 = re.search(r"(https?://[^\s\"']+\.(?:m3u8|mp4)[^\s\"']*)", html4)
+            direct2 = re.search(
+                r"(https?://[^\s\"']+\.(?:m3u8|mp4)[^\s\"']*)", html4
+            )
             video_url4 = direct2.group(1) if direct2 else _extract_m3u8(html4)
             if video_url4:
-                return StreamInfo(url=video_url4, cookies=cookies4, user_agent=ua4, referer=alt)
+                return models.StreamInfo(
+                    url=video_url4,
+                    cookies=cookies4,
+                    user_agent=ua4,
+                    referer=alt,
+                )
 
     return None
 
 
 def _parse_resolution_buttons(html: str) -> list[tuple[int, str, bool, str]]:
+    """Parses the quality menu of an episode play page.
+
+    Args:
+        html: The play page source.
+
+    Returns:
+        One tuple ``(resolution, kwik_url, is_dub, fansub)`` per button that
+        has a Kwik link and a resolution.
+    """
     entries: list[tuple[int, str, bool, str]] = []
     menu_m = re.search(
-        r'<div[^>]+id=["\']resolutionMenu["\'][^>]*>(.*?)</div>', html, re.I | re.S,
+        r'<div[^>]+id=["\']resolutionMenu["\'][^>]*>(.*?)</div>',
+        html,
+        re.I | re.S,
     )
     if not menu_m:
         return entries
@@ -185,7 +291,9 @@ def _parse_resolution_buttons(html: str) -> list[tuple[int, str, bool, str]]:
     ):
         attrs = btn_m.group(1)
         text = btn_m.group(2).strip()
-        src_m = re.search(r'data-src=["\']([^"\']+kwik\.[^"\']+)["\']', attrs, re.I)
+        src_m = re.search(
+            r'data-src=["\']([^"\']+kwik\.[^"\']+)["\']', attrs, re.I
+        )
         if not src_m:
             continue
         kwik_url = src_m.group(1)
@@ -200,25 +308,54 @@ def _parse_resolution_buttons(html: str) -> list[tuple[int, str, bool, str]]:
 
         is_dub = bool(
             re.search(r'''data-audio\s*=\s*["']eng["']''', attrs, re.I)
-            or re.search(r'''class\s*=\s*["'][^"']*eng[^"']*["']''', attrs, re.I)
+            or re.search(
+                r'''class\s*=\s*["'][^"']*eng[^"']*["']''', attrs, re.I
+            )
             or "eng" in attrs.lower()
             or "dub" in text.lower()
         )
 
         fansub_m = re.search(r'data-fansub=["\']([^"\']+)["\']', attrs, re.I)
-        fansub = fansub_m.group(1) if fansub_m else (text.split("\u00b7")[0].strip())
+        fansub = (
+            fansub_m.group(1) if fansub_m else (text.split("\u00b7")[0].strip())
+        )
         entries.append((res, kwik_url, is_dub, fansub))
     return entries
 
 
 async def extract_stream(
-    solver: Solver, play_url: str, quality: int = 1080, audio: str = "jpn", cookies_str: str = "",
-) -> StreamInfo:
+    solver: pahebatcher.solver.Solver,
+    play_url: str,
+    quality: int = 1080,
+    audio: str = "jpn",
+    cookies_str: str = "",
+) -> models.StreamInfo:
+    """Resolves an episode's play page to a playable stream.
+
+    Picks the Kwik link for the requested audio, falling back to whatever
+    audio exists, and for the highest quality not above ``quality`` (or the
+    lowest available if all are above it).
+
+    Args:
+        solver: The solver used for requests.
+        play_url: The episode's play page URL.
+        quality: The preferred vertical resolution.
+        audio: The preferred audio language, ``"jpn"`` or ``"eng"``.
+        cookies_str: Extra cookies as a ``name=value; ...`` string.
+
+    Returns:
+        The resolved stream, with its title, audio and fansub filled in.
+
+    Raises:
+        RuntimeError: If the page cannot be fetched, has no Kwik link, or
+            the Kwik URL cannot be resolved.
+    """
     sol = await solver.request(play_url, cache=True)
     if not sol:
         raise RuntimeError(
             "The browser solver failed to fetch the episode page.\n"
-            "  Try: set PAHEBATCHER_PROXY=http://user:pass@host:port to route through a proxy/VPN"
+            "  Try: set PAHEBATCHER_PROXY=http://user:pass@host:port to route "
+            "through a proxy/VPN"
         )
     html = str(sol["response"])
     entries = _parse_resolution_buttons(html)
@@ -228,7 +365,10 @@ async def extract_stream(
         target_dub = audio == "eng"
         filtered = [e for e in entries if e[2] == target_dub]
         if not filtered:
-            log.warning("Requested audio %s not found on play page — using available", audio)
+            log.warning(
+                "Requested audio %s not found on play page — using available",
+                audio,
+            )
             filtered = entries
         for res, url, is_dub, fansub in filtered:
             if res in quality_map:
@@ -239,12 +379,17 @@ async def extract_stream(
                 quality_map[res] = (url, is_dub, fansub)
     else:
         for url_match, q_str in re.findall(
-            r'(?:href|data-src)=["\']([^"\']*kwik\.[^"\']+)["\'][^>]*>\s*(?:\S+\s+)?(\d+)p',
+            r'(?:href|data-src)=["\']([^"\']*kwik\.[^"\']+)["\']'
+            r'[^>]*>\s*(?:\S+\s+)?(\d+)p',
             html, re.I,
         ):
             with contextlib.suppress(ValueError):
-                is_dub_found = "eng" in url_match.lower() or "dub" in url_match.lower()
-                quality_map.setdefault(int(q_str), (url_match, is_dub_found, ""))
+                is_dub_found = (
+                    "eng" in url_match.lower() or "dub" in url_match.lower()
+                )
+                quality_map.setdefault(
+                    int(q_str), (url_match, is_dub_found, "")
+                )
 
     if quality_map:
         qs = sorted(quality_map, reverse=True)
@@ -252,7 +397,9 @@ async def extract_stream(
         chosen_url, is_dub, fansub = quality_map[chosen_q]
     else:
         kwik_links = re.findall(
-            rf'data-src=["\']?(https?://{_KWIK_DOMAINS}/[ef]/\w+)["\']?', html, re.I,
+            rf'data-src=["\']?(https?://{config._KWIK_DOMAINS}/[ef]/\w+)["\']?',
+            html,
+            re.I,
         )
         if not kwik_links:
             raise RuntimeError("No Kwik link found on episode page")

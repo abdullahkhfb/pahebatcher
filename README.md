@@ -14,16 +14,16 @@ desktop app or the terminal.
 
 ## Highlights
 
-- **Desktop app and terminal UI**, both with a live per-episode download
-  dashboard.
-- **Fast and safe:** parallel episodes, parallel HLS segments, and downloads
-  resume exactly where they stopped.
-- **Stream in MPV** from the terminal, and switch between SUB and DUB between
-  episodes.
-- **Watchlist:** follow airing shows and fetch only the new episodes.
-- **No Docker, no extra services.** A built-in browser solver gets past
-  Cloudflare using the Chrome or Edge you already have.
-- **One-click FFmpeg:** the desktop app installs it for you.
+*   **Desktop app and terminal UI**, both with a live per-episode download
+    dashboard.
+*   **Fast and safe:** parallel episodes, parallel HLS segments, and downloads
+    resume exactly where they stopped.
+*   **Stream in MPV** from the terminal, and switch between SUB and DUB between
+    episodes.
+*   **Watchlist:** follow airing shows and fetch only the new episodes.
+*   **No Docker, no extra services.** A built-in browser solver gets past
+    Cloudflare using the Chrome or Edge you already have.
+*   **One-click FFmpeg:** the desktop app installs it for you.
 
 ## Install
 
@@ -166,12 +166,12 @@ pahebatcher wl list                 # see what's tracked
 `wl` is short for `watchlist` (`w` and `watch` also work). `N` can be the list
 number, the URL, or part of the title.
 
-- **Deleted a single episode?** It stays skipped while the series folder
-  exists. Delete the whole folder, or run `wl reset N`, to download it again.
-- **State** lives in `watchlist.json` in the folder you run from (override
-  with `WATCHLIST_PATH`).
-- **Cron example** (hourly). On Windows, use Task Scheduler with
-  `python -m pahebatcher check` instead.
+*   **Deleted a single episode?** It stays skipped while the series folder
+    exists. Delete the whole folder, or run `wl reset N`, to download it again.
+*   **State** lives in `watchlist.json` in the folder you run from (override
+    with `WATCHLIST_PATH`).
+*   **Cron example** (hourly). On Windows, use Task Scheduler with `python -m
+    pahebatcher check` instead.
 
   ```cron
   0 * * * * cd /path/to/pahebatcher && venv/bin/python -m pahebatcher check >> watchlist.log 2>&1
@@ -208,10 +208,10 @@ pahebatcher config reset
 
 Not every setting applies everywhere:
 
-- `output_dir` and `keep_temp` are used by the desktop app, and `output_dir`
-  is also the default for `wl add`. One-off terminal downloads ignore them:
-  use `-o` and `--keep-temp`.
-- The other keys apply to both apps and to the watchlist.
+*   `output_dir` and `keep_temp` are used by the desktop app, and `output_dir`
+    is also the default for `wl add`. One-off terminal downloads ignore them:
+    use `-o` and `--keep-temp`.
+*   The other keys apply to both apps and to the watchlist.
 
 See `pahebatcher.toml.example` for a ready-to-copy file. It sets
 `resolve_ahead = 1` (the gentler serial setting), while the built-in default is
@@ -256,8 +256,8 @@ expires.
 On Windows, double-click **`build_exe.bat`** (Python 3.11+ required). It cleans
 old output, installs everything and writes:
 
-- `dist\pahebatcher-gui.exe`: the desktop app, no console window
-- `dist\pahebatcher.exe`: the terminal app
+*   `dist\pahebatcher-gui.exe`: the desktop app, no console window
+*   `dist\pahebatcher.exe`: the terminal app
 
 Both use the app icon from `src/pahebatcher/gui/assets/` (`icon.ico` for the
 file, `icon.png` for the window; `icon.svg` is the editable source).
@@ -268,6 +268,21 @@ app, plus Windows, Linux and macOS terminal apps). You can also run it by hand
 from the Actions tab, which builds the binaries without publishing a Release.
 
 FFmpeg, MPV and Chrome/Edge are not bundled.
+
+## Updating
+
+Click **Check for updates** in the desktop app's header. If a newer release
+exists, the app shows its release notes and asks before doing anything.
+
+*   **Packaged app (the `.exe` or binary):** the app downloads the build for
+    your platform from GitHub, checks its size and SHA-256 checksum, and
+    replaces itself. If anything fails, the old version is restored. The
+    previous version and any partial downloads are deleted the next time the
+    app starts, and it offers to restart into the new version. Your settings,
+    watchlist and downloaded episodes are not touched.
+*   **Source or pip install:** the app cannot safely replace its own files, so
+    it opens the [releases page][latest-release] instead. Update with
+    `git pull` and `pip install -e .`, or reinstall.
 
 ## Troubleshooting
 
@@ -328,10 +343,10 @@ and watchlist in the desktop app, other audio languages.
 
 ## Credits
 
-- **Logo** by [/u/HellHarbinger][hellharbinger]. The app icon is a simplified
-  version of it.
-- **WSL setup** (`setup-wsl.sh` and the Makefile): idea and first version by
-  [/u/HellHarbinger][hellharbinger].
+*   **Logo** by [/u/HellHarbinger][hellharbinger]. The app icon is a simplified
+    version of it.
+*   **WSL setup** (`setup-wsl.sh` and the Makefile): idea and first version by
+    [/u/HellHarbinger][hellharbinger].
 
 ## License
 
@@ -341,7 +356,7 @@ official creators.
 
 ## See also
 
-- `pahebatcher.toml.example`: a ready-to-copy configuration file.
+*   `pahebatcher.toml.example`: a ready-to-copy configuration file.
 
 [hellharbinger]: https://www.reddit.com/user/HellHarbinger/
 [latest-release]: https://github.com/abdullahkhfb/pahebatcher/releases/latest

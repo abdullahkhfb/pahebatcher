@@ -4,12 +4,12 @@
 from __future__ import annotations
 
 import json
+import pathlib
 import subprocess
 import sys
 import time
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 def run(cmd: list[str], capture: bool = True) -> tuple[int, str, str, float]:
@@ -59,7 +59,15 @@ def main() -> None:
     # 4. coverage (optional)
     print("\n--- coverage ---")
     code, out, err, t = run(
-        [sys.executable, "-m", "pytest", "tests/", "--cov=pahebatcher", "--cov-report=term-missing", "-q"]
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "tests/",
+            "--cov=pahebatcher",
+            "--cov-report=term-missing",
+            "-q",
+        ]
     )
     if code == 0:
         # Find coverage line
@@ -67,14 +75,21 @@ def main() -> None:
             if "TOTAL" in line and "%" in line:
                 print(f"  coverage: {line.strip()}")
     else:
-        print("  coverage: pytest-cov not installed or failed (install with pip install pytest-cov)")
+        print(
+            "  coverage: pytest-cov not installed or failed (install with pip "
+            "install pytest-cov)"
+        )
 
     # 5. loc
     print("\n--- loc ---")
     src_files = list((ROOT / "src").rglob("*.py"))
-    src_lines = sum(len((p).read_text(errors="ignore").splitlines()) for p in src_files)
+    src_lines = sum(
+        len((p).read_text(errors="ignore").splitlines()) for p in src_files
+    )
     test_files = list((ROOT / "tests").rglob("*.py"))
-    test_lines = sum(len((p).read_text(errors="ignore").splitlines()) for p in test_files)
+    test_lines = sum(
+        len((p).read_text(errors="ignore").splitlines()) for p in test_files
+    )
     print(f"  src files: {len(src_files)}, src loc: {src_lines}")
     print(f"  test files: {len(test_files)}, test loc: {test_lines}")
     density = (passed / src_lines * 100) if src_lines else 0
@@ -82,16 +97,15 @@ def main() -> None:
 
     # 6. coherence summary
     print("\n--- coherence ---")
-    from pahebatcher import __version__
-    from pahebatcher.config import VERSION
+    import pahebatcher
+    from pahebatcher import config
 
-    assert __version__ == VERSION
-    print(f"  version: {VERSION} OK")
-    from pahebatcher.config_manager import ConfigManager
-    from pahebatcher.models import AppContext
+    assert pahebatcher.__version__ == config.VERSION
+    print(f"  version: {config.VERSION} OK")
+    from pahebatcher import config_manager, models
 
-    cm = ConfigManager()
-    app = AppContext.defaults()
+    cm = config_manager.ConfigManager()
+    app = models.AppContext.defaults()
     assert cm.DEFAULTS["quality"] == app.quality
     print("  config defaults: OK")
     print("\n=== benchmark complete: all checks green ===")

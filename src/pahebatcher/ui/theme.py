@@ -1,27 +1,29 @@
-"""Brand theme — animepahe pink. Single source of truth for chrome colors.
+"""Brand theme: animepahe pink. The single source of chrome colors.
 
-Semantic colors stay where they are used: green/red/yellow for status,
-cyan for SUB vs yellow for DUB. Everything that was bare `cyan` chrome
-(rules, panel borders, table headers, highlights) uses `brand`/`accent`.
+Semantic colors stay where they are used: green, red and yellow for
+status, and cyan for SUB versus yellow for DUB. Everything that used to
+be bare ``cyan`` chrome (rules, panel borders, table headers and
+highlights) uses ``brand`` or ``accent``.
 """
 
 from __future__ import annotations
 
-from rich.theme import Theme
+import rich.theme
 
 BRAND = "#ff3f90"
 ACCENT = "#fb6cab"
 SOFT = "#f9a8cd"
 PALE = "#fbdcef"
 
-# Minimal-UI palette (matches the animepahe look: black ground, one pink accent).
+# Minimal-UI palette (matches the animepahe look: black ground, one pink
+# accent).
 BAR = "#d5015a"      # progress fill / solid pink surfaces
 MUTED = "#8a8a96"    # secondary text, hints, queued rows
 TRACK = "#1c1c22"    # empty progress track
 OK = "#3ddc97"       # done / healthy
 WARN = "#ffb020"     # resolving / retrying
 
-THEME = Theme({
+THEME = rich.theme.Theme({
     # NOTE: Rich >=15 cannot combine an attribute with a theme name
     # ("bold brand" fails to parse), so combined variants are registered
     # as dotted names. Always use these — never "bold brand"/"dim brand".

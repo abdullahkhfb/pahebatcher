@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
+import pathlib
 import tomllib
-from pathlib import Path
 from typing import Any
 
 
 class ConfigManager:
-    """Read/write persistent settings at ./pahebatcher.toml (project root)."""
+    """Reads and writes persistent settings in ``pahebatcher.toml``.
 
-    DEFAULT_PATH = Path("pahebatcher.toml")
+    Attributes:
+        DEFAULTS: The default value of every known setting.
+        path: The configuration file.
+        data: The current settings.
+    """
+
+    DEFAULT_PATH = pathlib.Path("pahebatcher.toml")
 
     DEFAULTS: dict[str, Any] = {
         "quality": 1080,
@@ -27,11 +33,20 @@ class ConfigManager:
         "browser_mode": "auto",
     }
 
-    def __init__(self, path: Path | None = None) -> None:
+    def __init__(self, path: pathlib.Path | None = None) -> None:
+        """Initializes the manager with the default settings.
+
+        Args:
+            path: The configuration file. Defaults to ``DEFAULT_PATH``.
+        """
         self.path = path or self.DEFAULT_PATH
         self.data: dict[str, Any] = dict(self.DEFAULTS)
 
     def load(self) -> None:
+        """Loads known settings from the file, if it exists.
+
+        Unknown keys in the file are ignored.
+        """
         if not self.path.exists():
             return
         raw = self.path.read_bytes()
@@ -41,6 +56,7 @@ class ConfigManager:
                 self.data[key] = loaded[key]
 
     def save(self) -> None:
+        """Writes all settings to the configuration file."""
         lines: list[str] = ["# pahebatcher configuration", ""]
         for key, default in self.DEFAULTS.items():
             val = self.data.get(key, default)
@@ -52,6 +68,16 @@ class ConfigManager:
         return self.data.get(key, self.DEFAULTS.get(key))
 
     def set(self, key: str, value: Any) -> None:
+        """Validates and stores a setting.
+
+        Args:
+            key: The setting name.
+            value: The new value.
+
+        Raises:
+            KeyError: If the setting is unknown.
+            ValueError: If the value is not valid for the setting.
+        """
         validated = self._validate(key, value)
         self.data[key] = validated
 
@@ -59,51 +85,90 @@ class ConfigManager:
         return dict(self.data)
 
     def is_customized(self) -> bool:
-        """Return True if config file exists (user has completed first-run setup)."""
+        """Whether the configuration file exists.
+
+        This means the user has completed first-run setup.
+        """
         return self.path.exists()
 
     # ── CLI interface ──────────────────────────────────────────────────────
 
     @staticmethod
-    def cli_show(path: Path | None = None) -> None:
-        from rich import box
-        from rich.table import Table
+    def cli_show(path: pathlib.Path | None = None) -> None:
+        """Prints the current settings as a table.
 
-        from pahebatcher.ui.console import console
+        Args:
+            path: The configuration file. Defaults to ``DEFAULT_PATH``.
+        """
+        from rich import box
+        import rich.table
+
+        from pahebatcher.ui import console
 
         cm = ConfigManager(path)
         cm.load()
-        t = Table(box=box.ROUNDED, header_style="brand.bold", title="pahebatcher configuration")
+        t = rich.table.Table(
+            box=box.ROUNDED,
+            header_style="brand.bold",
+            title="pahebatcher configuration",
+        )
         t.add_column("Key", style="brand")
         t.add_column("Value", style="white")
         t.add_column("Default", style="dim")
         for key in cm.DEFAULTS:
             t.add_row(key, str(cm.get(key)), str(cm.DEFAULTS[key]))
-        console.print(t)
+        console.console.print(t)
 
     @staticmethod
-    def cli_set(key: str, value: str, path: Path | None = None) -> None:
-        from pahebatcher.ui.console import console
+    def cli_set(key: str, value: str, path: pathlib.Path | None = None) -> None:
+        """Converts, validates and saves one setting from the command line.
+
+        Args:
+            key: The setting name.
+            value: The new value as text.
+            path: The configuration file. Defaults to ``DEFAULT_PATH``.
+        """
+        from pahebatcher.ui import console
 
         cm = ConfigManager(path)
         cm.load()
         converted = cm._convert(key, value)
         cm.set(key, converted)
         cm.save()
-        console.print(f"  [green]\u2713[/green] {key} = {converted}")
+        console.console.print(f"  [green]\u2713[/green] {key} = {converted}")
 
     @staticmethod
-    def cli_reset(path: Path | None = None) -> None:
-        from pahebatcher.ui.console import console
+    def cli_reset(path: pathlib.Path | None = None) -> None:
+        """Resets every setting to its default and saves.
+
+        Args:
+            path: The configuration file. Defaults to ``DEFAULT_PATH``.
+        """
+        from pahebatcher.ui import console
 
         cm = ConfigManager(path)
         cm.data = dict(cm.DEFAULTS)
         cm.save()
-        console.print("  [green]\u2713[/green] Configuration reset to defaults")
+        console.console.print(
+            "  [green]\u2713[/green] Configuration reset to defaults"
+        )
 
     # ── internal helpers ───────────────────────────────────────────────────
 
     def _validate(self, key: str, value: Any) -> Any:
+        """Validates a value and clamps it to the allowed range.
+
+        Args:
+            key: The setting name.
+            value: The value to validate.
+
+        Returns:
+            The normalized value.
+
+        Raises:
+            KeyError: If the setting is unknown.
+            ValueError: If the value is not valid for the setting.
+        """
         validators: dict[str, Any] = {
             "quality": lambda v: v if v in (360, 720, 1080) else None,
             "audio_lang": lambda v: v if v in ("jpn", "eng") else None,
@@ -116,7 +181,9 @@ class ConfigManager:
             "cookie_string": lambda v: str(v),
             "auto_retry": lambda v: max(0, min(2, int(v))),
             "clearance_ttl": lambda v: max(0, int(v)),
-            "browser_mode": lambda v: v if v in ("auto", "headless", "headed") else None,
+            "browser_mode": lambda v: v
+            if v in ("auto", "headless", "headed")
+            else None,
         }
         if key not in validators:
             raise KeyError(f"Unknown config key: {key}")
@@ -126,6 +193,18 @@ class ConfigManager:
         return result
 
     def _convert(self, key: str, raw: str) -> Any:
+        """Converts command-line text to the setting's type.
+
+        Args:
+            key: The setting name.
+            raw: The value as text.
+
+        Returns:
+            The converted value.
+
+        Raises:
+            KeyError: If the setting is unknown.
+        """
         converters: dict[str, Any] = {
             "quality": int,
             "audio_lang": str,
