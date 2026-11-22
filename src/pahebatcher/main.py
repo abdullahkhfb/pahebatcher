@@ -467,7 +467,7 @@ async def run(args: argparse.Namespace) -> None:
                 else:
                     console.console.print()
                     console.section("Action")
-                    sessions = pahebatcher.sessions.SessionManager.get_sessions(
+                    sessions = pahebatcher.sessions.get_sessions(
                         cache_dir
                     )
                     total_cache = sum(s["size"] for s in sessions)
@@ -480,7 +480,7 @@ async def run(args: argparse.Namespace) -> None:
                     with contextlib.suppress(Exception):
                         from pahebatcher import watchlist
 
-                        wl_count = len(watchlist.WatchlistManager.load())
+                        wl_count = len(watchlist.load_entries())
                     wl_hint = (
                         f" [dim]({wl_count} tracked)[/dim]"
                         if wl_count > 0
@@ -546,7 +546,7 @@ async def run(args: argparse.Namespace) -> None:
                         console.console.print(t)
                         continue
                     if choice == "3":
-                        new_url = pahebatcher.sessions.SessionManager.run(
+                        new_url = pahebatcher.sessions.run(
                             cache_dir
                         )
                         if new_url and new_url != args.url:
@@ -732,13 +732,13 @@ def main() -> None:
             cfg_parser = build_config_parser()
             cfg_args = cfg_parser.parse_args(sys.argv[2:])
             if cfg_args.config_action == "show":
-                config_manager.ConfigManager.cli_show()
+                config_manager.cli_show()
             elif cfg_args.config_action == "set":
-                config_manager.ConfigManager.cli_set(
+                config_manager.cli_set(
                     cfg_args.key, cfg_args.value
                 )
             elif cfg_args.config_action == "reset":
-                config_manager.ConfigManager.cli_reset()
+                config_manager.cli_reset()
             return
 
         # Top-level shorthand: `pahebatcher check` → `pahebatcher watchlist
@@ -828,8 +828,8 @@ def main() -> None:
 
                         from pahebatcher import watchlist
 
-                        entries = watchlist.WatchlistManager.load()
-                        found = watchlist.WatchlistManager.find_entry(
+                        entries = watchlist.load_entries()
+                        found = watchlist.find_entry(
                             entries, wl_args.identifier
                         )
                         if found:

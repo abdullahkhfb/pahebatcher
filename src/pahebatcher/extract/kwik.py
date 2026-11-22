@@ -17,44 +17,40 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class JsPacker:
-    """Decoder for the eval-based JS packer (p,a,c,k,e,d) Kwik uses."""
+def unpack_js(packed: str) -> str:
+    """Decodes a packed JavaScript snippet.
 
-    @staticmethod
-    def unpack(packed: str) -> str:
-        """Decodes a packed JavaScript snippet.
+    Args:
+        packed: JavaScript containing a packer call.
 
-        Args:
-            packed: JavaScript containing a packer call.
+    Returns:
+        The decoded source, or ``packed`` unchanged if no packer call is
+        found.
+    """
+    m = re.search(
+        r"\}\s*\(\s*'(.*)'\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*"
+        r"'(.*?)'\.split\('\|'\)",
+        packed, re.DOTALL,
+    )
+    if not m:
+        return packed
+    payload, base_s, count_s, mapping_s = m.groups()
+    base, count = int(base_s), int(count_s)
+    mapping = mapping_s.split("|")
+    digits = (
+        "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    )
 
-        Returns:
-            The decoded source, or ``packed`` unchanged if no packer call is
-            found.
-        """
-        m = re.search(
-            r"\}\s*\(\s*'(.*)'\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*"
-            r"'(.*?)'\.split\('\|'\)",
-            packed, re.DOTALL,
-        )
-        if not m:
-            return packed
-        payload, base_s, count_s, mapping_s = m.groups()
-        base, count = int(base_s), int(count_s)
-        mapping = mapping_s.split("|")
-        digits = (
-            "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        )
+    def enc(c: int) -> str:
+        return digits[c] if c < base else enc(c // base) + digits[c % base]
 
-        def enc(c: int) -> str:
-            return digits[c] if c < base else enc(c // base) + digits[c % base]
-
-        lookup = {
-            enc(i): (mapping[i] if i < len(mapping) and mapping[i] else enc(i))
-            for i in range(count)
-        }
-        return re.sub(
-            r"\b\w+\b", lambda mo: lookup.get(mo.group(0), mo.group(0)), payload
-        )
+    lookup = {
+        enc(i): (mapping[i] if i < len(mapping) and mapping[i] else enc(i))
+        for i in range(count)
+    }
+    return re.sub(
+        r"\b\w+\b", lambda mo: lookup.get(mo.group(0), mo.group(0)), payload
+    )
 
 
 def _extract_m3u8(html: str) -> str | None:
@@ -87,7 +83,7 @@ def _extract_m3u8(html: str) -> str | None:
                     "unicode_escape", errors="ignore"
                 )
                 continue
-            unpacked = JsPacker.unpack(cur)
+            unpacked = unpack_js(cur)
             if unpacked != cur:
                 cur = unpacked
                 continue

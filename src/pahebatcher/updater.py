@@ -142,9 +142,10 @@ def can_self_update() -> bool:
 
 def asset_name() -> str:
     """Returns the release asset name for this platform's build."""
-    if sys.platform == "win32":
+    platform = sys.platform  # a variable, so type checkers do not prune
+    if platform == "win32":
         return "pahebatcher-gui-windows-x64.exe"
-    if sys.platform == "darwin":
+    if platform == "darwin":
         return "pahebatcher-macos-arm64"
     return "pahebatcher-linux-x64"
 

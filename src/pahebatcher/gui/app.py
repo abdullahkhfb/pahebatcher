@@ -109,7 +109,7 @@ class EpRow(tk.Frame):
             fg=widgets.STYLE_COLORS.get(style, widgets.MUTED),
         )
         self.bar.set(ep.fraction)
-        self.detail.configure(text=dashboard.Dashboard._detail(ep, now).plain)
+        self.detail.configure(text=dashboard.detail_text(ep, now).plain)
 
 
 class DownloadView(tk.Frame):
@@ -307,7 +307,7 @@ class DownloadView(tk.Frame):
         if not path or not pathlib.Path(path).exists():
             return
         if sys.platform == "win32":
-            os.startfile(path)  # type: ignore[attr-defined]
+            os.startfile(path)  # type: ignore[attr-defined,unused-ignore]
         elif sys.platform == "darwin":
             subprocess.Popen(["open", path])
         else:
@@ -395,21 +395,14 @@ class EpisodesView(tk.Frame):
         self.sub.configure(text=f"{len(self.eps)} episodes · {first} to {last}")
         self.lb.delete(0, "end")
         for ep in self.eps:
-            self.lb.insert("end", self._line(ep, False))
+            self.lb.insert("end", _episode_line(ep, False))
             self.lb.itemconfig("end", fg=widgets.MUTED)
         self._summary()
-
-    @staticmethod
-    def _line(ep: models.EpisodeInfo, on: bool) -> str:
-        return (
-            f" {'[x]' if on else '[ ]'}  Episode {ep.ep_str:<6} "
-            f"{clean_title(ep.title)}"
-        )
 
     def _paint(self, i: int) -> None:
         on = self.eps[i].number in self.sel
         self.lb.delete(i)
-        self.lb.insert(i, self._line(self.eps[i], on))
+        self.lb.insert(i, _episode_line(self.eps[i], on))
         self.lb.itemconfig(i, fg=widgets.PINK if on else widgets.MUTED)
         self.lb.selection_clear(0, "end")
 
@@ -465,6 +458,13 @@ class EpisodesView(tk.Frame):
         chosen = [e for e in self.eps if e.number in self.sel]
         anime = self.anime
         self.app.ensure_ffmpeg(lambda: self.app.start_download(anime, chosen))
+
+
+def _episode_line(ep: models.EpisodeInfo, on: bool) -> str:
+    return (
+        f" {'[x]' if on else '[ ]'}  Episode {ep.ep_str:<6} "
+        f"{clean_title(ep.title)}"
+    )
 
 
 # ── search ───────────────────────────────────────────────────────────────────
@@ -858,7 +858,11 @@ class App(tk.Tk):
 
         def progress(stage: str, frac: float | None) -> None:
             text = f"{stage} {frac:.0%}" if frac is not None else f"{stage}…"
-            self.bridge.post(lambda: self.upd_link.configure(text=text))
+
+            def show() -> None:
+                self.upd_link.configure(text=text)
+
+            self.bridge.post(show)
 
         self.bridge.thread(
             lambda: updater.install(updater.download(info, progress=progress)),
@@ -1237,7 +1241,7 @@ def _win_set_icon(win: tk.Tk, ico: pathlib.Path) -> None:
         import ctypes
         from ctypes import wintypes
 
-        user32, shell32 = ctypes.windll.user32, ctypes.windll.shell32  # type: ignore[attr-defined]
+        user32, shell32 = ctypes.windll.user32, ctypes.windll.shell32  # type: ignore[attr-defined,unused-ignore]
         user32.LoadImageW.restype = wintypes.HANDLE
         # separate taskbar identity so Windows doesn't group us under python.exe
         try:
@@ -1286,15 +1290,23 @@ def _prepare_process() -> None:
     """
     for name in ("stdout", "stderr"):
         if getattr(sys, name) is None:
-            setattr(sys, name, open(os.devnull, "w", encoding="utf-8", errors="replace"))  # noqa: SIM115
+            setattr(
+                sys,
+                name,
+                open(  # noqa: SIM115
+                    os.devnull, "w", encoding="utf-8", errors="replace"
+                ),
+            )
     from pahebatcher.ui import console as ui_console
 
-    ui_console.console.file = open(os.devnull, "w", encoding="utf-8", errors="replace")  # noqa: SIM115
+    ui_console.console.file = open(  # noqa: SIM115
+        os.devnull, "w", encoding="utf-8", errors="replace"
+    )
     if sys.platform == "win32":
         try:
             import ctypes
 
-            ctypes.windll.shcore.SetProcessDpiAwareness(1)  # type: ignore[attr-defined]
+            ctypes.windll.shcore.SetProcessDpiAwareness(1)  # type: ignore[attr-defined,unused-ignore]
         except Exception:
             pass
 

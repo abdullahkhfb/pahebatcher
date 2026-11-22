@@ -64,8 +64,6 @@ def _print_ep_table(
     Returns:
         The number of selected episodes.
     """
-    from pahebatcher.ui import console
-
     t = rich.table.Table.grid(padding=(0, 2))
     t.add_column(width=5)
     t.add_column(width=12)
@@ -106,8 +104,6 @@ def select_episodes(anime: models.AnimeInfo) -> list[models.EpisodeInfo]:
     Returns:
         The chosen episodes. The list is empty if the user cancels.
     """
-    from pahebatcher.ui import console
-
     unique_eps: list[models.EpisodeInfo] = list(
         {ep.number: ep for ep in anime.episodes}.values()
     )
@@ -269,8 +265,6 @@ def confirm_download(
         True if the user confirmed.
     """
     import pahebatcher.store
-    from pahebatcher.ui import console
-
     n = len(episodes)
     ep_range_str = utils.compact_ep_range(episodes)
 
@@ -333,8 +327,6 @@ def wizard_config(
         A copy of ``defaults`` with the user's answers applied.
     """
     import dataclasses
-
-    from pahebatcher.ui import console
 
     console.heading(
         "Settings",
@@ -448,7 +440,7 @@ async def interactive_discovery(
         user cancels or nothing is found.
     """
     from pahebatcher.extract import scanner
-    from pahebatcher.ui import console, tables
+    from pahebatcher.ui import tables
 
     pending = initial.strip() if initial and initial.strip() else None
     while True:

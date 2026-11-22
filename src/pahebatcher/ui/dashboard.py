@@ -251,39 +251,11 @@ class Dashboard:
                 f"EP {key}",
                 rich.text.Text(glyph, style=style),
                 bar,
-                self._detail(ep, now),
+                detail_text(ep, now),
             )
         parts.append(rows)
         parts.append(rich.text.Text(""))
         return rich.padding.Padding(rich.console.Group(*parts), (1, 2))
-
-    @staticmethod
-    def _detail(ep: _Ep, now: float) -> rich.text.Text:
-        """Builds the detail text shown beside an episode's bar.
-
-        Args:
-            ep: The episode row.
-            now: The current monotonic time.
-
-        Returns:
-            The styled text.
-        """
-        t = rich.text.Text(style="muted")
-        if ep.state == "done":
-            t.append(
-                utils.fmt_bytes(ep.nbytes) if ep.nbytes else "already exists"
-            )
-        elif ep.state == "downloading":
-            if ep.total:
-                t.append(f"{ep.done}/{ep.total}")
-            sp = ep.speed(now)
-            if sp > 0:
-                t.append(f" · {utils.fmt_bytes(int(sp))}/s")
-        elif ep.state in ("resolving", "retry", "remuxing") and ep.total:
-            t.append(f"{ep.done}/{ep.total}")
-        elif ep.state == "fail":
-            t = rich.text.Text(ep.label[:22], style="red")
-        return t
 
     # ── state updates (public API used by the downloader) ────────────────
     def add_ep(self, key: str, label: str, total_segments: int = 0) -> None:
@@ -404,3 +376,31 @@ class Dashboard:
             reason: The text to show.
         """
         self._set(key, "fail", reason)
+
+
+def detail_text(ep: _Ep, now: float) -> rich.text.Text:
+    """Builds the detail text shown beside an episode's bar.
+
+    Args:
+        ep: The episode row.
+        now: The current monotonic time.
+
+    Returns:
+        The styled text.
+    """
+    t = rich.text.Text(style="muted")
+    if ep.state == "done":
+        t.append(
+            utils.fmt_bytes(ep.nbytes) if ep.nbytes else "already exists"
+        )
+    elif ep.state == "downloading":
+        if ep.total:
+            t.append(f"{ep.done}/{ep.total}")
+        sp = ep.speed(now)
+        if sp > 0:
+            t.append(f" · {utils.fmt_bytes(int(sp))}/s")
+    elif ep.state in ("resolving", "retry", "remuxing") and ep.total:
+        t.append(f"{ep.done}/{ep.total}")
+    elif ep.state == "fail":
+        t = rich.text.Text(ep.label[:22], style="red")
+    return t

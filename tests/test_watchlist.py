@@ -34,7 +34,7 @@ def _entry(
 
 
 def _seed(path: pathlib.Path, entries: list[watchlist.WatchlistEntry]) -> None:
-    watchlist.WatchlistManager.save(entries, path)
+    watchlist.save_entries(entries, path)
 
 
 class TestRecordDownload:
@@ -47,7 +47,7 @@ class TestRecordDownload:
             )
             is True
         )
-        loaded = watchlist.WatchlistManager.load(p)
+        loaded = watchlist.load_entries(p)
         assert loaded[0].downloaded == [1.0, 2.0, 3.0]
         assert loaded[0].title == "Real Title"
         assert loaded[0].last_checked is not None
@@ -59,7 +59,7 @@ class TestRecordDownload:
             watchlist.record_watchlist_download("s1", "Unknown Anime", [1.0], p)
             is True
         )
-        assert watchlist.WatchlistManager.load(p)[0].title == "Real Title"
+        assert watchlist.load_entries(p)[0].title == "Real Title"
 
     def test_unknown_session(self, tmp_path: pathlib.Path) -> None:
         p = tmp_path / "wl.json"
@@ -68,7 +68,7 @@ class TestRecordDownload:
             watchlist.record_watchlist_download("nope", "Title", [1.0], p)
             is False
         )
-        assert watchlist.WatchlistManager.load(p)[0].downloaded == []
+        assert watchlist.load_entries(p)[0].downloaded == []
 
 
 class TestResetAll:
@@ -82,7 +82,7 @@ class TestResetAll:
             ],
         )
         watchlist.cli_reset("1", path=p)
-        loaded = watchlist.WatchlistManager.load(p)
+        loaded = watchlist.load_entries(p)
         assert loaded[0].downloaded == []
         assert loaded[1].downloaded == [3.0]
 
@@ -97,7 +97,7 @@ class TestResetAll:
         )
         watchlist.cli_reset(None, path=p, reset_all=True)
         assert all(
-            e.downloaded == [] for e in watchlist.WatchlistManager.load(p)
+            e.downloaded == [] for e in watchlist.load_entries(p)
         )
 
     def test_positional_all(self, tmp_path: pathlib.Path) -> None:
@@ -107,7 +107,7 @@ class TestResetAll:
         )
         watchlist.cli_reset("all", path=p)
         assert all(
-            e.downloaded == [] for e in watchlist.WatchlistManager.load(p)
+            e.downloaded == [] for e in watchlist.load_entries(p)
         )
 
     def test_missing_identifier_exits_2(self, tmp_path: pathlib.Path) -> None:
@@ -130,7 +130,7 @@ class TestBrowser:
     ) -> None:
         monkeypatch.setenv("WATCHLIST_PATH", str(tmp_path / "wl.json"))
         with mock.patch("rich.prompt.Prompt.ask", return_value=""):
-            assert watchlist.WatchlistManager.load() == []
+            assert watchlist.load_entries() == []
             import asyncio
 
             assert (
@@ -216,7 +216,7 @@ class TestAddSearch:
             watchlist.cli_add(
                 URL1, None, None, None, None, None, False, None, path=p
             )
-        loaded = watchlist.WatchlistManager.load(p)
+        loaded = watchlist.load_entries(p)
         assert len(loaded) == 1
         assert loaded[0].session == "11111111-1111-1111-1111-111111111111"
 
@@ -230,7 +230,7 @@ class TestAddSearch:
                 None, None, None, None, None, None, False, None, path=p
             )
         mock_d.assert_called_once_with(None)
-        loaded = watchlist.WatchlistManager.load(p)
+        loaded = watchlist.load_entries(p)
         assert len(loaded) == 1
         assert loaded[0].title == "Found Title"
 
@@ -245,7 +245,7 @@ class TestAddSearch:
             watchlist.cli_add(
                 None, None, None, None, None, None, False, None, path=p
             )
-        assert watchlist.WatchlistManager.load(p) == []
+        assert watchlist.load_entries(p) == []
 
     def test_query_searches(self, tmp_path: pathlib.Path) -> None:
         p = tmp_path / "wl.json"
@@ -257,7 +257,7 @@ class TestAddSearch:
                 "Frieren", None, None, None, None, None, False, None, path=p
             )
         mock_d.assert_called_once_with("Frieren")
-        loaded = watchlist.WatchlistManager.load(p)
+        loaded = watchlist.load_entries(p)
         assert len(loaded) == 1
         assert loaded[0].title == "Found Title"
 
@@ -269,7 +269,7 @@ class TestAddSearch:
             watchlist.cli_add(
                 "Frieren", None, None, None, None, None, False, None, path=p
             )
-        assert watchlist.WatchlistManager.load(p) == []
+        assert watchlist.load_entries(p) == []
 
     def test_search_title_upgrades_placeholder(
         self,
@@ -285,4 +285,4 @@ class TestAddSearch:
             watchlist.cli_add(
                 "Frieren", None, None, None, None, None, False, None, path=p
             )
-        assert watchlist.WatchlistManager.load(p)[0].title == "Real Title"
+        assert watchlist.load_entries(p)[0].title == "Real Title"

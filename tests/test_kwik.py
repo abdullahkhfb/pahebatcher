@@ -1,4 +1,4 @@
-"""Tests for Kwik extraction — JsPacker, resolution parsing."""
+"""Tests for Kwik extraction — JS unpacking, resolution parsing."""
 
 from __future__ import annotations
 
@@ -12,11 +12,11 @@ from pahebatcher.extract import kwik
 class TestJsPacker:
     def test_unpack_basic(self) -> None:
         packed = "} ('payload', 10, 10, 'payload'.split('|'))"
-        unpacked = kwik.JsPacker.unpack(packed)
+        unpacked = kwik.unpack_js(packed)
         assert "payload" in unpacked
 
     def test_unpack_no_match(self) -> None:
-        result = kwik.JsPacker.unpack("plain javascript code")
+        result = kwik.unpack_js("plain javascript code")
         assert result == "plain javascript code"
 
 

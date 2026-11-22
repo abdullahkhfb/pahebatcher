@@ -64,7 +64,7 @@ class TestAnimePaheScanner:
                 },
             ]
         }
-        eps = scanner.AnimePaheScanner._parse_episode_page(
+        eps = scanner._parse_episode_page(
             data, "animepahe.com", "anime-session"
         )
         assert len(eps) == 2
@@ -77,7 +77,7 @@ class TestAnimePaheScanner:
         assert eps[1].audio == "eng"
 
     def test_parse_episode_page_empty(self) -> None:
-        eps = scanner.AnimePaheScanner._parse_episode_page(
+        eps = scanner._parse_episode_page(
             {"data": []}, "host", "session"
         )
         assert eps == []
@@ -94,7 +94,7 @@ class TestAnimePaheScanner:
                 }
             ]
         }
-        eps = scanner.AnimePaheScanner._parse_episode_page(
+        eps = scanner._parse_episode_page(
             data, "host", "session"
         )
         assert eps[0].title == ""
@@ -111,7 +111,7 @@ class TestAnimePaheScanner:
                 }
             ]
         }
-        eps = scanner.AnimePaheScanner._parse_episode_page(
+        eps = scanner._parse_episode_page(
             data, "host", "session"
         )
         assert eps[0].audio == "eng"
@@ -128,7 +128,7 @@ class TestAnimePaheScanner:
                 }
             ]
         }
-        eps = scanner.AnimePaheScanner._parse_episode_page(
+        eps = scanner._parse_episode_page(
             data, "host", "session"
         )
         assert eps == []

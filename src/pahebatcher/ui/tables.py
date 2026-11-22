@@ -53,7 +53,6 @@ def episode_table(
         check = "\u2713" if selected_set and ep.session in selected_set else " "
         row = [check, ep.ep_str, ep.title or "\u2014"]
         if show_audio:
-            from pahebatcher import utils
             row.append(utils.audio_badge(ep.audio))
         t.add_row(*row)
     return t
@@ -75,8 +74,6 @@ def summary_table(
     Returns:
         The table.
     """
-    from pahebatcher import utils
-
     table = _table()
     table.add_column("Ep", style="muted", width=6, justify="right")
     table.add_column("Title", style="white", ratio=1, overflow="ellipsis")

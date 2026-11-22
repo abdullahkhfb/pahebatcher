@@ -60,7 +60,7 @@ class ConfigManager:
         lines: list[str] = ["# pahebatcher configuration", ""]
         for key, default in self.DEFAULTS.items():
             val = self.data.get(key, default)
-            lines.append(f"{key} = {self._format(val)}")
+            lines.append(f"{key} = {_format_value(val)}")
         lines.append("")
         self.path.write_text("\n".join(lines), encoding="utf-8")
 
@@ -92,66 +92,6 @@ class ConfigManager:
         return self.path.exists()
 
     # ── CLI interface ──────────────────────────────────────────────────────
-
-    @staticmethod
-    def cli_show(path: pathlib.Path | None = None) -> None:
-        """Prints the current settings as a table.
-
-        Args:
-            path: The configuration file. Defaults to ``DEFAULT_PATH``.
-        """
-        from rich import box
-        import rich.table
-
-        from pahebatcher.ui import console
-
-        cm = ConfigManager(path)
-        cm.load()
-        t = rich.table.Table(
-            box=box.ROUNDED,
-            header_style="brand.bold",
-            title="pahebatcher configuration",
-        )
-        t.add_column("Key", style="brand")
-        t.add_column("Value", style="white")
-        t.add_column("Default", style="dim")
-        for key in cm.DEFAULTS:
-            t.add_row(key, str(cm.get(key)), str(cm.DEFAULTS[key]))
-        console.console.print(t)
-
-    @staticmethod
-    def cli_set(key: str, value: str, path: pathlib.Path | None = None) -> None:
-        """Converts, validates and saves one setting from the command line.
-
-        Args:
-            key: The setting name.
-            value: The new value as text.
-            path: The configuration file. Defaults to ``DEFAULT_PATH``.
-        """
-        from pahebatcher.ui import console
-
-        cm = ConfigManager(path)
-        cm.load()
-        converted = cm._convert(key, value)
-        cm.set(key, converted)
-        cm.save()
-        console.console.print(f"  [green]\u2713[/green] {key} = {converted}")
-
-    @staticmethod
-    def cli_reset(path: pathlib.Path | None = None) -> None:
-        """Resets every setting to its default and saves.
-
-        Args:
-            path: The configuration file. Defaults to ``DEFAULT_PATH``.
-        """
-        from pahebatcher.ui import console
-
-        cm = ConfigManager(path)
-        cm.data = dict(cm.DEFAULTS)
-        cm.save()
-        console.console.print(
-            "  [green]\u2713[/green] Configuration reset to defaults"
-        )
 
     # ── internal helpers ───────────────────────────────────────────────────
 
@@ -223,10 +163,70 @@ class ConfigManager:
             raise KeyError(f"Unknown config key: {key}")
         return converters[key](raw)
 
-    @staticmethod
-    def _format(value: Any) -> str:
-        if isinstance(value, bool):
-            return str(value).lower()
-        if isinstance(value, str):
-            return repr(value)
-        return str(value)
+
+def cli_show(path: pathlib.Path | None = None) -> None:
+    """Prints the current settings as a table.
+
+    Args:
+        path: The configuration file. Defaults to ``DEFAULT_PATH``.
+    """
+    from rich import box
+    import rich.table
+
+    from pahebatcher.ui import console
+
+    cm = ConfigManager(path)
+    cm.load()
+    t = rich.table.Table(
+        box=box.ROUNDED,
+        header_style="brand.bold",
+        title="pahebatcher configuration",
+    )
+    t.add_column("Key", style="brand")
+    t.add_column("Value", style="white")
+    t.add_column("Default", style="dim")
+    for key in cm.DEFAULTS:
+        t.add_row(key, str(cm.get(key)), str(cm.DEFAULTS[key]))
+    console.console.print(t)
+
+
+def cli_set(key: str, value: str, path: pathlib.Path | None = None) -> None:
+    """Converts, validates and saves one setting from the command line.
+
+    Args:
+        key: The setting name.
+        value: The new value as text.
+        path: The configuration file. Defaults to ``DEFAULT_PATH``.
+    """
+    from pahebatcher.ui import console
+
+    cm = ConfigManager(path)
+    cm.load()
+    converted = cm._convert(key, value)
+    cm.set(key, converted)
+    cm.save()
+    console.console.print(f"  [green]\u2713[/green] {key} = {converted}")
+
+
+def cli_reset(path: pathlib.Path | None = None) -> None:
+    """Resets every setting to its default and saves.
+
+    Args:
+        path: The configuration file. Defaults to ``DEFAULT_PATH``.
+    """
+    from pahebatcher.ui import console
+
+    cm = ConfigManager(path)
+    cm.data = dict(cm.DEFAULTS)
+    cm.save()
+    console.console.print(
+        "  [green]\u2713[/green] Configuration reset to defaults"
+    )
+
+
+def _format_value(value: Any) -> str:
+    if isinstance(value, bool):
+        return str(value).lower()
+    if isinstance(value, str):
+        return repr(value)
+    return str(value)

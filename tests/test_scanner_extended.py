@@ -15,7 +15,7 @@ import pahebatcher.extract.scanner
 
 class TestCachePath:
     def test_cache_path_sanitize(self, tmp_path: pathlib.Path) -> None:
-        p = pahebatcher.extract.scanner.AnimePaheScanner._cache_path(
+        p = pahebatcher.extract.scanner._cache_path(
             tmp_path, "sess123", "My Anime: Test"
         )
         assert p.name == "_scan_cache.json"
@@ -33,7 +33,7 @@ class TestCachePath:
             "episodes": [],
         }
         cache_path.write_text(json.dumps(data))
-        result = pahebatcher.extract.scanner.AnimePaheScanner._load_cache(
+        result = pahebatcher.extract.scanner._load_cache(
             cache_path, cache_ttl=60
         )
         assert result is None  # expired
@@ -59,7 +59,7 @@ class TestCachePath:
             ],
         }
         cache_path.write_text(json.dumps(data))
-        result = pahebatcher.extract.scanner.AnimePaheScanner._load_cache(
+        result = pahebatcher.extract.scanner._load_cache(
             cache_path, cache_ttl=60
         )
         assert result is not None
@@ -71,7 +71,7 @@ class TestCachePath:
         cache_path.parent.mkdir(parents=True)
         cache_path.write_text("{}")
         assert (
-            pahebatcher.extract.scanner.AnimePaheScanner._load_cache(
+            pahebatcher.extract.scanner._load_cache(
                 cache_path, cache_ttl=0
             )
             is None
@@ -82,7 +82,7 @@ class TestCachePath:
         cache_path.parent.mkdir(parents=True)
         cache_path.write_text("not json")
         assert (
-            pahebatcher.extract.scanner.AnimePaheScanner._load_cache(
+            pahebatcher.extract.scanner._load_cache(
                 cache_path, cache_ttl=60
             )
             is None

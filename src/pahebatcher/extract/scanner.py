@@ -180,46 +180,6 @@ class AnimePaheScanner:
             return re.sub(r"^Watch\s+", "", t, flags=re.I).strip()
         return "Unknown Anime"
 
-    @staticmethod
-    def _parse_episode_page(
-        data: dict[str, Any],
-        host: str,
-        session: str,
-    ) -> list[models.EpisodeInfo]:
-        """Converts one page of release data into episodes.
-
-        A SUB or DUB marker in the title overrides the reported audio language.
-        Entries without a session are skipped.
-
-        Args:
-            data: The decoded API page.
-            host: The host used to build play URLs.
-            session: The series' session identifier, used in play URLs.
-
-        Returns:
-            The episodes found on the page.
-        """
-        eps: list[models.EpisodeInfo] = []
-        for item in data.get("data", []):
-            ep_sess = item.get("session", "")
-            if not ep_sess:
-                continue
-            audio = (item.get("audio") or "jpn").strip().lower()
-            title = (item.get("title") or "").strip()
-            if audio == "jpn" and "dub" in title.lower():
-                audio = "eng"
-            elif audio == "eng" and "sub" in title.lower():
-                audio = "jpn"
-            eps.append(models.EpisodeInfo(
-                number=float(item.get("episode", 0) or 0),
-                session=ep_sess,
-                title=("" if title == "?" else title),
-                fansub=(item.get("fansub") or "").strip(),
-                audio=audio,
-                play_url=f"https://{host}/play/{session}/{ep_sess}",
-            ))
-        return eps
-
     @classmethod
     async def discover_all_sessions(
         cls,
@@ -269,80 +229,6 @@ class AnimePaheScanner:
                 sessions.add(res_session)
         return list(sessions)
 
-    @staticmethod
-    def _cache_path(
-        cache_dir: pathlib.Path,
-        session: str,
-        title: str,
-    ) -> pathlib.Path:
-        safe = utils.sanitize(title) or session
-        return cache_dir / f"{safe}_{session}" / "_scan_cache.json"
-
-    @staticmethod
-    def _load_cache(
-        cache_path: pathlib.Path,
-        cache_ttl: int,
-    ) -> models.AnimeInfo | None:
-        """Loads a scan cache if it exists and is still fresh.
-
-        Args:
-            cache_path: The cache file.
-            cache_ttl: The maximum age in minutes. A value of 0 or less disables
-                the cache.
-
-        Returns:
-            The cached series, or None if the cache is missing, unreadable or
-            expired.
-        """
-        if not cache_path.exists() or cache_ttl <= 0:
-            return None
-        try:
-            raw = json.loads(cache_path.read_text(encoding="utf-8"))
-        except Exception:
-            return None
-        age = time.time() - raw.get("cached_at", 0)
-        if age > cache_ttl * 60:
-            return None
-        episodes = [
-            models.EpisodeInfo(**ep) for ep in raw.get("episodes", [])
-        ]
-        return models.AnimeInfo(
-            session=raw["session"],
-            title=raw["title"],
-            host=raw["host"],
-            total=raw.get("total", len(episodes)),
-            episodes=episodes,
-        )
-
-    @staticmethod
-    def _save_cache(cache_path: pathlib.Path, anime: models.AnimeInfo) -> None:
-        """Writes a scan to its cache file.
-
-        Errors while writing are ignored, since the cache is only an
-        optimization.
-
-        Args:
-            cache_path: The cache file to write.
-            anime: The scan result to store.
-        """
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-        data = {
-            "cached_at": time.time(),
-            "title": anime.title,
-            "session": anime.session,
-            "host": anime.host,
-            "total": anime.total,
-            "episodes": [
-                {"number": e.number, "session": e.session, "title": e.title,
-                 "fansub": e.fansub, "audio": e.audio, "play_url": e.play_url}
-                for e in anime.episodes
-            ],
-        }
-        try:
-            cache_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
-        except Exception:
-            pass
-
     async def scan(
         self,
         cache_dir: pathlib.Path,
@@ -378,7 +264,7 @@ class AnimePaheScanner:
             candidates: list[pathlib.Path] = []
             # 1. legacy placeholder path (for completeness)
             candidates.append(
-                self._cache_path(cache_dir, self.session, "Unknown Anime")
+                _cache_path(cache_dir, self.session, "Unknown Anime")
             )
             # 2. any folder ending with _{session}/_scan_cache.json
             if cache_dir.exists():
@@ -390,7 +276,7 @@ class AnimePaheScanner:
                 if cp in seen or not cp.exists():
                     continue
                 seen.add(cp)
-                cached = self._load_cache(cp, cache_ttl)
+                cached = _load_cache(cp, cache_ttl)
                 if cached:
                     safe_title = utils.sanitize(cached.title)
                     session_path = cache_dir / f"{safe_title}_{self.session}"
@@ -467,7 +353,7 @@ class AnimePaheScanner:
                     break
                 if not data.get("data"):
                     break
-                for ep in self._parse_episode_page(data, self.host, s):
+                for ep in _parse_episode_page(data, self.host, s):
                     key = (ep.number, ep.audio)
                     if key not in unique_episodes:
                         unique_episodes[key] = ep
@@ -483,8 +369,8 @@ class AnimePaheScanner:
         console.console.print(" " * 60, end="\r")
 
         if completed_all:
-            cache_path = self._cache_path(cache_dir, self.session, title)
-            self._save_cache(cache_path, anime)
+            cache_path = _cache_path(cache_dir, self.session, title)
+            _save_cache(cache_path, anime)
         else:
             console.console.print(
                 f"\n  [yellow]\u26a0 Scan incomplete — {len(unique_episodes)} "
@@ -494,3 +380,117 @@ class AnimePaheScanner:
             )
 
         return anime
+
+
+def _parse_episode_page(
+    data: dict[str, Any],
+    host: str,
+    session: str,
+) -> list[models.EpisodeInfo]:
+    """Converts one page of release data into episodes.
+
+    A SUB or DUB marker in the title overrides the reported audio language.
+    Entries without a session are skipped.
+
+    Args:
+        data: The decoded API page.
+        host: The host used to build play URLs.
+        session: The series' session identifier, used in play URLs.
+
+    Returns:
+        The episodes found on the page.
+    """
+    eps: list[models.EpisodeInfo] = []
+    for item in data.get("data", []):
+        ep_sess = item.get("session", "")
+        if not ep_sess:
+            continue
+        audio = (item.get("audio") or "jpn").strip().lower()
+        title = (item.get("title") or "").strip()
+        if audio == "jpn" and "dub" in title.lower():
+            audio = "eng"
+        elif audio == "eng" and "sub" in title.lower():
+            audio = "jpn"
+        eps.append(models.EpisodeInfo(
+            number=float(item.get("episode", 0) or 0),
+            session=ep_sess,
+            title=("" if title == "?" else title),
+            fansub=(item.get("fansub") or "").strip(),
+            audio=audio,
+            play_url=f"https://{host}/play/{session}/{ep_sess}",
+        ))
+    return eps
+
+
+def _cache_path(
+    cache_dir: pathlib.Path,
+    session: str,
+    title: str,
+) -> pathlib.Path:
+    safe = utils.sanitize(title) or session
+    return cache_dir / f"{safe}_{session}" / "_scan_cache.json"
+
+
+def _load_cache(
+    cache_path: pathlib.Path,
+    cache_ttl: int,
+) -> models.AnimeInfo | None:
+    """Loads a scan cache if it exists and is still fresh.
+
+    Args:
+        cache_path: The cache file.
+        cache_ttl: The maximum age in minutes. A value of 0 or less disables
+            the cache.
+
+    Returns:
+        The cached series, or None if the cache is missing, unreadable or
+        expired.
+    """
+    if not cache_path.exists() or cache_ttl <= 0:
+        return None
+    try:
+        raw = json.loads(cache_path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    age = time.time() - raw.get("cached_at", 0)
+    if age > cache_ttl * 60:
+        return None
+    episodes = [
+        models.EpisodeInfo(**ep) for ep in raw.get("episodes", [])
+    ]
+    return models.AnimeInfo(
+        session=raw["session"],
+        title=raw["title"],
+        host=raw["host"],
+        total=raw.get("total", len(episodes)),
+        episodes=episodes,
+    )
+
+
+def _save_cache(cache_path: pathlib.Path, anime: models.AnimeInfo) -> None:
+    """Writes a scan to its cache file.
+
+    Errors while writing are ignored, since the cache is only an
+    optimization.
+
+    Args:
+        cache_path: The cache file to write.
+        anime: The scan result to store.
+    """
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    data = {
+        "cached_at": time.time(),
+        "title": anime.title,
+        "session": anime.session,
+        "host": anime.host,
+        "total": anime.total,
+        "episodes": [
+            {"number": e.number, "session": e.session, "title": e.title,
+             "fansub": e.fansub, "audio": e.audio, "play_url": e.play_url}
+            for e in anime.episodes
+        ],
+    }
+    try:
+        cache_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    except Exception:
+        pass

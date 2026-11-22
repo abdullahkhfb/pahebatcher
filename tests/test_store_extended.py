@@ -162,7 +162,7 @@ class TestAssemble:
         mock_proc.returncode = 0
         with mock.patch("subprocess.Popen", return_value=mock_proc):
             with mock.patch.object(
-                pahebatcher.store.SegmentStore,
+                pahebatcher.store,
                 "fix_aac_esds",
                 return_value=False,
             ) as mock_fix:
@@ -235,12 +235,12 @@ class TestFixAacEsds:
 
         out = tmp_path / "main.mp4"
         out.write_bytes(_mp4_with_aac(bytes([0x0B, 0x88])))
-        assert pahebatcher.store.SegmentStore.fix_aac_esds(out) is True
+        assert pahebatcher.store.fix_aac_esds(out) is True
         data = out.read_bytes()
         assert bytes([0x13, 0x88]) in data
         assert bytes([0x0B, 0x88]) not in data
         # Idempotent: second run finds nothing to patch
-        assert pahebatcher.store.SegmentStore.fix_aac_esds(out) is False
+        assert pahebatcher.store.fix_aac_esds(out) is False
 
     def test_leaves_lc_untouched(self, tmp_path: pathlib.Path) -> None:
         import pahebatcher.store
@@ -248,7 +248,7 @@ class TestFixAacEsds:
         out = tmp_path / "lc.mp4"
         raw = _mp4_with_aac(bytes([0x13, 0x88]))
         out.write_bytes(raw)
-        assert pahebatcher.store.SegmentStore.fix_aac_esds(out) is False
+        assert pahebatcher.store.fix_aac_esds(out) is False
         assert out.read_bytes() == raw
 
     def test_leaves_non_aac_untouched(self, tmp_path: pathlib.Path) -> None:
@@ -257,7 +257,7 @@ class TestFixAacEsds:
         out = tmp_path / "mp3.mp4"
         raw = _mp4_with_aac(bytes([0x0B, 0x88]), object_type=0x6B)
         out.write_bytes(raw)
-        assert pahebatcher.store.SegmentStore.fix_aac_esds(out) is False
+        assert pahebatcher.store.fix_aac_esds(out) is False
         assert out.read_bytes() == raw
 
     def test_garbage_and_truncated_safe(self, tmp_path: pathlib.Path) -> None:
@@ -271,13 +271,13 @@ class TestFixAacEsds:
         ]:
             out = tmp_path / name
             out.write_bytes(raw)
-            assert pahebatcher.store.SegmentStore.fix_aac_esds(out) is False
+            assert pahebatcher.store.fix_aac_esds(out) is False
             assert out.read_bytes() == raw
 
     def test_missing_file_returns_false(self, tmp_path: pathlib.Path) -> None:
         import pahebatcher.store
 
         assert (
-            pahebatcher.store.SegmentStore.fix_aac_esds(tmp_path / "nope.mp4")
+            pahebatcher.store.fix_aac_esds(tmp_path / "nope.mp4")
             is False
         )

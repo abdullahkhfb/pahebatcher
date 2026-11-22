@@ -292,11 +292,11 @@ class SegmentStore:
             # duration, which can stretch the timeline with timestamp gaps;
             # a contiguous input avoids that. Still -c copy (lossless).
             if self._assemble_pipe(n_segments, out):
-                self.fix_aac_esds(out)
+                fix_aac_esds(out)
                 return True
             # Fallback: concat demuxer (handles inputs the pipe path rejects).
             if self._assemble_concat(n_segments, out, lst):
-                self.fix_aac_esds(out)
+                fix_aac_esds(out)
                 return True
             return False
         finally:
@@ -385,41 +385,41 @@ class SegmentStore:
         )
         return result.returncode == 0
 
-    @staticmethod
-    def fix_aac_esds(out: pathlib.Path) -> bool:
-        """Corrects AAC audio mislabeled as AAC Main to AAC-LC.
-
-        Some sources declare AAC Main (audio object type 1) while the payload
-        is HE-AAC. Strict decoders such as Android's MediaCodec reject Main,
-        while VLC tolerates it. Changing the type from 1 to 2 preserves all
-        other bits. Only metadata changes; nothing is re-encoded. This is
-        best-effort.
-
-        Args:
-            out: The MP4 file to fix in place.
-
-        Returns:
-            True if the file was patched. False, leaving the file untouched, if
-            it did not match the expected structure.
-        """
-        try:
-            data = bytearray(out.read_bytes())
-        except Exception:
-            return False
-        try:
-            patched = _patch_aac_main_to_lc(data)
-        except Exception:
-            return False
-        if not patched:
-            return False
-        try:
-            out.write_bytes(bytes(data))
-        except Exception:
-            return False
-        return True
-
     def cleanup(self) -> None:
         """Deletes the episode's segment directory, ignoring errors."""
         with contextlib.suppress(Exception):
             import shutil
             shutil.rmtree(self.dir)
+
+
+def fix_aac_esds(out: pathlib.Path) -> bool:
+    """Corrects AAC audio mislabeled as AAC Main to AAC-LC.
+
+    Some sources declare AAC Main (audio object type 1) while the payload
+    is HE-AAC. Strict decoders such as Android's MediaCodec reject Main,
+    while VLC tolerates it. Changing the type from 1 to 2 preserves all
+    other bits. Only metadata changes; nothing is re-encoded. This is
+    best-effort.
+
+    Args:
+        out: The MP4 file to fix in place.
+
+    Returns:
+        True if the file was patched. False, leaving the file untouched, if
+        it did not match the expected structure.
+    """
+    try:
+        data = bytearray(out.read_bytes())
+    except Exception:
+        return False
+    try:
+        patched = _patch_aac_main_to_lc(data)
+    except Exception:
+        return False
+    if not patched:
+        return False
+    try:
+        out.write_bytes(bytes(data))
+    except Exception:
+        return False
+    return True

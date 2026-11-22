@@ -183,9 +183,10 @@ def _devtools_up(port: int) -> bool:
 
 
 def _platform_info() -> tuple[str, str]:
-    if sys.platform.startswith("win"):
+    platform = sys.platform  # a variable, so type checkers do not prune
+    if platform.startswith("win"):
         return "Windows", "10.0.0"
-    if sys.platform == "darwin":
+    if platform == "darwin":
         return "macOS", "14.0.0"
     return "Linux", "6.0.0"
 
@@ -504,7 +505,7 @@ class BrowserEngine:
         deadline = loop.time() + timeout_ms / 1000
         page = await ctx.new_page()
         try:
-            ua = await self._mask_headless(ctx, page)
+            ua = await _mask_headless(ctx, page)
             try:
                 await page.goto(
                     url,
@@ -553,52 +554,52 @@ class BrowserEngine:
             except Exception:
                 pass
 
-    @staticmethod
-    async def _mask_headless(ctx: Any, page: Any) -> str:
-        """Returns the page's user agent, disguising headless Chrome.
 
-        If the browser is headless, the user agent and client hints are
-        rewritten to those of a normal Chrome.
+async def _mask_headless(ctx: Any, page: Any) -> str:
+    """Returns the page's user agent, disguising headless Chrome.
 
-        Args:
-            ctx: The browser context.
-            page: The page.
+    If the browser is headless, the user agent and client hints are
+    rewritten to those of a normal Chrome.
 
-        Returns:
-            The user agent in effect.
-        """
-        ua = str(await page.evaluate("navigator.userAgent"))
-        if "Headless" not in ua:
-            return ua
-        ua = ua.replace("HeadlessChrome", "Chrome")
-        try:
-            cdp = await ctx.new_cdp_session(page)
-            product = str(
-                (await cdp.send("Browser.getVersion")).get("product", "")
-            )
-            full = product.split("/", 1)[1] if "/" in product else ""
-            major = full.split(".", 1)[0] or "0"
-            platform, platform_ver = _platform_info()
-            await cdp.send(
-                "Emulation.setUserAgentOverride",
-                {
-                    "userAgent": ua,
-                    "acceptLanguage": "en-US,en",
-                    "userAgentMetadata": {
-                        "brands": [
-                            {"brand": "Chromium", "version": major},
-                            {"brand": "Google Chrome", "version": major},
-                            {"brand": "Not.A/Brand", "version": "99"},
-                        ],
-                        "fullVersion": full,
-                        "platform": platform,
-                        "platformVersion": platform_ver,
-                        "architecture": "x86",
-                        "model": "",
-                        "mobile": False,
-                    },
-                },
-            )
-        except Exception as exc:
-            log.debug("UA override failed: %s", exc)
+    Args:
+        ctx: The browser context.
+        page: The page.
+
+    Returns:
+        The user agent in effect.
+    """
+    ua = str(await page.evaluate("navigator.userAgent"))
+    if "Headless" not in ua:
         return ua
+    ua = ua.replace("HeadlessChrome", "Chrome")
+    try:
+        cdp = await ctx.new_cdp_session(page)
+        product = str(
+            (await cdp.send("Browser.getVersion")).get("product", "")
+        )
+        full = product.split("/", 1)[1] if "/" in product else ""
+        major = full.split(".", 1)[0] or "0"
+        platform, platform_ver = _platform_info()
+        await cdp.send(
+            "Emulation.setUserAgentOverride",
+            {
+                "userAgent": ua,
+                "acceptLanguage": "en-US,en",
+                "userAgentMetadata": {
+                    "brands": [
+                        {"brand": "Chromium", "version": major},
+                        {"brand": "Google Chrome", "version": major},
+                        {"brand": "Not.A/Brand", "version": "99"},
+                    ],
+                    "fullVersion": full,
+                    "platform": platform,
+                    "platformVersion": platform_ver,
+                    "architecture": "x86",
+                    "model": "",
+                    "mobile": False,
+                },
+            },
+        )
+    except Exception as exc:
+        log.debug("UA override failed: %s", exc)
+    return ua

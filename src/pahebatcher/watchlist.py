@@ -252,162 +252,158 @@ class WatchlistEntry:
         )
 
 
-class WatchlistManager:
-    """Loads, saves and edits the stored list of watchlist entries."""
+def load_entries(path: pathlib.Path | None = None) -> list[WatchlistEntry]:
+    """Loads the watchlist.
 
-    @staticmethod
-    def load(path: pathlib.Path | None = None) -> list[WatchlistEntry]:
-        """Loads the watchlist.
+    Args:
+        path: The watchlist file, or None for the default.
 
-        Args:
-            path: The watchlist file, or None for the default.
-
-        Returns:
-            The entries. The list is empty if the file is missing or unreadable.
-        """
-        p = get_watchlist_path(path)
-        if not p.exists():
-            return []
+    Returns:
+        The entries. The list is empty if the file is missing or unreadable.
+    """
+    p = get_watchlist_path(path)
+    if not p.exists():
+        return []
+    try:
+        raw = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    # Support both {"entries": [...]} and plain list for backward compat
+    if isinstance(raw, dict) and "entries" in raw:
+        raw_list = raw["entries"]
+    elif isinstance(raw, list):
+        raw_list = raw
+    else:
+        return []
+    entries: list[WatchlistEntry] = []
+    for item in raw_list:
         try:
-            raw = json.loads(p.read_text(encoding="utf-8"))
+            entries.append(WatchlistEntry.from_dict(item))
         except Exception:
-            return []
-        # Support both {"entries": [...]} and plain list for backward compat
-        if isinstance(raw, dict) and "entries" in raw:
-            raw_list = raw["entries"]
-        elif isinstance(raw, list):
-            raw_list = raw
-        else:
-            return []
-        entries: list[WatchlistEntry] = []
-        for item in raw_list:
-            try:
-                entries.append(WatchlistEntry.from_dict(item))
-            except Exception:
-                continue
-        return entries
+            continue
+    return entries
 
-    @staticmethod
-    def save(
-        entries: list[WatchlistEntry],
-        path: pathlib.Path | None = None,
-    ) -> None:
-        """Writes the watchlist.
 
-        Args:
-            entries: The entries to store.
-            path: The watchlist file, or None for the default.
-        """
-        p = get_watchlist_path(path)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        data = [e.to_dict() for e in entries]
-        # Atomic write via tmp rename
-        tmp = p.with_suffix(p.suffix + ".tmp")
-        tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
-        tmp.replace(p)
+def save_entries(
+    entries: list[WatchlistEntry],
+    path: pathlib.Path | None = None,
+) -> None:
+    """Writes the watchlist.
 
-    @staticmethod
-    def find_entry(
-        entries: list[WatchlistEntry], identifier: str
-    ) -> tuple[int, WatchlistEntry] | None:
-        """Finds an entry by index, session, URL or title.
+    Args:
+        entries: The entries to store.
+        path: The watchlist file, or None for the default.
+    """
+    p = get_watchlist_path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    data = [e.to_dict() for e in entries]
+    # Atomic write via tmp rename
+    tmp = p.with_suffix(p.suffix + ".tmp")
+    tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    tmp.replace(p)
 
-        Args:
-            entries: The entries to search.
-            identifier: What to look for.
 
-        Returns:
-            A tuple ``(index, entry)``, or None if nothing matches.
-        """
-        ident = identifier.strip()
-        # 1. numeric index (1-based)
-        if ident.isdigit():
-            idx = int(ident) - 1
-            if 0 <= idx < len(entries):
-                return idx, entries[idx]
-        # 2. try parse as URL -> match session
-        try:
-            _, sess = pahebatcher.extract.scanner.parse_anime_url(ident)
-            for i, e in enumerate(entries):
-                if e.session == sess:
-                    return i, e
-        except Exception:
-            pass
-        # 3. direct session uuid match
+def find_entry(
+    entries: list[WatchlistEntry], identifier: str
+) -> tuple[int, WatchlistEntry] | None:
+    """Finds an entry by index, session, URL or title.
+
+    Args:
+        entries: The entries to search.
+        identifier: What to look for.
+
+    Returns:
+        A tuple ``(index, entry)``, or None if nothing matches.
+    """
+    ident = identifier.strip()
+    # 1. numeric index (1-based)
+    if ident.isdigit():
+        idx = int(ident) - 1
+        if 0 <= idx < len(entries):
+            return idx, entries[idx]
+    # 2. try parse as URL -> match session
+    try:
+        _, sess = pahebatcher.extract.scanner.parse_anime_url(ident)
         for i, e in enumerate(entries):
-            if e.session == ident or e.url == ident:
+            if e.session == sess:
                 return i, e
-        # 4. substring title/URL match (case-insensitive)
-        low = ident.lower()
-        for i, e in enumerate(entries):
+    except Exception:
+        pass
+    # 3. direct session uuid match
+    for i, e in enumerate(entries):
+        if e.session == ident or e.url == ident:
+            return i, e
+    # 4. substring title/URL match (case-insensitive)
+    low = ident.lower()
+    for i, e in enumerate(entries):
+        if (
+            low in e.title.lower()
+            or low in e.url.lower()
+            or low in e.session.lower()
+        ):
+            return i, e
+    return None
+
+
+def add_entry(
+    entry: WatchlistEntry,
+    path: pathlib.Path | None = None,
+) -> tuple[bool, WatchlistEntry]:
+    """Adds an entry, or updates the existing one for the same series.
+
+    Args:
+        entry: The entry to store.
+        path: The watchlist file, or None for the default.
+
+    Returns:
+        A tuple ``(is_new, entry)``.
+    """
+    entries = load_entries(path)
+    for i, e in enumerate(entries):
+        if e.session == entry.session:
+            # Update existing — keep added_at, downloaded history, and real
+            # title
+            old_added = e.added_at
+            old_downloaded = list(e.downloaded)
             if (
-                low in e.title.lower()
-                or low in e.url.lower()
-                or low in e.session.lower()
+                e.title
+                and e.title != e.session
+                and entry.title == entry.session
             ):
-                return i, e
+                entry.title = e.title
+            entry.added_at = old_added
+            # Preserve downloaded history unless caller explicitly set it
+            if not entry.downloaded and old_downloaded:
+                entry.downloaded = old_downloaded
+            entries[i] = entry
+            save_entries(entries, path)
+            return False, entry
+    entries.append(entry)
+    save_entries(entries, path)
+    return True, entry
+
+
+def remove_entry(
+    identifier: str,
+    path: pathlib.Path | None = None,
+) -> WatchlistEntry | None:
+    """Removes an entry.
+
+    Args:
+        identifier: The entry's index, session, URL or title.
+        path: The watchlist file, or None for the default.
+
+    Returns:
+        The removed entry, or None if nothing matched.
+    """
+    entries = load_entries(path)
+    found = find_entry(entries, identifier)
+    if not found:
         return None
-
-    @staticmethod
-    def add_entry(
-        entry: WatchlistEntry,
-        path: pathlib.Path | None = None,
-    ) -> tuple[bool, WatchlistEntry]:
-        """Adds an entry, or updates the existing one for the same series.
-
-        Args:
-            entry: The entry to store.
-            path: The watchlist file, or None for the default.
-
-        Returns:
-            A tuple ``(is_new, entry)``.
-        """
-        entries = WatchlistManager.load(path)
-        for i, e in enumerate(entries):
-            if e.session == entry.session:
-                # Update existing — keep added_at, downloaded history, and real
-                # title
-                old_added = e.added_at
-                old_downloaded = list(e.downloaded)
-                if (
-                    e.title
-                    and e.title != e.session
-                    and entry.title == entry.session
-                ):
-                    entry.title = e.title
-                entry.added_at = old_added
-                # Preserve downloaded history unless caller explicitly set it
-                if not entry.downloaded and old_downloaded:
-                    entry.downloaded = old_downloaded
-                entries[i] = entry
-                WatchlistManager.save(entries, path)
-                return False, entry
-        entries.append(entry)
-        WatchlistManager.save(entries, path)
-        return True, entry
-
-    @staticmethod
-    def remove_entry(
-        identifier: str,
-        path: pathlib.Path | None = None,
-    ) -> WatchlistEntry | None:
-        """Removes an entry.
-
-        Args:
-            identifier: The entry's index, session, URL or title.
-            path: The watchlist file, or None for the default.
-
-        Returns:
-            The removed entry, or None if nothing matched.
-        """
-        entries = WatchlistManager.load(path)
-        found = WatchlistManager.find_entry(entries, identifier)
-        if not found:
-            return None
-        idx, ent = found
-        entries.pop(idx)
-        WatchlistManager.save(entries, path)
-        return ent
+    idx, ent = found
+    entries.pop(idx)
+    save_entries(entries, path)
+    return ent
 
 
 # ── CLI helpers ──────────────────────────────────────────────────────────
@@ -424,7 +420,7 @@ def cli_list(path: pathlib.Path | None = None) -> None:
 
     from pahebatcher.ui import console
 
-    entries = WatchlistManager.load(path)
+    entries = load_entries(path)
     if not entries:
         console.console.print("\n  [dim]No watchlist entries.[/dim]")
         console.console.print(
@@ -467,11 +463,11 @@ def cli_show(identifier: str, path: pathlib.Path | None = None) -> None:
 
     from pahebatcher.ui import console
 
-    entries = WatchlistManager.load(path)
+    entries = load_entries(path)
     if not entries:
         console.console.print("\n  [dim]No watchlist entries.[/dim]")
         return
-    found = WatchlistManager.find_entry(entries, identifier)
+    found = find_entry(entries, identifier)
     if not found:
         console.console.print(
             f"\n  [red]✗ No entry found for:[/red] {identifier}"
@@ -535,13 +531,13 @@ def cli_remove(identifier: str, path: pathlib.Path | None = None) -> None:
     """
     from pahebatcher.ui import console
 
-    removed = WatchlistManager.remove_entry(identifier, path)
+    removed = remove_entry(identifier, path)
     if not removed:
         console.console.print(
             f"\n  [red]✗ No entry found for:[/red] {identifier}"
         )
         sys.exit(1)
-    remaining = len(WatchlistManager.load(path))
+    remaining = len(load_entries(path))
     console.console.print(
         f"  [green]✓ Removed[/green] '{removed.title}' [dim]({remaining} "
         "remaining)[/dim]"
@@ -562,7 +558,7 @@ def cli_reset(
     """
     from pahebatcher.ui import console
 
-    entries = WatchlistManager.load(path)
+    entries = load_entries(path)
     if not entries:
         console.console.print("\n  [dim]No watchlist entries.[/dim]")
         return
@@ -577,7 +573,7 @@ def cli_reset(
         total = sum(len(e.downloaded) for e in entries)
         for e in entries:
             e.downloaded = []
-        WatchlistManager.save(entries, path)
+        save_entries(entries, path)
         console.console.print(
             f"  [green]✓ Reset[/green] {len(entries)} "
             f"entr{'y' if len(entries) == 1 else 'ies'}"
@@ -591,7 +587,7 @@ def cli_reset(
             "--all[/dim]",
         )
         sys.exit(2)
-    found = WatchlistManager.find_entry(entries, identifier)
+    found = find_entry(entries, identifier)
     if not found:
         console.console.print(
             f"\n  [red]✗ No entry found for:[/red] {identifier}"
@@ -600,7 +596,7 @@ def cli_reset(
     _idx, entry = found
     cleared = len(entry.downloaded)
     entry.downloaded = []
-    WatchlistManager.save(entries, path)
+    save_entries(entries, path)
     console.console.print(
         f"  [green]✓ Reset[/green] '{entry.title}' [dim](cleared {cleared} "
         "history)[/dim]"
@@ -627,7 +623,7 @@ def record_watchlist_download(
     Returns:
         True if a matching entry was found and updated.
     """
-    entries = WatchlistManager.load(path)
+    entries = load_entries(path)
     for e in entries:
         if e.session != session:
             continue
@@ -641,7 +637,7 @@ def record_watchlist_download(
                 e.downloaded.append(fn)
         e.downloaded = sorted(e.downloaded)
         e.last_checked = time.time()
-        WatchlistManager.save(entries, path)
+        save_entries(entries, path)
         return True
     return False
 
@@ -663,7 +659,7 @@ async def run_watchlist_browser() -> tuple[str | None, WatchlistEntry | None]:
     from pahebatcher.ui import console
 
     while True:
-        entries = WatchlistManager.load()
+        entries = load_entries()
         if not entries:
             console.console.print("\n  [dim]No watchlist entries.[/dim]")
             console.console.print(
@@ -765,7 +761,7 @@ def cli_relink(
     """
     from pahebatcher.ui import console
 
-    entries = WatchlistManager.load(path)
+    entries = load_entries(path)
     # No identifier → auto-relink ALL dead entries in one command
     if not identifier:
         if not entries:
@@ -830,7 +826,7 @@ def cli_relink(
                         # relinked
                         continue
                 if relinked:
-                    WatchlistManager.save(entries, path)
+                    save_entries(entries, path)
                     console.console.print(
                         f"\n  [green]✓ Relinked {relinked} entry(s)[/green]"
                     )
@@ -868,7 +864,7 @@ def cli_relink(
             asyncio.run(_relink_all())
         return
 
-    found = WatchlistManager.find_entry(entries, identifier)
+    found = find_entry(entries, identifier)
     if not found:
         console.console.print(
             f"\n  [red]✗ No entry found for:[/red] {identifier}"
@@ -1029,7 +1025,7 @@ def cli_relink(
     # If old title was placeholder, keep new title placeholder to be refreshed
     # on next check Otherwise keep old title until next successful scan
     # refreshes it
-    WatchlistManager.save(entries, path)
+    save_entries(entries, path)
     console.console.print(
         f"  [green]✓ Relinked '{old_title}'[/green] [dim]{old_session[:8]}… → "
         f"{new_session[:8]}…[/dim]\n"
@@ -1183,7 +1179,7 @@ def cli_add(
     title = (
         found_title.strip() if found_title and found_title.strip() else session
     )
-    existing_entries = WatchlistManager.load(path)
+    existing_entries = load_entries(path)
     for e in existing_entries:
         if e.session != session:
             continue
@@ -1207,7 +1203,7 @@ def cli_add(
         auto_retry=auto_retry,
         added_at=time.time(),
     )
-    is_new, saved = WatchlistManager.add_entry(entry, path)
+    is_new, saved = add_entry(entry, path)
     verb = "Added" if is_new else "Updated"
     audio_str = "SUB" if a == "jpn" else "DUB"
     console.console.print(
@@ -1223,7 +1219,7 @@ def cli_add(
     if is_new:
         console.console.print(
             f"  [dim]Saved to {get_watchlist_path(path)}"
-            f" ({len(WatchlistManager.load(path))} entries)[/dim]",
+            f" ({len(load_entries(path))} entries)[/dim]",
         )
         console.console.print(
             "  [dim]Run 'pahebatcher watchlist check' to download new "
@@ -1271,7 +1267,7 @@ async def run_watchlist_check(
 
     console.print_banner()
 
-    all_entries = WatchlistManager.load(path)
+    all_entries = load_entries(path)
     if not all_entries:
         console.console.print(
             "\n  [dim]No watchlist entries. Add one with:[/dim]"
@@ -1282,7 +1278,7 @@ async def run_watchlist_check(
         return
 
     if filter_id:
-        found = WatchlistManager.find_entry(all_entries, filter_id)
+        found = find_entry(all_entries, filter_id)
         if not found:
             console.console.print(
                 f"\n  [red]✗ No watchlist entry for:[/red] {filter_id}"
@@ -1355,7 +1351,7 @@ async def run_watchlist_check(
                     )
                     # update last_checked even on failure
                     entry.last_checked = time.time()
-                    WatchlistManager.save(all_entries, path)
+                    save_entries(all_entries, path)
                     total_failed += 1
                     continue
 
@@ -1428,7 +1424,7 @@ async def run_watchlist_check(
                             },
                         )
                         entry.last_checked = time.time()
-                        WatchlistManager.save(all_entries, path)
+                        save_entries(all_entries, path)
                         total_failed += 1
                         continue
                     try:
@@ -1444,7 +1440,7 @@ async def run_watchlist_check(
                             entry.url = (
                                 f"https://{new_host}/anime/{new_session}"
                             )
-                            WatchlistManager.save(all_entries, path)
+                            save_entries(all_entries, path)
                             console.console.print(
                                 f"  [yellow]↻ Relinked '{entry.title}': "
                                 f"{old_session[:8]}… → "
@@ -1507,7 +1503,7 @@ async def run_watchlist_check(
                                 },
                             )
                             entry.last_checked = time.time()
-                            WatchlistManager.save(all_entries, path)
+                            save_entries(all_entries, path)
                             total_failed += 1
                             continue
                         elif status == "unknown_title":
@@ -1527,7 +1523,7 @@ async def run_watchlist_check(
                                 },
                             )
                             entry.last_checked = time.time()
-                            WatchlistManager.save(all_entries, path)
+                            save_entries(all_entries, path)
                             total_failed += 1
                             continue
                         else:  # ambiguous
@@ -1550,7 +1546,7 @@ async def run_watchlist_check(
                                 },
                             )
                             entry.last_checked = time.time()
-                            WatchlistManager.save(all_entries, path)
+                            save_entries(all_entries, path)
                             total_failed += 1
                             continue
                     except Exception as exc:
@@ -1576,7 +1572,7 @@ async def run_watchlist_check(
                             },
                         )
                         entry.last_checked = time.time()
-                        WatchlistManager.save(all_entries, path)
+                        save_entries(all_entries, path)
                         total_failed += 1
                         continue
                 # Update stored title if scan succeeded with valid (non-404)
@@ -1588,7 +1584,7 @@ async def run_watchlist_check(
                     and entry.title != anime.title
                 ):
                     entry.title = anime.title
-                    WatchlistManager.save(all_entries, path)
+                    save_entries(all_entries, path)
                 # Actually better to use get_variant logic per number
                 pending: list[Any] = []
                 skipped_deleted = 0
@@ -1626,7 +1622,7 @@ async def run_watchlist_check(
                     )
                     downloaded_set.clear()
                     entry.downloaded = []
-                    WatchlistManager.save(all_entries, path)
+                    save_entries(all_entries, path)
                 # Temporary orchestrator just for _find_existing helper (no
                 # network)
                 tmp_orch = downloader.BatchOrchestrator(
@@ -1666,7 +1662,7 @@ async def run_watchlist_check(
                     != set(float(v) for v in (entry.downloaded or []))
                 ):
                     entry.downloaded = sorted(downloaded_set)
-                    WatchlistManager.save(all_entries, path)
+                    save_entries(all_entries, path)
 
                 if not pending:
                     if skipped_deleted:
@@ -1684,7 +1680,7 @@ async def run_watchlist_check(
                         {"title": entry.title, "new": 0, "done": 0, "failed": 0}
                     )
                     entry.last_checked = time.time()
-                    WatchlistManager.save(all_entries, path)
+                    save_entries(all_entries, path)
                     continue
 
                 console.console.print(
@@ -1744,7 +1740,7 @@ async def run_watchlist_check(
                     # successes counted)
                     if 'downloaded_set' in locals():
                         entry.downloaded = sorted(downloaded_set)
-                    WatchlistManager.save(all_entries, path)
+                    save_entries(all_entries, path)
                     # Orphan cleanup per entry not needed here
 
             # Final summary

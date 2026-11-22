@@ -17,27 +17,27 @@ class TestHints:
 
 class TestParseCookieString:
     def test_empty(self) -> None:
-        assert solver.Solver._parse_cookie_string("") == []
+        assert solver._parse_cookie_string("") == []
 
     def test_single(self) -> None:
-        result = solver.Solver._parse_cookie_string("a=1")
+        result = solver._parse_cookie_string("a=1")
         assert result == [{"name": "a", "value": "1"}]
 
     def test_multiple(self) -> None:
-        result = solver.Solver._parse_cookie_string("a=1; b=2; c=3")
+        result = solver._parse_cookie_string("a=1; b=2; c=3")
         assert len(result) == 3
         assert result[0]["name"] == "a"
         assert result[1]["value"] == "2"
 
     def test_with_spaces_and_equals_in_value(self) -> None:
-        result = solver.Solver._parse_cookie_string(
+        result = solver._parse_cookie_string(
             "cf_clearance=abc123; session=xyz=123"
         )
         assert result[0] == {"name": "cf_clearance", "value": "abc123"}
         assert result[1]["value"] == "xyz=123"
 
     def test_trailing_semicolon(self) -> None:
-        result = solver.Solver._parse_cookie_string("a=1;")
+        result = solver._parse_cookie_string("a=1;")
         assert len(result) == 1
 
 

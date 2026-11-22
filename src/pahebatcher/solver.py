@@ -179,7 +179,7 @@ class Solver:
         self._sem = asyncio.Semaphore(1)
         self._lock = asyncio.Lock()
         self._solver_cache = pahebatcher.cache.TTLCache(ttl=120.0, max_size=256)
-        self._user_cookies = self._parse_cookie_string(user_cookies)
+        self._user_cookies = _parse_cookie_string(user_cookies)
         # Clearance store: live cf_clearance per domain, harvested from
         # successful responses. clearance_ttl <= 0 disables the store and
         # the direct fast path (legacy behavior: transplant always sent).
@@ -228,26 +228,6 @@ class Solver:
                 profile, self._browser_mode, self._proxy
             )
         return self._engine_obj
-
-    @staticmethod
-    def _parse_cookie_string(s: str) -> list[dict[str, str]]:
-        """Parses a ``name=value; ...`` string into cookie dicts.
-
-        Args:
-            s: The cookie string.
-
-        Returns:
-            One dict with ``name`` and ``value`` per cookie.
-        """
-        if not s:
-            return []
-        cookies: list[dict[str, str]] = []
-        for part in s.split(";"):
-            part = part.strip()
-            if "=" in part:
-                name, _, value = part.partition("=")
-                cookies.append({"name": name.strip(), "value": value.strip()})
-        return cookies
 
     async def _clearance_for(
         self,
@@ -550,3 +530,23 @@ class Solver:
             list(cookies_val) if isinstance(cookies_val, list) else []
         )
         return str(resp), cookies_list
+
+
+def _parse_cookie_string(s: str) -> list[dict[str, str]]:
+    """Parses a ``name=value; ...`` string into cookie dicts.
+
+    Args:
+        s: The cookie string.
+
+    Returns:
+        One dict with ``name`` and ``value`` per cookie.
+    """
+    if not s:
+        return []
+    cookies: list[dict[str, str]] = []
+    for part in s.split(";"):
+        part = part.strip()
+        if "=" in part:
+            name, _, value = part.partition("=")
+            cookies.append({"name": name.strip(), "value": value.strip()})
+    return cookies
