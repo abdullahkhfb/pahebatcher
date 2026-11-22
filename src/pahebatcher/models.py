@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import pathlib
+import re
 
 
 @dataclasses.dataclass
@@ -50,7 +51,6 @@ class EpisodeInfo:
             int(self.number) if self.number == int(self.number) else self.number
         )
         dub = "  [yellow]DUB[/yellow]" if self.audio == "eng" else ""
-        import re
 
         titl = (
             re.sub(

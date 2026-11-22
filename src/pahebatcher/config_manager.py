@@ -6,6 +6,11 @@ import pathlib
 import tomllib
 from typing import Any
 
+from rich import box
+import rich.table
+
+from pahebatcher.ui import console
+
 
 class ConfigManager:
     """Reads and writes persistent settings in ``pahebatcher.toml``.
@@ -170,10 +175,6 @@ def cli_show(path: pathlib.Path | None = None) -> None:
     Args:
         path: The configuration file. Defaults to ``DEFAULT_PATH``.
     """
-    from rich import box
-    import rich.table
-
-    from pahebatcher.ui import console
 
     cm = ConfigManager(path)
     cm.load()
@@ -198,7 +199,6 @@ def cli_set(key: str, value: str, path: pathlib.Path | None = None) -> None:
         value: The new value as text.
         path: The configuration file. Defaults to ``DEFAULT_PATH``.
     """
-    from pahebatcher.ui import console
 
     cm = ConfigManager(path)
     cm.load()
@@ -214,7 +214,6 @@ def cli_reset(path: pathlib.Path | None = None) -> None:
     Args:
         path: The configuration file. Defaults to ``DEFAULT_PATH``.
     """
-    from pahebatcher.ui import console
 
     cm = ConfigManager(path)
     cm.data = dict(cm.DEFAULTS)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import dataclasses
 import pathlib
 import re
 from typing import TYPE_CHECKING
@@ -13,7 +14,9 @@ import rich.table
 import rich.text
 
 from pahebatcher import utils
-from pahebatcher.ui import console
+from pahebatcher.extract import scanner
+import pahebatcher.store
+from pahebatcher.ui import console, tables
 
 if TYPE_CHECKING:
     from pahebatcher import models
@@ -264,7 +267,6 @@ def confirm_download(
     Returns:
         True if the user confirmed.
     """
-    import pahebatcher.store
     n = len(episodes)
     ep_range_str = utils.compact_ep_range(episodes)
 
@@ -326,7 +328,6 @@ def wizard_config(
     Returns:
         A copy of ``defaults`` with the user's answers applied.
     """
-    import dataclasses
 
     console.heading(
         "Settings",
@@ -439,8 +440,6 @@ async def interactive_discovery(
         A tuple ``(series_url, result_title)``, or ``(None, None)`` if the
         user cancels or nothing is found.
     """
-    from pahebatcher.extract import scanner
-    from pahebatcher.ui import tables
 
     pending = initial.strip() if initial and initial.strip() else None
     while True:

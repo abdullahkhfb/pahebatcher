@@ -8,7 +8,10 @@ import logging
 import re
 import shutil
 from typing import TYPE_CHECKING
+import urllib.parse
 
+import aiohttp
+from aiohttp import web
 from rich import box
 import rich.align
 import rich.console
@@ -20,7 +23,9 @@ import rich.rule
 import rich.table
 import rich.text
 
-from pahebatcher.extract import kwik
+from pahebatcher.extract import kwik, m3u8
+import pahebatcher.http
+from pahebatcher.ui import console
 
 if TYPE_CHECKING:
     from pahebatcher import models
@@ -88,10 +93,6 @@ async def _prepare_local_hls(
     Raises:
         RuntimeError: If the playlist cannot be fetched.
     """
-    from aiohttp import web
-
-    from pahebatcher.extract import m3u8
-    import pahebatcher.http
 
     # Ensure http_client is HttpClient and started
     http: pahebatcher.http.HttpClient
@@ -116,19 +117,17 @@ async def _prepare_local_hls(
     # We will serve m3u8 at /uwu.m3u8 and proxy segments/keys via same server
     # Rewrite segment URLs and key URI to local
     # Keep original m3u8 text for debugging, but rewrite for local serving
-    import re as _re
 
     # Find remote base for segments (for proxying, we need to map local path ->
     # remote URL) We'll create a dict local_path -> remote_url
     remote_map: dict[str, str] = {}
     # Extract key URI
-    key_match = _re.search(
+    key_match = re.search(
         r'#EXT-X-KEY:METHOD=AES-128,URI="([^"]+)"', m3u8_text
     )
     if key_match:
         raw_key_url = key_match.group(1)
         # Normalize key URL (may be relative)
-        import urllib.parse
 
         remote_key_url = (
             raw_key_url
@@ -147,7 +146,6 @@ async def _prepare_local_hls(
         if line and not line.startswith("#"):
             remote_seg = line
             # Normalize
-            import urllib.parse
 
             if not remote_seg.startswith("http"):
                 remote_seg = urllib.parse.urljoin(info.url, remote_seg)
@@ -215,9 +213,8 @@ async def _prepare_local_hls(
             range_hdr = request.headers.get("Range")
             if range_hdr and request.method == "GET":
                 # Simple bytes= start-end handling
-                import re as _re2
 
-                m = _re2.match(r"bytes=(\d*)-(\d*)", range_hdr)
+                m = re.match(r"bytes=(\d*)-(\d*)", range_hdr)
                 if m:
                     start_s, end_s = m.groups()
                     start = int(start_s) if start_s else 0
@@ -270,7 +267,6 @@ async def _prepare_local_hls(
     # Verify local m3u8 fetch works (quick check)
     try:
         # Quick fetch via http to ensure server works
-        import aiohttp
 
         async with (
             aiohttp.ClientSession() as sess,
@@ -307,7 +303,6 @@ async def run_stream(
         chosen_episodes: The episodes to queue.
         solver: The Cloudflare solver.
     """
-    from pahebatcher.ui import console
 
     if not shutil.which("mpv"):
         console.console.print("\n  [red]\u2717 MPV not found![/red]")
@@ -404,7 +399,6 @@ async def run_stream(
         )
 
     # Shared HttpClient for HLS proxy (handles 403 fallback)
-    import pahebatcher.http
 
     http = pahebatcher.http.HttpClient(hls_workers=8)
     await http.start()

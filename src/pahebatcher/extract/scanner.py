@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 import urllib.parse
 
 from pahebatcher import config, models, utils
+from pahebatcher.ui import console
 
 if TYPE_CHECKING:
     import pathlib
@@ -109,7 +110,6 @@ class AnimePaheScanner:
             The raw result dicts from the API. The list is empty if every host
             fails.
         """
-        import urllib.parse
 
         hosts = list(
             dict.fromkeys(
@@ -254,7 +254,6 @@ class AnimePaheScanner:
         Returns:
             The series with all discovered episode variants.
         """
-        from pahebatcher.ui import console
 
         # Try cache first — stable lookup via glob so title variation doesn't
         # invalidate cache

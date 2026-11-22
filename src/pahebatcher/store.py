@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import json
 import pathlib
+import shutil
 import subprocess
 import time
 
@@ -340,7 +341,7 @@ class SegmentStore:
             proc.stdin.close()
             proc.wait(timeout=600)
             return proc.returncode == 0
-        except (OSError, subprocess.SubprocessError):
+        except Exception:  # fallback point: any failure falls back to concat
             return False
 
     def _assemble_concat(
@@ -388,7 +389,6 @@ class SegmentStore:
     def cleanup(self) -> None:
         """Deletes the episode's segment directory, ignoring errors."""
         with contextlib.suppress(Exception):
-            import shutil
             shutil.rmtree(self.dir)
 
 

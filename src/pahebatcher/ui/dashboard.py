@@ -126,7 +126,6 @@ class Dashboard:
         self._started = time.monotonic()
 
         if console is None:
-            import pahebatcher.ui.console
             console = pahebatcher.ui.console.console
         self._console = console
 

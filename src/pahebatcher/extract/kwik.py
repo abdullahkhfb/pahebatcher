@@ -136,6 +136,7 @@ def _sync_curl_fetch(
         request or extraction fails.
     """
     try:
+        # Lazy: curl_cffi loads a native library; only the fallback needs it
         import curl_cffi.requests
     except ImportError:
         return None

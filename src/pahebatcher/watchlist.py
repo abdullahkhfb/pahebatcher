@@ -2,17 +2,30 @@
 
 from __future__ import annotations
 
+import asyncio
+import concurrent.futures
+import contextlib
 import dataclasses
 import json
+import logging
 import os
 import pathlib
 import re
+import shutil
 import sys
 import time
 from typing import Any
 
-from pahebatcher import config_manager, utils
+from rich import box
+import rich.panel
+import rich.prompt
+import rich.table
+
+from pahebatcher import config_manager, downloader, models, utils
 import pahebatcher.extract.scanner
+import pahebatcher.http
+import pahebatcher.solver
+from pahebatcher.ui import console, prompts
 
 DEFAULT_WATCHLIST_PATH = pathlib.Path("watchlist.json")
 
@@ -64,9 +77,7 @@ def _recover_title_from_cache(
     # Find any cache ending with _<session>/_scan_cache.json
     for p in cache_dir.glob(f"*_{session}/_scan_cache.json"):
         try:
-            import json as _json
-
-            raw = _json.loads(p.read_text(encoding="utf-8"))
+            raw = json.loads(p.read_text(encoding="utf-8"))
             t = str(raw.get("title", "")).strip()
             if t and t != "Unknown Anime" and not _is_404_title(t):
                 return t
@@ -415,10 +426,6 @@ def cli_list(path: pathlib.Path | None = None) -> None:
     Args:
         path: The watchlist file, or None for the default.
     """
-    from rich import box
-    import rich.table
-
-    from pahebatcher.ui import console
 
     entries = load_entries(path)
     if not entries:
@@ -459,9 +466,6 @@ def cli_show(identifier: str, path: pathlib.Path | None = None) -> None:
         identifier: The entry's index, session, URL or title.
         path: The watchlist file, or None for the default.
     """
-    import rich.panel
-
-    from pahebatcher.ui import console
 
     entries = load_entries(path)
     if not entries:
@@ -529,7 +533,6 @@ def cli_remove(identifier: str, path: pathlib.Path | None = None) -> None:
         identifier: The entry's index, session, URL or title.
         path: The watchlist file, or None for the default.
     """
-    from pahebatcher.ui import console
 
     removed = remove_entry(identifier, path)
     if not removed:
@@ -556,7 +559,6 @@ def cli_reset(
         path: The watchlist file, or None for the default.
         reset_all: Whether to reset every entry.
     """
-    from pahebatcher.ui import console
 
     entries = load_entries(path)
     if not entries:
@@ -651,12 +653,6 @@ async def run_watchlist_browser() -> tuple[str | None, WatchlistEntry | None]:
         A tuple ``(url, entry)`` to open for download, or ``(None, None)``
         to go back.
     """
-    from rich import box
-    import rich.panel
-    import rich.prompt
-    import rich.table
-
-    from pahebatcher.ui import console
 
     while True:
         entries = load_entries()
@@ -759,7 +755,6 @@ def cli_relink(
         new_url: The new series URL, or None to search for it.
         path: The watchlist file, or None for the default.
     """
-    from pahebatcher.ui import console
 
     entries = load_entries(path)
     # No identifier → auto-relink ALL dead entries in one command
@@ -769,9 +764,6 @@ def cli_relink(
             return
         # Reuse check's dead-detection: Unknown/0 + real title/history
         # But for relink we just try auto for every entry with real title
-        import asyncio
-
-        import pahebatcher.solver
 
         async def _relink_all() -> int:
             """Tries to relink every entry that looks dead.
@@ -856,8 +848,6 @@ def cli_relink(
         except RuntimeError:
             loop = None
         if loop is not None and loop.is_running():
-            import concurrent.futures
-
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 pool.submit(asyncio.run, _relink_all()).result()
         else:
@@ -898,9 +888,6 @@ def cli_relink(
             )
             sys.exit(1)
         # Reuse shared search helper (same as check auto-migrate)
-        import asyncio
-
-        import pahebatcher.solver
 
         async def _auto() -> tuple[str, str] | None:
             """Searches for the entry's new session.
@@ -960,8 +947,6 @@ def cli_relink(
         except RuntimeError:
             loop = None
         if loop is not None and loop.is_running():
-            import concurrent.futures
-
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 result = pool.submit(asyncio.run, _auto()).result()
         else:
@@ -1043,7 +1028,6 @@ def _solver_from_config() -> Any:
     Returns:
         The new solver.
     """
-    import pahebatcher.solver
 
     cm = config_manager.ConfigManager()
     cm.load()
@@ -1060,9 +1044,6 @@ def _discover_add_url(query: str | None) -> tuple[str | None, str | None]:
         A tuple ``(series_url, result_title)``, or ``(None, None)`` if the
         user quit or the solver is unavailable.
     """
-    import asyncio
-
-    from pahebatcher.ui import console
 
     async def _run() -> tuple[str | None, str | None]:
         """Runs the interactive search on the event loop."""
@@ -1074,7 +1055,6 @@ def _discover_add_url(query: str | None) -> tuple[str | None, str | None]:
                     "[red]✗ no Cloudflare solver available[/red]"
                 )
                 return None, None
-            from pahebatcher.ui import prompts
 
             return await prompts.interactive_discovery(
                 solver, "animepahe.pw", initial=query
@@ -1087,8 +1067,6 @@ def _discover_add_url(query: str | None) -> tuple[str | None, str | None]:
     except RuntimeError:
         loop = None
     if loop is not None and loop.is_running():
-        import concurrent.futures
-
         with concurrent.futures.ThreadPoolExecutor() as pool:
             return pool.submit(asyncio.run, _run()).result()
     return asyncio.run(_run())
@@ -1120,7 +1098,6 @@ def cli_add(
         retry: How many times to retry failed episodes, or None.
         path: The watchlist file, or None for the default.
     """
-    from pahebatcher.ui import console
 
     if url is None:
         # No target given — interactive search (same UI as bare `pahebatcher`).
@@ -1245,16 +1222,6 @@ async def run_watchlist_check(
     Raises:
         RuntimeError: If the solver cannot be started.
     """
-    import logging
-
-    from rich import box
-    import rich.panel
-    import rich.table
-
-    from pahebatcher import downloader, models
-    import pahebatcher.http
-    import pahebatcher.solver
-    from pahebatcher.ui import console
 
     cm = config_manager.ConfigManager()
     cm.load()
@@ -1785,12 +1752,10 @@ async def run_watchlist_check(
         await solver.close()
 
     # Cleanup orphaned cache (>24h) — reuse main.py logic
-    import contextlib as _ctxlib
-    import shutil as _shutil
 
-    with _ctxlib.suppress(Exception):
+    with contextlib.suppress(Exception):
         now = time.time()
         for p in cache_dir.glob("*/*/*.ts"):
             if now - p.stat().st_mtime > 86400:
-                with _ctxlib.suppress(Exception):
-                    _shutil.rmtree(p.parent.parent)
+                with contextlib.suppress(Exception):
+                    shutil.rmtree(p.parent.parent)

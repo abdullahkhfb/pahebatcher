@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import threading
+import time
 from typing import Any
 
 import aiohttp
@@ -23,6 +24,7 @@ def _get_curl_session() -> Any:
     """
     sess: Any = getattr(_curl_local, "session", None)
     if sess is None:
+        # Lazy: curl_cffi loads a native library; only the fallback needs it
         import curl_cffi.requests
 
         sess = curl_cffi.requests.Session()
@@ -53,8 +55,8 @@ def _curl_fetch(
             out.
         Exception: Whatever error the final attempt raised.
     """
-    import time as _time
 
+    # Lazy: curl_cffi loads a native library; only the fallback needs it
     import curl_cffi.requests
 
     sess: Any = _get_curl_session()
@@ -70,12 +72,12 @@ def _curl_fetch(
                 log.debug(
                     "curl_cffi timeout on %s — retry %d/5", url, attempt + 1
                 )
-                _time.sleep(1)
+                time.sleep(1)
                 continue
             raise
         except Exception:
             if attempt < 4:
-                _time.sleep(1)
+                time.sleep(1)
                 continue
             raise
     raise RuntimeError("curl fetch failed after retries")

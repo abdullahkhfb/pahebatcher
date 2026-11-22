@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+import shutil
 import time
 from typing import Any
 
@@ -12,6 +13,7 @@ import rich.prompt
 import rich.table
 
 from pahebatcher import utils
+from pahebatcher.ui import console
 
 
 def get_sessions(cache_dir: pathlib.Path) -> list[dict[str, Any]]:
@@ -74,7 +76,6 @@ def run(cache_dir: pathlib.Path) -> str | None:
         The URL of the session the user chose to resume, or None if they
         left without choosing one.
     """
-    from pahebatcher.ui import console
 
     while True:
         console.console.clear()
@@ -134,7 +135,6 @@ def run(cache_dir: pathlib.Path) -> str | None:
             if rich.prompt.Confirm.ask(
                 "  [red]Wipe entire cache folder?[/red]", default=False
             ):
-                import shutil
                 shutil.rmtree(cache_dir, ignore_errors=True)
                 console.console.print(
                     "  [green]\u2713 Cache cleared.[/green]"
@@ -154,9 +154,6 @@ def run(cache_dir: pathlib.Path) -> str | None:
                     f"  [red]Delete session for '{target['title']}'?[/red]",
                     default=True,
                 ):
-                    import pathlib
-                    import shutil
-
                     target_path = target["path"]
                     if isinstance(target_path, pathlib.Path):
                         shutil.rmtree(target_path, ignore_errors=True)

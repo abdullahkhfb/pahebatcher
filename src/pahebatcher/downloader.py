@@ -9,6 +9,7 @@ import re
 import time
 from typing import TYPE_CHECKING, Any
 
+from Cryptodome.Cipher import AES
 from rich import box
 import rich.panel
 import rich.table
@@ -16,7 +17,7 @@ import rich.table
 from pahebatcher import cache, models, utils
 from pahebatcher.extract import kwik, m3u8
 import pahebatcher.store
-from pahebatcher.ui import dashboard
+from pahebatcher.ui import console, dashboard
 
 if TYPE_CHECKING:
     import pahebatcher.http
@@ -159,7 +160,6 @@ class EpisodeDownloader:
                     async with seg_sem:
                         raw = await self.http.get(seg["url"], hdrs)
                         if seg["key_url"]:
-                            from Cryptodome.Cipher import AES
                             cipher = AES.new(
                                 key_map[seg["key_url"]],
                                 AES.MODE_CBC,
@@ -308,8 +308,6 @@ class BatchOrchestrator:
                 break
             is_retry = batch_attempt > 0
             if is_retry:
-                from pahebatcher.ui import console
-
                 console.console.print(
                     f"\n  [yellow]Retrying {len(remaining)} failed episode(s) "
                     "(attempt "
@@ -525,7 +523,6 @@ class BatchOrchestrator:
             episodes: The episodes that were requested.
             elapsed: The total time taken, in seconds.
         """
-        from pahebatcher.ui import console
 
         h, rem = divmod(int(elapsed), 3600)
         m, s = divmod(rem, 60)

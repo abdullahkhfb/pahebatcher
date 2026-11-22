@@ -11,7 +11,16 @@ import queue
 import threading
 from typing import Any
 
-from pahebatcher import config_manager, ffmpeg_setup, models
+from pahebatcher import (
+    config_manager,
+    downloader,
+    ffmpeg_setup,
+    http,
+    models,
+    solver,
+    utils,
+)
+import pahebatcher.extract.scanner
 
 Callback = Callable[[Any], None]
 
@@ -181,7 +190,6 @@ class Backend:
 
     async def start(self) -> None:
         """Starts the HTTP client and the solver."""
-        from pahebatcher import http, solver
 
         self.solver = solver.Solver.from_config(self.cfg)
         await self.solver.start()
@@ -200,7 +208,6 @@ class Backend:
         Returns:
             The raw search results.
         """
-        import pahebatcher.extract.scanner
 
         res = await pahebatcher.extract.scanner.AnimePaheScanner.search(
             self.solver, self.host, query
@@ -224,7 +231,6 @@ class Backend:
         Returns:
             The series with its episodes.
         """
-        import pahebatcher.extract.scanner
 
         scanner = pahebatcher.extract.scanner.AnimePaheScanner(
             self.solver, self.host, session
@@ -244,7 +250,6 @@ class Backend:
         Returns:
             The settings for one download run.
         """
-        from pahebatcher import utils
 
         c = self.cfg
         return models.AppContext(
@@ -279,7 +284,6 @@ class Backend:
             A dict mapping each episode's session to the downloaded file, or to
             None if it failed.
         """
-        from pahebatcher import downloader
 
         ctx = self.context(anime.title)
         pathlib.Path(ctx.output_dir).mkdir(parents=True, exist_ok=True)

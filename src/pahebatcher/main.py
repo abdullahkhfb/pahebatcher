@@ -24,6 +24,7 @@ from pahebatcher import (
     models,
     stream,
     utils,
+    watchlist,
 )
 import pahebatcher.extract.scanner
 import pahebatcher.http
@@ -478,8 +479,6 @@ async def run(args: argparse.Namespace) -> None:
                     )
                     wl_count = 0
                     with contextlib.suppress(Exception):
-                        from pahebatcher import watchlist
-
                         wl_count = len(watchlist.load_entries())
                     wl_hint = (
                         f" [dim]({wl_count} tracked)[/dim]"
@@ -517,8 +516,6 @@ async def run(args: argparse.Namespace) -> None:
                     if choice == "5":
                         break
                     if choice.upper() == "W":
-                        from pahebatcher import watchlist
-
                         new_url, wl_ent = (
                             await watchlist.run_watchlist_browser()
                         )
@@ -679,8 +676,6 @@ async def run(args: argparse.Namespace) -> None:
                     )
                     results = await orch.download(chosen)
                     if wl_entry is not None:
-                        from pahebatcher import watchlist
-
                         done_nums = [
                             ep.number
                             for ep in chosen
@@ -745,8 +740,6 @@ def main() -> None:
         # check` and `pahebatcher relink` → `pahebatcher watchlist relink` (no
         # id = relink all)
         if len(sys.argv) > 1 and sys.argv[1] in CHECK_ALIASES:
-            from pahebatcher import watchlist
-
             # Parse check flags (identifier, --verbose) via watchlist parser
             wl_parser = build_watchlist_parser()
             # Reuse check subparser parsing: prepend "check"
@@ -773,8 +766,6 @@ def main() -> None:
             return
 
         if len(sys.argv) > 1 and sys.argv[1] in RELINK_ALIASES:
-            from pahebatcher import watchlist
-
             # Top-level relink: `pahebatcher relink [id] [new-url]`
             wl_parser = build_watchlist_parser()
             try:
@@ -802,8 +793,6 @@ def main() -> None:
             try:
                 act = wl_args.watchlist_action
                 if act in ("add", "a"):
-                    from pahebatcher import watchlist
-
                     watchlist.cli_add(
                         url=wl_args.url,
                         quality=wl_args.quality,
@@ -815,19 +804,11 @@ def main() -> None:
                         retry=wl_args.retry,
                     )
                 elif act in ("list", "ls", "l"):
-                    from pahebatcher import watchlist
-
                     watchlist.cli_list()
                 elif act in ("show", "s", "info"):
-                    from pahebatcher import watchlist
-
                     watchlist.cli_show(wl_args.identifier)
                 elif act in ("remove", "rm", "r", "del", "delete"):
                     if not wl_args.yes:
-                        import rich.prompt
-
-                        from pahebatcher import watchlist
-
                         entries = watchlist.load_entries()
                         found = watchlist.find_entry(
                             entries, wl_args.identifier
@@ -841,22 +822,15 @@ def main() -> None:
                             ):
                                 console.console.print("  [dim]Cancelled.[/dim]")
                                 return
-                    from pahebatcher import watchlist
 
                     watchlist.cli_remove(wl_args.identifier)
                 elif act in ("reset", "rst", "clear"):
-                    from pahebatcher import watchlist
-
                     watchlist.cli_reset(
                         wl_args.identifier, reset_all=bool(wl_args.all)
                     )
                 elif act in ("relink", "link", "migrate", "update-url"):
-                    from pahebatcher import watchlist
-
                     watchlist.cli_relink(wl_args.identifier, wl_args.new_url)
                 elif act in ("check", "c", "sync", "update"):
-                    from pahebatcher import watchlist
-
                     asyncio.run(
                         watchlist.run_watchlist_check(
                             verbose=bool(wl_args.verbose),

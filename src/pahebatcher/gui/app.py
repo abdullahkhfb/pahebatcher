@@ -20,7 +20,7 @@ import webbrowser
 
 from pahebatcher import config, ffmpeg_setup, models, updater, utils
 from pahebatcher.gui import bridge, widgets
-from pahebatcher.ui import dashboard
+from pahebatcher.ui import dashboard, prompts
 
 PIP_CMD = 'pip install "pahebatcher[browser]"'
 EST_MB = {360: 50, 720: 90, 1080: 150}
@@ -431,7 +431,6 @@ class EpisodesView(tk.Frame):
 
     def select_range(self) -> None:
         """Selects the episodes in the range entered by the user."""
-        from pahebatcher.ui import prompts
 
         raw = self.range.get().strip()
         if raw:
@@ -692,6 +691,7 @@ class App(tk.Tk):
         self._after_ff: list[Callable[[], None]] = []
         self._pinging = False
 
+        # Lazy: aliased to avoid a name clash
         from pahebatcher.ui import dashboard as dashboard_ui
 
         def factory(
@@ -1238,6 +1238,7 @@ def _win_set_icon(win: tk.Tk, ico: pathlib.Path) -> None:
         ico: The .ico file.
     """
     try:
+        # Lazy: Windows-only API
         import ctypes
         from ctypes import wintypes
 
@@ -1297,6 +1298,7 @@ def _prepare_process() -> None:
                     os.devnull, "w", encoding="utf-8", errors="replace"
                 ),
             )
+    # Lazy: aliased to avoid a name clash
     from pahebatcher.ui import console as ui_console
 
     ui_console.console.file = open(  # noqa: SIM115
@@ -1304,6 +1306,7 @@ def _prepare_process() -> None:
     )
     if sys.platform == "win32":
         try:
+            # Lazy: Windows-only API
             import ctypes
 
             ctypes.windll.shcore.SetProcessDpiAwareness(1)  # type: ignore[attr-defined,unused-ignore]

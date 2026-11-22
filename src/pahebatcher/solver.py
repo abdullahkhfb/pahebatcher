@@ -11,7 +11,7 @@ import re
 from typing import TYPE_CHECKING, Any
 import urllib.parse
 
-from pahebatcher import browser_solver
+from pahebatcher import browser_solver, ffmpeg_setup
 import pahebatcher.cache
 
 if TYPE_CHECKING:
@@ -82,6 +82,7 @@ def _impersonate_for(user_agent: str) -> str:
         return _DEFAULT_IMPERSONATE
     major = int(m.group(1))
     try:
+        # Lazy: curl_cffi loads a native library; only the fallback needs it
         import curl_cffi.requests
 
         versions = sorted(
@@ -116,6 +117,7 @@ def _direct_fetch_sync(
         error so the caller can fall back to the browser path.
     """
     try:
+        # Lazy: curl_cffi loads a native library; only the fallback needs it
         import curl_cffi.requests
     except ImportError:
         return None
@@ -221,8 +223,6 @@ class Solver:
         if self._engine_obj is None:
             profile = self._profile_dir
             if profile is None:
-                from pahebatcher import ffmpeg_setup
-
                 profile = ffmpeg_setup.app_dir() / "browser-profile"
             self._engine_obj = browser_solver.BrowserEngine(
                 profile, self._browser_mode, self._proxy
