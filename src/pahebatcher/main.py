@@ -663,7 +663,7 @@ async def run(args: argparse.Namespace) -> None:
                             "  [dim]Settings saved to "
                             "[bold]pahebatcher.toml[/bold][/dim]\n"
                         )
-                    except Exception:
+                    except (OSError, ValueError):
                         pass
 
                 if mode == "stream":
@@ -789,7 +789,7 @@ def main() -> None:
                 sys.exit(0)
             except SystemExit:
                 raise
-            except Exception as exc:
+            except Exception as exc:  # isolation point: keep going
                 console.console.print(
                     f"\n  [red]\u2717 Fatal Error:[/red] {exc}"
                 )

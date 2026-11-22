@@ -31,6 +31,7 @@ with Windows 10 and 11). The browser is chosen in this order:
 from __future__ import annotations
 
 import asyncio
+import http.client
 import importlib
 import logging
 import os
@@ -178,7 +179,7 @@ def _devtools_up(port: int) -> bool:
             f"http://127.0.0.1:{port}/json/version", timeout=1
         ) as r:
             return bool(r.status == 200)
-    except Exception:
+    except (OSError, http.client.HTTPException):
         return False
 
 
@@ -405,7 +406,7 @@ class BrowserEngine:
         if self._cdp_browser is not None:
             try:
                 await self._cdp_browser.close()
-            except Exception:
+            except Exception:  # best-effort cleanup; must not raise
                 pass
             self._cdp_browser = None
             self._ctx = None
@@ -415,12 +416,12 @@ class BrowserEngine:
                 proc.terminate()
                 try:
                     await asyncio.to_thread(proc.wait, 5)
-                except Exception:
+                except Exception:  # best-effort cleanup; must not raise
                     proc.kill()
         if self._ctx is not None:
             try:
                 await self._ctx.close()
-            except Exception:
+            except Exception:  # best-effort cleanup; must not raise
                 pass
             self._ctx = None
         self._ctx_headless = None
@@ -432,7 +433,7 @@ class BrowserEngine:
             if self._pw_cm is not None:
                 try:
                     await self._pw_cm.stop()
-                except Exception:
+                except Exception:  # best-effort cleanup; must not raise
                     pass
                 self._pw_cm = self._pw = None
 
@@ -513,7 +514,7 @@ class BrowserEngine:
                     timeout=min(timeout_ms, 60_000),
                 )
             # slow/blocked navigation — the poll loop decides
-            except Exception as exc:
+            except Exception as exc:  # isolation point: keep going
                 log.debug("goto %s: %s", url, exc)
 
             html = ""
@@ -532,7 +533,7 @@ class BrowserEngine:
             await asyncio.sleep(max(0, settle_ms) / 1000)
             try:
                 html = await page.content()
-            except Exception:
+            except Exception:  # isolation point: keep going
                 pass
             if _is_challenge(html):
                 return None
@@ -545,13 +546,13 @@ class BrowserEngine:
                 "userAgent": ua,
                 "startTimestamp": int(time.time() * 1000),
             }
-        except Exception as exc:
+        except Exception as exc:  # isolation point: keep going
             log.warning("Browser solve failed for %s: %s", url, exc)
             return None
         finally:
             try:
                 await page.close()
-            except Exception:
+            except Exception:  # best-effort cleanup; must not raise
                 pass
 
 
@@ -600,6 +601,6 @@ async def _mask_headless(ctx: Any, page: Any) -> str:
                 },
             },
         )
-    except Exception as exc:
+    except Exception as exc:  # isolation point: keep going
         log.debug("UA override failed: %s", exc)
     return ua

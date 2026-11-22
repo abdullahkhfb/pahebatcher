@@ -124,7 +124,7 @@ class AnimePaheScanner:
                     cls._current_host = h
                     result = data.get("data", [])
                     return list(result) if isinstance(result, list) else []
-            except Exception as exc:
+            except Exception as exc:  # isolation point: keep going
                 log.debug("Search failed on %s: %s", h, exc)
                 continue
         return []
@@ -450,7 +450,7 @@ def _load_cache(
         return None
     try:
         raw = json.loads(cache_path.read_text(encoding="utf-8"))
-    except Exception:
+    except (OSError, ValueError):
         return None
     age = time.time() - raw.get("cached_at", 0)
     if age > cache_ttl * 60:
@@ -492,5 +492,5 @@ def _save_cache(cache_path: pathlib.Path, anime: models.AnimeInfo) -> None:
     }
     try:
         cache_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
-    except Exception:
+    except (OSError, TypeError, ValueError):
         pass

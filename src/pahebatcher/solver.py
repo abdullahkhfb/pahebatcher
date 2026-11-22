@@ -89,7 +89,7 @@ def _impersonate_for(user_agent: str) -> str:
             for b in curl_cffi.requests.BrowserType
             if re.fullmatch(r"chrome\d+", b.value)
         )
-    except Exception:
+    except (AttributeError, ImportError, ValueError):
         return _DEFAULT_IMPERSONATE
     usable = [v for v in versions if v <= major]
     return f"chrome{usable[-1]}" if usable else _DEFAULT_IMPERSONATE

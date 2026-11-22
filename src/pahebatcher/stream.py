@@ -104,7 +104,7 @@ async def _prepare_local_hls(
     # Fetch original m3u8 via HttpClient (handles curl fallback for 403)
     try:
         m3u8_text = await m3u8.fetch_m3u8(http, info.url, info.headers)
-    except Exception as exc:
+    except Exception as exc:  # isolation point: keep going
         log.warning(
             "Failed to fetch m3u8 via HttpClient, falling back to remote: %s",
             exc,
@@ -248,7 +248,7 @@ async def _prepare_local_hls(
                 content_type=ctype,
                 headers={"Accept-Ranges": "bytes"},
             )
-        except Exception as exc:
+        except Exception as exc:  # isolation point: keep going
             log.warning("Local HLS proxy failed for %s: %s", local_path, exc)
             return web.Response(status=502, text=f"Proxy failed: {exc}")
 
@@ -278,7 +278,7 @@ async def _prepare_local_hls(
         ):
             if resp.status != 200:
                 raise RuntimeError(f"Local server check failed {resp.status}")
-    except Exception as exc:
+    except Exception as exc:  # isolation point: keep going
         log.warning(
             "Local HLS server check failed, falling back to remote: %s", exc
         )
@@ -455,7 +455,7 @@ async def run_stream(
                             info.url,
                             local_url,
                         )
-                except Exception as exc:
+                except Exception as exc:  # isolation point: keep going
                     log.warning(
                         "Local HLS proxy failed, falling back to remote: %s",
                         exc,
@@ -613,7 +613,7 @@ async def run_stream(
                     idx = max(0, min(num - 1, len(playlist) - 1))
             except KeyboardInterrupt:
                 break
-            except Exception as exc:
+            except Exception as exc:  # isolation point: keep going
                 console.console.print(f"  [red]\u2717 Error:[/red] {exc}")
                 if not rich.prompt.Confirm.ask(
                     "  [brand]Try next episode?[/brand]", default=True

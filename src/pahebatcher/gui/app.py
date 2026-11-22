@@ -741,7 +741,7 @@ class App(tk.Tk):
             # keep a reference or Tk drops it
             self._icon = tk.PhotoImage(file=str(assets / "icon.png"))
             self.iconphoto(True, self._icon)
-        except Exception:
+        except tk.TclError:
             pass  # a missing icon must never stop the app
         if sys.platform == "win32":
             self.update_idletasks()
@@ -765,7 +765,7 @@ class App(tk.Tk):
             tk.Label(hdr, image=self._logo, bg=widgets.BG, bd=0).pack(
                 side="left"
             )
-        except Exception:
+        except tk.TclError:
             tk.Label(
                 hdr,
                 text="PaheBatcher",
@@ -1218,7 +1218,7 @@ class App(tk.Tk):
             self.v_dl.future.cancel()
         try:
             self.bridge.run(self.backend.close()).result(timeout=6)
-        except Exception:
+        except Exception:  # best-effort cleanup; must not raise
             pass
         self.bridge.shutdown()
         self.destroy()
@@ -1246,7 +1246,7 @@ def _win_set_icon(win: tk.Tk, ico: pathlib.Path) -> None:
         # separate taskbar identity so Windows doesn't group us under python.exe
         try:
             shell32.SetCurrentProcessExplicitAppUserModelID("pahebatcher.gui")
-        except Exception:
+        except (AttributeError, OSError):
             pass
         hwnd = user32.GetParent(win.winfo_id()) or win.winfo_id()
 
@@ -1279,7 +1279,7 @@ def _win_set_icon(win: tk.Tk, ico: pathlib.Path) -> None:
             h = load(size)
             if h:
                 user32.SendMessageW(hwnd, 0x0080, which, h)  # WM_SETICON
-    except Exception:
+    except Exception:  # cosmetic; an icon must not stop the app
         pass
 
 
@@ -1307,7 +1307,7 @@ def _prepare_process() -> None:
             import ctypes
 
             ctypes.windll.shcore.SetProcessDpiAwareness(1)  # type: ignore[attr-defined,unused-ignore]
-        except Exception:
+        except (AttributeError, OSError):
             pass
 
 

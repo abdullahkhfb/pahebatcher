@@ -340,7 +340,7 @@ class SegmentStore:
             proc.stdin.close()
             proc.wait(timeout=600)
             return proc.returncode == 0
-        except Exception:
+        except (OSError, subprocess.SubprocessError):
             return False
 
     def _assemble_concat(
@@ -410,7 +410,7 @@ def fix_aac_esds(out: pathlib.Path) -> bool:
     """
     try:
         data = bytearray(out.read_bytes())
-    except Exception:
+    except OSError:
         return False
     try:
         patched = _patch_aac_main_to_lc(data)
@@ -420,6 +420,6 @@ def fix_aac_esds(out: pathlib.Path) -> bool:
         return False
     try:
         out.write_bytes(bytes(data))
-    except Exception:
+    except OSError:
         return False
     return True

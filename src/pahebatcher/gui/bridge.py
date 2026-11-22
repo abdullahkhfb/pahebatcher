@@ -130,7 +130,7 @@ class Bridge:
             asyncio.run_coroutine_threadsafe(_cancel_all(), self.loop).result(
                 timeout=3
             )
-        except Exception:
+        except Exception:  # best-effort cleanup; must not raise
             pass
         self.loop.call_soon_threadsafe(self.loop.stop)
         self._pool.shutdown(wait=False, cancel_futures=True)
@@ -293,5 +293,5 @@ class Backend:
             if obj is not None:
                 try:
                     await obj.close()
-                except Exception:
+                except Exception:  # best-effort cleanup; must not raise
                     pass

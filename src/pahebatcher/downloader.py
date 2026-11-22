@@ -195,7 +195,7 @@ class EpisodeDownloader:
 
                 self.dash.mark_done(key, f"Ep {ep.ep_str} \u2014 {title[:34]}")
                 return out
-            except Exception as exc:
+            except Exception as exc:  # isolation point: keep going
                 is_last = attempt == max_attempts - 1
                 # Don't retry permanent parse errors
                 msg = str(exc)
@@ -419,7 +419,7 @@ class BatchOrchestrator:
                                     f"{r_attempt+1}/{max_attempts-1}",
                                 )
                                 await asyncio.sleep(2 * (2**r_attempt))
-                        except Exception as exc:
+                        except Exception as exc:  # isolation point: keep going
                             msg = str(exc)
                             is_permanent = (
                                 "No Kwik link" in msg or "No anime UUID" in msg

@@ -56,7 +56,7 @@ def get_sessions(cache_dir: pathlib.Path) -> list[dict[str, Any]]:
                 "size": size,
                 "updated": meta.get("updated", folder.stat().st_mtime),
             })
-        except Exception:
+        except (AttributeError, OSError, ValueError):
             continue
     return sessions
 

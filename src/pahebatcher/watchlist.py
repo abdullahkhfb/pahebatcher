@@ -70,7 +70,7 @@ def _recover_title_from_cache(
             t = str(raw.get("title", "")).strip()
             if t and t != "Unknown Anime" and not _is_404_title(t):
                 return t
-        except Exception:
+        except (AttributeError, OSError, ValueError):
             continue
     # Fallback: try downloads folder name inference (sanitized title)
     # Look for output dirs that might contain the series (best effort)
@@ -232,7 +232,7 @@ class WatchlistEntry:
             for v in raw_dl:
                 try:
                     dl_list.append(float(v))
-                except Exception:
+                except (OverflowError, TypeError, ValueError):
                     continue
         return cls(
             url=data["url"],
@@ -266,7 +266,7 @@ def load_entries(path: pathlib.Path | None = None) -> list[WatchlistEntry]:
         return []
     try:
         raw = json.loads(p.read_text(encoding="utf-8"))
-    except Exception:
+    except (OSError, ValueError):
         return []
     # Support both {"entries": [...]} and plain list for backward compat
     if isinstance(raw, dict) and "entries" in raw:
@@ -279,7 +279,7 @@ def load_entries(path: pathlib.Path | None = None) -> list[WatchlistEntry]:
     for item in raw_list:
         try:
             entries.append(WatchlistEntry.from_dict(item))
-        except Exception:
+        except (AttributeError, KeyError, TypeError, ValueError):
             continue
     return entries
 
@@ -1338,7 +1338,7 @@ async def run_watchlist_check(
                         prefer_audio=entry.audio_lang,
                         cache_ttl=cache_ttl_watch,
                     )
-                except Exception as exc:
+                except Exception as exc:  # isolation point: keep going
                     console.console.print(f"  [red]✗ Scan failed:[/red] {exc}")
                     per_entry_summary.append(
                         {
@@ -1549,7 +1549,7 @@ async def run_watchlist_check(
                             save_entries(all_entries, path)
                             total_failed += 1
                             continue
-                    except Exception as exc:
+                    except Exception as exc:  # isolation point: keep going
                         # If we already handled and continued, not here;
                         # otherwise treat as dead
                         if (

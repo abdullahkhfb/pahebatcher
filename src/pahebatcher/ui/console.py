@@ -22,7 +22,7 @@ from pahebatcher.ui import theme
 for _stream in (sys.stdout, sys.stderr):
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
-    except Exception:
+    except (AttributeError, OSError, ValueError):
         pass
 
 console = rich.console.Console(theme=theme.THEME, highlight=False)

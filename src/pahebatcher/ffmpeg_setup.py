@@ -90,7 +90,7 @@ def _works(path: str) -> bool:
             creationflags=NO_WINDOW,
         )
         return r.returncode == 0
-    except Exception:
+    except (OSError, subprocess.SubprocessError):
         return False
 
 
