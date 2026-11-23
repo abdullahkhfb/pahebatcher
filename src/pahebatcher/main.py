@@ -35,54 +35,49 @@ from pahebatcher.ui import console, prompts
 log = logging.getLogger(__name__)
 
 
-def build_parser() -> argparse.ArgumentParser:
-    """Builds the main command-line parser.
+_MAIN_EPILOG = (
+    "Examples:\n"
+    "  %(prog)s https://animepahe.pw/anime/<uuid> "
+    "                       # wizard\n"
+    "  %(prog)s https://animepahe.pw/anime/<uuid> --all "
+    "                 # all eps\n"
+    "  %(prog)s https://animepahe.pw/anime/<uuid> --range 1-12 "
+    "          # season 1\n"
+    "  %(prog)s https://animepahe.pw/anime/<uuid> --latest 3 "
+    "            # last 3\n"
+    "  %(prog)s https://animepahe.pw/anime/<uuid> --list "
+    "                # list only\n"
+    "  %(prog)s https://animepahe.pw/anime/<uuid> --audio eng --all "
+    "     # dubbed\n"
+    "  %(prog)s https://animepahe.pw/anime/<uuid> -s "
+    "                    # stream\n"
+    "\n"
+    "Configuration:\n"
+    "  %(prog)s config show "
+    "                                              # view settings\n"
+    "  %(prog)s config set quality 720 "
+    "                                   # save default quality\n"
+    "  %(prog)s config reset "
+    "                                             # reset to "
+    "defaults\n"
+    "\n"
+    "Watchlist (auto-download ongoing series) — shorthand: wl, w, "
+    "check:\n"
+    "  %(prog)s watchlist add <URL> [-q 720] [--audio eng] [-o DIR] "
+    "     # add\n"
+    "  %(prog)s wl add <URL>                  # same as watchlist\n"
+    "  %(prog)s check                         # same as watchlist "
+    "check\n"
+    "  %(prog)s wl list / wl show 1 / wl remove 1 / wl reset 1\n"
+)
 
-    Returns:
-        The parser.
+
+def _add_selection_arguments(parser: argparse.ArgumentParser) -> None:
+    """Adds the series URL, the episode-selection group and ``--list``.
+
+    Args:
+        parser: The parser to add the arguments to.
     """
-    parser = argparse.ArgumentParser(
-        prog="pahebatcher",
-        description=f"pahe-batcher v{config.VERSION} \u2014 animepahe Batch "
-        "Downloader",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=(
-            "Examples:\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> "
-            "                       # wizard\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> --all "
-            "                 # all eps\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> --range 1-12 "
-            "          # season 1\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> --latest 3 "
-            "            # last 3\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> --list "
-            "                # list only\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> --audio eng --all "
-            "     # dubbed\n"
-            "  %(prog)s https://animepahe.pw/anime/<uuid> -s "
-            "                    # stream\n"
-            "\n"
-            "Configuration:\n"
-            "  %(prog)s config show "
-            "                                              # view settings\n"
-            "  %(prog)s config set quality 720 "
-            "                                   # save default quality\n"
-            "  %(prog)s config reset "
-            "                                             # reset to "
-            "defaults\n"
-            "\n"
-            "Watchlist (auto-download ongoing series) — shorthand: wl, w, "
-            "check:\n"
-            "  %(prog)s watchlist add <URL> [-q 720] [--audio eng] [-o DIR] "
-            "     # add\n"
-            "  %(prog)s wl add <URL>                  # same as watchlist\n"
-            "  %(prog)s check                         # same as watchlist "
-            "check\n"
-            "  %(prog)s wl list / wl show 1 / wl remove 1 / wl reset 1\n"
-        ),
-    )
-
     parser.add_argument(
         "url", metavar="URL", nargs="?", help="animepahe series URL"
     )
@@ -113,6 +108,14 @@ def build_parser() -> argparse.ArgumentParser:
         dest="list_only",
         help="List episodes and exit",
     )
+
+
+def _add_download_arguments(parser: argparse.ArgumentParser) -> None:
+    """Adds the output, quality, audio and performance options.
+
+    Args:
+        parser: The parser to add the arguments to.
+    """
     parser.add_argument(
         "-o", "--output", default="./downloads", help="Output directory"
     )
@@ -142,6 +145,24 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Enable debug logging"
     )
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Builds the main command-line parser.
+
+    Returns:
+        The parser.
+    """
+    parser = argparse.ArgumentParser(
+        prog="pahebatcher",
+        description=f"pahe-batcher v{config.VERSION} \u2014 animepahe Batch "
+        "Downloader",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=_MAIN_EPILOG,
+    )
+
+    _add_selection_arguments(parser)
+    _add_download_arguments(parser)
     return parser
 
 
@@ -177,45 +198,42 @@ def build_config_parser() -> argparse.ArgumentParser:
     return cfg
 
 
-def build_watchlist_parser() -> argparse.ArgumentParser:
-    """Builds the parser for the ``watchlist`` subcommand.
+_WATCHLIST_EPILOG = (
+    "Examples:\n"
+    "  pahebatcher watchlist add https://animepahe.pw/anime/<uuid> -q "
+    "1080 --audio jpn -o ~/anime\n"
+    "  pahebatcher wl add https://... -q 720  # wl/w = shorthand\n"
+    "  pahebatcher watchlist list  |  pahebatcher wl list  |  "
+    "pahebatcher wl ls\n"
+    "  pahebatcher watchlist check |  pahebatcher check   |  "
+    "pahebatcher wl c\n"
+    "  pahebatcher watchlist remove https://animepahe.pw/anime/<uuid>\n"
+    "  pahebatcher wl relink 1 https://animepahe.pw/anime/<new-uuid>  "
+    "# fix dead link\n"
+    "\n"
+    "Shorthand: wl, w, watch = watchlist; check/sync = watchlist "
+    "check\n"
+    "Sub-aliases: a=add, ls/l=list, s=show, rm/r/del=remove,\n"
+    "             rst=reset, c/sync=check, link/migrate=relink\n"
+    "\n"
+    "Cron example (run hourly):\n"
+    "  0 * * * * cd /path/to/pahebatcher && venv/bin/python -m "
+    "pahebatcher \\\n"
+    "    watchlist check >> watchlist.log 2>&1\n"
+    "  # or shorter:\n"
+    "  0 * * * * cd /path/to/pahebatcher && make watchlist-check >> "
+    "watchlist.log 2>&1\n"
+)
 
-    Returns:
-        The parser.
+
+def _add_add_command(
+    sub: argparse._SubParsersAction[argparse.ArgumentParser]
+) -> None:
+    """Adds the ``add`` subcommand.
+
+    Args:
+        sub: The subcommand group to add it to.
     """
-    parser = argparse.ArgumentParser(
-        prog="pahebatcher watchlist",
-        description="Manage watchlist for auto-downloading ongoing anime",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=(
-            "Examples:\n"
-            "  pahebatcher watchlist add https://animepahe.pw/anime/<uuid> -q "
-            "1080 --audio jpn -o ~/anime\n"
-            "  pahebatcher wl add https://... -q 720  # wl/w = shorthand\n"
-            "  pahebatcher watchlist list  |  pahebatcher wl list  |  "
-            "pahebatcher wl ls\n"
-            "  pahebatcher watchlist check |  pahebatcher check   |  "
-            "pahebatcher wl c\n"
-            "  pahebatcher watchlist remove https://animepahe.pw/anime/<uuid>\n"
-            "  pahebatcher wl relink 1 https://animepahe.pw/anime/<new-uuid>  "
-            "# fix dead link\n"
-            "\n"
-            "Shorthand: wl, w, watch = watchlist; check/sync = watchlist "
-            "check\n"
-            "Sub-aliases: a=add, ls/l=list, s=show, rm/r/del=remove,\n"
-            "             rst=reset, c/sync=check, link/migrate=relink\n"
-            "\n"
-            "Cron example (run hourly):\n"
-            "  0 * * * * cd /path/to/pahebatcher && venv/bin/python -m "
-            "pahebatcher \\\n"
-            "    watchlist check >> watchlist.log 2>&1\n"
-            "  # or shorter:\n"
-            "  0 * * * * cd /path/to/pahebatcher && make watchlist-check >> "
-            "watchlist.log 2>&1\n"
-        ),
-    )
-    sub = parser.add_subparsers(dest="watchlist_action", required=True)
-
     p_add = sub.add_parser("add", aliases=["a"], help="Add anime to watchlist")
     p_add.add_argument(
         "url",
@@ -255,6 +273,15 @@ def build_watchlist_parser() -> argparse.ArgumentParser:
         "--verbose", "-v", action="store_true", help="Enable debug logging"
     )
 
+
+def _add_entry_commands(
+    sub: argparse._SubParsersAction[argparse.ArgumentParser]
+) -> None:
+    """Adds the ``list``, ``show``, ``remove`` and ``reset`` subcommands.
+
+    Args:
+        sub: The subcommand group to add them to.
+    """
     sub.add_parser("list", aliases=["ls", "l"], help="List watchlist entries")
 
     p_show = sub.add_parser(
@@ -292,6 +319,15 @@ def build_watchlist_parser() -> argparse.ArgumentParser:
         "--all", action="store_true", help="Reset skip history for all entries"
     )
 
+
+def _add_sync_commands(
+    sub: argparse._SubParsersAction[argparse.ArgumentParser]
+) -> None:
+    """Adds the ``relink`` and ``check`` subcommands.
+
+    Args:
+        sub: The subcommand group to add them to.
+    """
     p_relink = sub.add_parser(
         "relink",
         aliases=["link", "migrate", "update-url"],
@@ -320,6 +356,25 @@ def build_watchlist_parser() -> argparse.ArgumentParser:
     p_check.add_argument(
         "--verbose", "-v", action="store_true", help="Enable debug logging"
     )
+
+
+def build_watchlist_parser() -> argparse.ArgumentParser:
+    """Builds the parser for the ``watchlist`` subcommand.
+
+    Returns:
+        The parser.
+    """
+    parser = argparse.ArgumentParser(
+        prog="pahebatcher watchlist",
+        description="Manage watchlist for auto-downloading ongoing anime",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=_WATCHLIST_EPILOG,
+    )
+    sub = parser.add_subparsers(dest="watchlist_action", required=True)
+
+    _add_add_command(sub)
+    _add_entry_commands(sub)
+    _add_sync_commands(sub)
 
     return parser
 
