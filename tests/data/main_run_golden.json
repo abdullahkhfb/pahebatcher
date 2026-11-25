@@ -1,0 +1,4823 @@
+{
+ "all_download": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    3,
+    16,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ],
+     [
+      5.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "cache_cleanup": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": true,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    3,
+    16,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ],
+     [
+      5.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "cm_high_values": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    6,
+    8,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ],
+     [
+      5.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "cm_out_of_range": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    32
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    1,
+    32,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    0,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ],
+     [
+      5.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "explicit_flags_clamped": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "orch.init",
+    "/x/Show_A",
+    "pahe_cache",
+    720,
+    "jpn",
+    6,
+    8,
+    true,
+    false,
+    2,
+    30,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ],
+     [
+      5.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "latest_two": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    3,
+    16,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      3.0,
+      "jpn"
+     ],
+     [
+      5.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "list_only": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "Table(['Ep', 'Title', 'Audio'],[['1', 'T1', 'SUB'], ['2', '\u2014', 'SUB'], ['3', 'T3', 'SUB'], ['5', 'T5', 'SUB']])",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_cache_and_watchlist_hints": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand] [dim](6.0 KB)[/dim]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand] [dim](3 tracked)[/dim]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_download_customized": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "print",
+    "\n  [dim]Using saved settings from pahebatcher.toml:  [cyan]SUB[/cyan]  1080p  3 concurrent  16 workers[/dim]\n",
+    {}
+   ],
+   [
+    "confirm",
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    3,
+    16,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_download_declined": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "print",
+    "\n  [dim]Using saved settings from pahebatcher.toml:  [cyan]SUB[/cyan]  1080p  3 concurrent  16 workers[/dim]\n",
+    {}
+   ],
+   [
+    "confirm",
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_download_wizard": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "wizard",
+    "download"
+   ],
+   [
+    "cm.set",
+    "quality",
+    720
+   ],
+   [
+    "cm.set",
+    "audio_lang",
+    "eng"
+   ],
+   [
+    "cm.set",
+    "max_parallel",
+    2
+   ],
+   [
+    "cm.set",
+    "hls_workers",
+    9
+   ],
+   [
+    "cm.save"
+   ],
+   [
+    "print",
+    "  [dim]Settings saved to [bold]pahebatcher.toml[/bold][/dim]\n",
+    {}
+   ],
+   [
+    "confirm",
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    720,
+    "eng",
+    2,
+    9,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_download_wizard_save_fails": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "wizard",
+    "download"
+   ],
+   [
+    "cm.set",
+    "quality",
+    720
+   ],
+   [
+    "cm.set",
+    "audio_lang",
+    "eng"
+   ],
+   [
+    "cm.set",
+    "max_parallel",
+    2
+   ],
+   [
+    "cm.set",
+    "hls_workers",
+    9
+   ],
+   [
+    "cm.save"
+   ],
+   [
+    "confirm",
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    720,
+    "eng",
+    2,
+    9,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_exit": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_list_then_exit": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "print",
+    "Table(['Ep', 'Title', 'Audio'],[['1', 'T1', 'SUB'], ['2', '\u2014', 'SUB'], ['3', 'T3', 'SUB'], ['5', 'T5', 'SUB']])",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_select_empty_then_exit": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_sessions_new_url_relaunch": {
+  "args_url": "https://animepahe.pw/anime/223e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "sessions.run",
+    "pahe_cache"
+   ],
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "223e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show B[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show B[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_sessions_none": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "sessions.run",
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_sessions_same_url": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "sessions.run",
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_stream_customized": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "print",
+    "\n  [dim]Using saved settings from pahebatcher.toml:  [cyan]SUB[/cyan]  1080p  3 concurrent  16 workers[/dim]\n",
+    {}
+   ],
+   [
+    "stream",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    3,
+    16,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_stream_wizard": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "wizard",
+    "stream"
+   ],
+   [
+    "cm.set",
+    "quality",
+    720
+   ],
+   [
+    "cm.set",
+    "audio_lang",
+    "eng"
+   ],
+   [
+    "cm.set",
+    "max_parallel",
+    2
+   ],
+   [
+    "cm.set",
+    "hls_workers",
+    9
+   ],
+   [
+    "cm.save"
+   ],
+   [
+    "print",
+    "  [dim]Settings saved to [bold]pahebatcher.toml[/bold][/dim]\n",
+    {}
+   ],
+   [
+    "stream",
+    "./downloads/Show_A",
+    "pahe_cache",
+    720,
+    "eng",
+    2,
+    9,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_watchlist_back": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "wl.browser"
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_watchlist_count_raises": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_watchlist_relaunch": {
+  "args_url": "https://animepahe.pw/anime/223e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "wl.browser"
+   ],
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "223e4567-e89b-12d3-a456-426614174000",
+    "eng",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show B[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show B[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "outcome": null
+ },
+ "menu_watchlist_same_url": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "wl.browser"
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "no_url_discovery_none": {
+  "args_url": null,
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "discovery",
+    "animepahe.pw"
+   ],
+   [
+    "print",
+    "\n  [yellow]No anime selected. Exiting.[/yellow]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "outcome": null
+ },
+ "no_url_discovery_ok_all": {
+  "args_url": null,
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "discovery",
+    "animepahe.pw"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    3,
+    16,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ],
+     [
+      5.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "partial_badge": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold] [bold yellow][PARTIAL DOWNLOAD FOUND][/bold yellow]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    3,
+    16,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ],
+     [
+      5.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "partial_dl_fail": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    3,
+    16,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ],
+     [
+      5.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "ping_fail": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[red]\u2717 none available[/red]",
+    {}
+   ],
+   [
+    "print",
+    "\n  [red]No Cloudflare solver is available[/red]\n  [dim]HINT[/dim]",
+    {}
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "outcome": "exit:1"
+ },
+ "range_match": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    3,
+    16,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "range_nomatch_exit": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "  [red]\u2717 No episodes matched:[/red] 40-50",
+    {}
+   ],
+   [
+    "print",
+    "    Available: [brand]1\u20133, 5[/brand]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "outcome": "exit:1"
+ },
+ "scripted_empty_break": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]0[/brand] episodes  (none)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "stream_scripted": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "stream",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    3,
+    16,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "verbose": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "logging.basicConfig"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    3,
+    16,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ],
+     [
+      5.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "wl_entry_cli_flags_win": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    10
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "print",
+    "\n  [dim]Using watchlist prefs for 'Show A':  [cyan]SUB[/cyan]  720p  2 concurrent  10 workers[/dim]\n",
+    {}
+   ],
+   [
+    "confirm",
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "orch.init",
+    "<T>/wlout/Show_A",
+    "pahe_cache",
+    720,
+    "jpn",
+    2,
+    10,
+    true,
+    false,
+    2,
+    30,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "wl.record",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "Show A",
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "print",
+    "  [dim]Watchlist history updated for 'Show A'[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "wl_entry_download_record": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "eng",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "print",
+    "\n  [dim]Using watchlist prefs for 'Show A':  [yellow]DUB[/yellow]  480p  5 concurrent  32 workers[/dim]\n",
+    {}
+   ],
+   [
+    "confirm",
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "orch.init",
+    "<T>/wlout/Show_A",
+    "pahe_cache",
+    480,
+    "eng",
+    5,
+    32,
+    true,
+    false,
+    2,
+    30,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "wl.record",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "Show A",
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "print",
+    "  [dim]Watchlist history updated for 'Show A'[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "wl_entry_record_false": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "eng",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "print",
+    "\n  [dim]Using watchlist prefs for 'Show A':  [yellow]DUB[/yellow]  480p  5 concurrent  32 workers[/dim]\n",
+    {}
+   ],
+   [
+    "confirm",
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "orch.init",
+    "<T>/wlout/Show_A",
+    "pahe_cache",
+    480,
+    "eng",
+    5,
+    32,
+    true,
+    false,
+    2,
+    30,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "wl.record",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "Show A",
+    [
+     2.0
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "wl_entry_record_raises": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "eng",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "print",
+    "\n  [dim]Using watchlist prefs for 'Show A':  [yellow]DUB[/yellow]  480p  5 concurrent  32 workers[/dim]\n",
+    {}
+   ],
+   [
+    "confirm",
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "orch.init",
+    "<T>/wlout/Show_A",
+    "pahe_cache",
+    480,
+    "eng",
+    5,
+    32,
+    true,
+    false,
+    2,
+    30,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "wl.record",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "Show A",
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "wl_entry_scripted": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "eng",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/wlout/Show_A",
+    "pahe_cache",
+    480,
+    "eng",
+    5,
+    32,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ],
+     [
+      5.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "wl.record",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "Show A",
+    [
+     1.0,
+     2.0,
+     3.0,
+     5.0
+    ]
+   ],
+   [
+    "print",
+    "  [dim]Watchlist history updated for 'Show A'[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ },
+ "wl_entry_session_mismatch": {
+  "args_url": "https://animepahe.pw/anime/123e4567-e89b-12d3-a456-426614174000",
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "123e4567-e89b-12d3-a456-426614174000",
+    "jpn",
+    30,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [green]\u2713[/green] [bold]Show A[/bold]\n  \u2014 [brand]4[/brand] episodes  (1\u20133, 5)",
+    {}
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Action"
+   ],
+   [
+    "sessions.get",
+    "pahe_cache"
+   ],
+   [
+    "wl.load"
+   ],
+   [
+    "print",
+    "Panel('  [bold white]1[/bold white]  [brand]Download[/brand]  [dim]\u00b7 save .mp4 files[/dim]/n  [bold white]2[/bold white]  [brand]Stream[/brand]    [dim]\u00b7 play in MPV[/dim]/n  [bold white]3[/bold white]  [brand]Sessions & Cache[/brand]/n  [bold white]4[/bold white]  [brand]List[/brand]      [dim]\u00b7 show episode table[/dim]/n  [bold white]W[/bold white]  [brand]Watchlist[/brand]/n  [bold white]5[/bold white]  [red]Exit[/red]',[brand.bold]Show A[/brand.bold],brand)",
+    {}
+   ],
+   [
+    "ask",
+    "  [brand]Select action[/brand]",
+    {
+     "choices": "['1', '2', '3', '4', '5', 'W', 'w']",
+     "default": "1",
+     "show_choices": "False"
+    }
+   ],
+   [
+    "select_episodes"
+   ],
+   [
+    "print",
+    "\n  [dim]Using saved settings from pahebatcher.toml:  [cyan]SUB[/cyan]  1080p  3 concurrent  16 workers[/dim]\n",
+    {}
+   ],
+   [
+    "confirm",
+    [
+     1.0,
+     2.0
+    ]
+   ],
+   [
+    "orch.init",
+    "./downloads/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    3,
+    16,
+    false,
+    false,
+    2,
+    30,
+    "c=1",
+    1,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ],
+   [
+    "print",
+    "\n  [brand.bold]Session finished.[/brand.bold]",
+    {}
+   ]
+  ],
+  "outcome": null
+ }
+}

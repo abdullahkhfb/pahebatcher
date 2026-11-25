@@ -1206,6 +1206,656 @@ def cli_add(
         console.console.print("  [dim]Entry updated.[/dim]")
 
 
+@dataclasses.dataclass
+class _CheckRun:
+    """Settings and services shared by every entry of one check run.
+
+    Attributes:
+        solver: The Cloudflare solver.
+        http: The shared HTTP client.
+        all_entries: Every watchlist entry. Saved after each change.
+        path: The watchlist file, or None for the default.
+        cache_dir: The scan and segment cache directory.
+        resolve_ahead: How many episodes to resolve ahead of downloads.
+        cache_ttl: Minutes a cached scan stays valid. 0 forces a fresh scan.
+        cookie_string: A user-supplied Cookie header value, or empty.
+        verbose: Whether download errors should be re-raised.
+    """
+
+    solver: pahebatcher.solver.Solver
+    http: pahebatcher.http.HttpClient
+    all_entries: list[WatchlistEntry]
+    path: pathlib.Path | None
+    cache_dir: pathlib.Path
+    resolve_ahead: int
+    cache_ttl: int
+    cookie_string: str
+    verbose: bool
+
+
+@dataclasses.dataclass
+class _EntryResult:
+    """What checking one watchlist entry produced.
+
+    Attributes:
+        summaries: Rows for the final results table.
+        new: How many new episodes were queued for download.
+        done: How many of them downloaded.
+        failed: How many episodes or checks failed.
+    """
+
+    summaries: list[dict[str, Any]] = dataclasses.field(default_factory=list)
+    new: int = 0
+    done: int = 0
+    failed: int = 0
+
+
+def _select_entries(
+    all_entries: list[WatchlistEntry], filter_id: str | None
+) -> list[WatchlistEntry]:
+    """Picks the entries to check.
+
+    Args:
+        all_entries: Every watchlist entry.
+        filter_id: An identifier to check only one entry, or None for all.
+
+    Returns:
+        The matching entry, or every entry if ``filter_id`` is empty.
+
+    Raises:
+        SystemExit: If ``filter_id`` matches no entry.
+    """
+    if not filter_id:
+        return all_entries
+    found = find_entry(all_entries, filter_id)
+    if not found:
+        console.console.print(
+            f"\n  [red]✗ No watchlist entry for:[/red] {filter_id}"
+        )
+        sys.exit(1)
+    return [found[1]]
+
+
+def _mark_checked(run: _CheckRun, entry: WatchlistEntry) -> None:
+    """Stamps an entry as checked now and saves the watchlist.
+
+    Args:
+        run: The shared run settings.
+        entry: The entry that was checked.
+    """
+    entry.last_checked = time.time()
+    save_entries(run.all_entries, run.path)
+
+
+def _give_up(
+    run: _CheckRun, entry: WatchlistEntry, res: _EntryResult, error: str
+) -> None:
+    """Records that checking an entry failed.
+
+    Args:
+        run: The shared run settings.
+        entry: The entry that failed.
+        res: The entry's result, updated in place.
+        error: The reason, kept in the summary row.
+    """
+    res.summaries.append(
+        {
+            "title": entry.title,
+            "new": 0,
+            "done": 0,
+            "failed": 1,
+            "error": error,
+        },
+    )
+    _mark_checked(run, entry)
+    res.failed += 1
+
+
+def _unique_episodes(
+    anime: models.AnimeInfo, audio_lang: str
+) -> dict[float, models.EpisodeInfo]:
+    """Reduces a scan to one episode per number, preferring an audio language.
+
+    Args:
+        anime: The scanned series.
+        audio_lang: The preferred audio language.
+
+    Returns:
+        The chosen episode for each episode number.
+    """
+    unique: dict[float, models.EpisodeInfo] = {}
+    for ep in anime.episodes:
+        if ep.number not in unique:
+            unique[ep.number] = ep
+        else:
+            existing = unique[ep.number]
+            if existing.audio != audio_lang and ep.audio == audio_lang:
+                unique[ep.number] = ep
+    return unique
+
+
+def _is_dead_candidate(
+    entry: WatchlistEntry, anime: models.AnimeInfo, episode_count: int
+) -> bool:
+    """Whether a scan looks like a dead link worth trying to relink.
+
+    The scan must look dead (no usable title or no episodes) and the entry
+    must be worth rescuing: it has a real title or a download history.
+
+    Args:
+        entry: The watchlist entry.
+        anime: The scan result.
+        episode_count: The number of distinct episodes found.
+
+    Returns:
+        True if a relink should be attempted.
+    """
+    anime_is_dead = (
+        anime.title == "Unknown Anime"
+        or _is_404_title(anime.title)
+        or episode_count == 0
+    )
+    return anime_is_dead and (
+        (
+            entry.title != entry.session
+            and entry.title != "Unknown Anime"
+            and not _is_404_title(entry.title)
+        )
+        or bool(entry.downloaded)
+    )
+
+
+def _print_dead_link(entry: WatchlistEntry, reason: str) -> None:
+    """Tells the user a link is dead and how to relink it.
+
+    Args:
+        entry: The dead entry.
+        reason: Why it could not be relinked automatically.
+    """
+    console.console.print(
+        f"  [yellow]✗ Link dead for '{entry.title}' — {reason}[/yellow]\n"
+        "  [dim]Use: pahebatcher wl relink "
+        f"{entry.session[:8]} <new-url>[/dim]",
+    )
+
+
+def _search_title(entry: WatchlistEntry, cache_dir: pathlib.Path) -> str:
+    """Picks the title to search for a dead entry's new session.
+
+    A corrupted 404 title is replaced by one recovered from the cache.
+
+    Args:
+        entry: The dead entry.
+        cache_dir: The cache directory.
+
+    Returns:
+        The title to search for. It may still be unusable.
+    """
+    search_title = entry.title
+    if _is_404_title(search_title):
+        recovered = _recover_title_from_cache(entry.session, cache_dir)
+        if recovered:
+            console.console.print(
+                f"  [dim]Recovered title '{recovered}' for "
+                f"{entry.session[:8]}…[/dim]",
+            )
+            search_title = recovered
+    return search_title
+
+
+async def _migrate_entry(
+    run: _CheckRun, entry: WatchlistEntry, new_host: str, new_session: str
+) -> tuple[models.AnimeInfo, dict[float, models.EpisodeInfo]]:
+    """Points an entry at its new session and rescans it.
+
+    Args:
+        run: The shared run settings.
+        entry: The entry to relink. Updated and saved in place.
+        new_host: The host the series moved to.
+        new_session: The series' new session identifier.
+
+    Returns:
+        The rescanned series and its de-duplicated episodes.
+
+    Raises:
+        RuntimeError: If the new session is still dead.
+    """
+    old_session = entry.session
+    entry.session = new_session
+    entry.host = new_host
+    entry.url = f"https://{new_host}/anime/{new_session}"
+    save_entries(run.all_entries, run.path)
+    console.console.print(
+        f"  [yellow]↻ Relinked '{entry.title}': "
+        f"{old_session[:8]}… → "
+        f"{new_session[:8]}…[/yellow]",
+    )
+    scanner = pahebatcher.extract.scanner.AnimePaheScanner(
+        run.solver, entry.host, entry.session
+    )
+    anime = await scanner.scan(
+        run.cache_dir,
+        prefer_audio=entry.audio_lang,
+        cache_ttl=run.cache_ttl,
+    )
+    if (
+        anime.title == "Unknown Anime"
+        or _is_404_title(anime.title)
+        or not anime.episodes
+    ):
+        raise RuntimeError("migrated session still dead")
+    if (
+        anime.title
+        and anime.title != "Unknown Anime"
+        and not _is_404_title(anime.title)
+    ):
+        entry.title = anime.title
+    return anime, _unique_episodes(anime, entry.audio_lang)
+
+
+async def _recover_dead_entry(
+    run: _CheckRun, entry: WatchlistEntry, res: _EntryResult
+) -> tuple[models.AnimeInfo, dict[float, models.EpisodeInfo]] | None:
+    """Tries to relink a dead entry by searching for its title.
+
+    Args:
+        run: The shared run settings.
+        entry: The dead entry.
+        res: The entry's result, updated in place when giving up.
+
+    Returns:
+        The rescanned series and its episodes if the entry was relinked, or
+        None if it could not be, in which case the failure is recorded.
+    """
+    search_title = _search_title(entry, run.cache_dir)
+    if (
+        search_title == entry.session
+        or search_title == "Unknown Anime"
+        or _is_404_title(search_title)
+    ):
+        _print_dead_link(entry, "title unknown.")
+        _give_up(run, entry, res, "dead link")
+        return None
+    try:
+        new_host, new_session, status = await _find_single_new_session(
+            run.solver, entry.host, search_title, entry.session
+        )
+        if status == "ok" and new_host and new_session:
+            return await _migrate_entry(run, entry, new_host, new_session)
+        if status == "none":
+            _print_dead_link(entry, "no session found.")
+            _give_up(run, entry, res, "dead link")
+        elif status == "unknown_title":
+            _print_dead_link(entry, "title unknown.")
+            _give_up(run, entry, res, "dead link")
+        else:  # ambiguous
+            _print_dead_link(
+                entry, "multiple candidates, not auto-migrating."
+            )
+            _give_up(run, entry, res, "ambiguous")
+        return None
+    except Exception as exc:  # isolation point: keep going
+        if (
+            "dead link" not in str(exc).lower()
+            and "ambiguous" not in str(exc).lower()
+        ):
+            _print_dead_link(entry, f"auto-migrate failed: {exc}")
+        _give_up(run, entry, res, str(exc))
+        return None
+
+
+def _build_context(
+    run: _CheckRun, entry: WatchlistEntry, anime: models.AnimeInfo
+) -> tuple[models.AppContext, str]:
+    """Builds the download settings for one entry.
+
+    The series folder is named after the entry when the scan has no usable
+    title, which keeps the folder stable.
+
+    Args:
+        run: The shared run settings.
+        entry: The watchlist entry.
+        anime: The scan result.
+
+    Returns:
+        The download settings and the series output folder.
+    """
+    is_anime_dead = anime.title == "Unknown Anime" or _is_404_title(anime.title)
+    safe_title = utils.sanitize(
+        entry.title if is_anime_dead else anime.title,
+    )
+    full_output = os.path.join(entry.output_dir, safe_title)
+    ctx = models.AppContext(
+        output_dir=full_output,
+        cache_dir=run.cache_dir,
+        quality=entry.quality,
+        audio_lang=entry.audio_lang,
+        max_parallel=entry.max_parallel,
+        hls_workers=entry.hls_workers,
+        keep_temp=entry.keep_temp,
+        list_only=False,
+        resolve_ahead=run.resolve_ahead,
+        cache_ttl=run.cache_ttl,
+        cookie_string=run.cookie_string,
+        auto_retry=entry.auto_retry,
+    )
+    return ctx, full_output
+
+
+def _load_history(
+    run: _CheckRun, entry: WatchlistEntry, full_output: str
+) -> tuple[set[float], bool]:
+    """Reads an entry's download history.
+
+    If the series folder no longer exists, the history is forgotten so that
+    deleted episodes are downloaded again.
+
+    Args:
+        run: The shared run settings.
+        entry: The watchlist entry. Its history may be reset and saved.
+        full_output: The series output folder.
+
+    Returns:
+        The downloaded episode numbers and whether the folder exists.
+    """
+    downloaded_set = set(float(v) for v in (entry.downloaded or []))
+    folder_exists = pathlib.Path(full_output).exists()
+    if not folder_exists and downloaded_set:
+        console.console.print(
+            f"  [dim]Folder not found ({full_output}) — resetting "
+            "skip history[/dim]",
+        )
+        downloaded_set.clear()
+        entry.downloaded = []
+        save_entries(run.all_entries, run.path)
+    return downloaded_set, folder_exists
+
+
+def _find_pending(
+    anime: models.AnimeInfo,
+    unique_by_num: dict[float, models.EpisodeInfo],
+    audio_lang: str,
+    orch: downloader.BatchOrchestrator,
+    folder_exists: bool,
+    downloaded_set: set[float],
+) -> tuple[list[models.EpisodeInfo], int]:
+    """Works out which episodes still need downloading.
+
+    Episodes already on disk are added to the history. Episodes in the
+    history but missing from an existing folder were deleted on purpose and
+    are skipped.
+
+    Args:
+        anime: The scanned series.
+        unique_by_num: One episode per number.
+        audio_lang: The preferred audio language.
+        orch: An orchestrator, used only to look for existing files.
+        folder_exists: Whether the series folder exists.
+        downloaded_set: The downloaded episode numbers. Updated in place.
+
+    Returns:
+        The episodes to download and how many were skipped as deleted.
+    """
+    pending: list[models.EpisodeInfo] = []
+    skipped_deleted = 0
+    for num in sorted(unique_by_num.keys()):
+        ep_variant = anime.get_variant(num, audio_lang)
+        if not ep_variant:
+            # Fall back to any variant of that number
+            variants = anime.get_all_variants(num)
+            if not variants:
+                continue
+            ep_variant = variants[0]
+        existing = None
+        try:
+            existing = orch._find_existing(ep_variant)
+        except Exception:  # isolation point: keep going
+            existing = None
+        if existing is not None:
+            # A file on disk means it was downloaded
+            if num not in downloaded_set:
+                downloaded_set.add(num)
+            continue
+        if folder_exists and num in downloaded_set:
+            skipped_deleted += 1
+            continue
+        pending.append(ep_variant)
+    return pending, skipped_deleted
+
+
+def _print_up_to_date(total: int, skipped_deleted: int) -> None:
+    """Prints that an entry has nothing new.
+
+    Args:
+        total: The number of distinct episodes.
+        skipped_deleted: How many were skipped because they were deleted.
+    """
+    if skipped_deleted:
+        console.console.print(
+            f"  [dim]Up to date — {total} "
+            "episodes, "
+            f"{skipped_deleted} skipped (deleted)[/dim]",
+        )
+    else:
+        console.console.print(
+            f"  [dim]Up to date — {total} episodes, 0 new[/dim]"
+        )
+
+
+async def _download_pending(
+    run: _CheckRun,
+    entry: WatchlistEntry,
+    orch: downloader.BatchOrchestrator,
+    pending: list[models.EpisodeInfo],
+    downloaded_set: set[float],
+    res: _EntryResult,
+) -> None:
+    """Downloads an entry's new episodes and records the outcome.
+
+    The entry's history and check time are saved even if the download fails.
+
+    Args:
+        run: The shared run settings.
+        entry: The watchlist entry.
+        orch: The orchestrator that downloads the episodes.
+        pending: The episodes to download.
+        downloaded_set: The downloaded episode numbers. Updated in place.
+        res: The entry's result, updated in place.
+
+    Raises:
+        Exception: Whatever the download raised, but only in verbose mode.
+    """
+    try:
+        results = await orch.download(pending)
+        # results is dict[session, Path|None]
+        done = sum(1 for v in results.values() if v is not None)
+        failed = len(results) - done
+        res.new += len(pending)
+        res.done += done
+        res.failed += failed
+        res.summaries.append(
+            {
+                "title": entry.title,
+                "new": len(pending),
+                "done": done,
+                "failed": failed,
+            },
+        )
+        for ep in pending:
+            if results.get(ep.session) is not None:
+                downloaded_set.add(float(ep.number))
+        entry.downloaded = sorted(downloaded_set)
+        if failed:
+            console.console.print(
+                f"  [yellow]⚠ {failed} failed, {done} done[/yellow]"
+            )
+        else:
+            console.console.print(
+                f"  [green]✓ {done} episode(s) completed[/green]"
+            )
+    except Exception as exc:  # isolation point: keep going
+        console.console.print(f"  [red]✗ Download failed:[/red] {exc}")
+        if run.verbose:
+            raise
+        res.summaries.append(
+            {
+                "title": entry.title,
+                "new": len(pending),
+                "done": 0,
+                "failed": len(pending),
+                "error": str(exc),
+            },
+        )
+        res.failed += len(pending)
+    finally:
+        entry.last_checked = time.time()
+        # Persist history even if the download failed partially
+        entry.downloaded = sorted(downloaded_set)
+        save_entries(run.all_entries, run.path)
+
+
+async def _check_entry(run: _CheckRun, entry: WatchlistEntry) -> _EntryResult:
+    """Checks one watched series and downloads its new episodes.
+
+    Args:
+        run: The shared run settings.
+        entry: The watchlist entry to check.
+
+    Returns:
+        The outcome for the entry.
+    """
+    res = _EntryResult()
+    try:
+        scanner = pahebatcher.extract.scanner.AnimePaheScanner(
+            run.solver, entry.host, entry.session
+        )
+        # Force a fresh scan (TTL 0) to detect new episodes promptly
+        anime = await scanner.scan(
+            run.cache_dir,
+            prefer_audio=entry.audio_lang,
+            cache_ttl=run.cache_ttl,
+        )
+    except Exception as exc:  # isolation point: keep going
+        console.console.print(f"  [red]✗ Scan failed:[/red] {exc}")
+        _give_up(run, entry, res, str(exc))
+        return res
+
+    unique_by_num = _unique_episodes(anime, entry.audio_lang)
+    if _is_dead_candidate(entry, anime, len(unique_by_num)):
+        recovered = await _recover_dead_entry(run, entry, res)
+        if recovered is None:
+            return res
+        anime, unique_by_num = recovered
+    # Keep the stored title in step with a valid (non-404) scanned title
+    if (
+        anime.title
+        and anime.title != "Unknown Anime"
+        and not _is_404_title(anime.title)
+        and entry.title != anime.title
+    ):
+        entry.title = anime.title
+        save_entries(run.all_entries, run.path)
+
+    ctx, full_output = _build_context(run, entry, anime)
+    downloaded_set, folder_exists = _load_history(run, entry, full_output)
+    # A temporary orchestrator, only for its _find_existing helper (no network)
+    tmp_orch = downloader.BatchOrchestrator(ctx, anime, run.http, run.solver)
+    pending, skipped_deleted = _find_pending(
+        anime,
+        unique_by_num,
+        entry.audio_lang,
+        tmp_orch,
+        folder_exists,
+        downloaded_set,
+    )
+    # Persist backfilled history even when up to date
+    if downloaded_set != set(float(v) for v in (entry.downloaded or [])):
+        entry.downloaded = sorted(downloaded_set)
+        save_entries(run.all_entries, run.path)
+
+    if not pending:
+        _print_up_to_date(len(unique_by_num), skipped_deleted)
+        res.summaries.append(
+            {"title": entry.title, "new": 0, "done": 0, "failed": 0}
+        )
+        _mark_checked(run, entry)
+        return res
+
+    console.console.print(
+        f"  [yellow]{len(pending)} new episode(s)[/yellow]"
+        f" [dim]({len(unique_by_num)} total)[/dim] → downloading "
+        f"to [brand]{full_output}[/brand]",
+    )
+    # Download with an orchestrator (reuses the resolver and segment resume)
+    orch = downloader.BatchOrchestrator(ctx, anime, run.http, run.solver)
+    await _download_pending(run, entry, orch, pending, downloaded_set, res)
+    return res
+
+
+def _print_check_summary(
+    rows: list[dict[str, Any]],
+    total_new: int,
+    total_done: int,
+    total_failed: int,
+) -> None:
+    """Prints the results table and status panel of a check run.
+
+    Args:
+        rows: One summary row per entry.
+        total_new: How many new episodes were found.
+        total_done: How many were downloaded.
+        total_failed: How many failed.
+    """
+    console.console.print()
+    console.section("Watchlist check complete")
+    table = rich.table.Table(
+        box=box.SIMPLE_HEAVY,
+        show_header=True,
+        header_style="brand.bold",
+        border_style="dim",
+    )
+    table.add_column("Series", style="bold white", ratio=1, overflow="ellipsis")
+    table.add_column("New", justify="center", width=6)
+    table.add_column("Done", justify="center", width=6, style="green")
+    table.add_column("Failed", justify="center", width=8, style="red")
+    for s in rows:
+        table.add_row(
+            s["title"], str(s["new"]), str(s["done"]), str(s["failed"])
+        )
+    console.console.print(table)
+    status = f"[green]✓ {total_done} new episodes downloaded[/green]"
+    if total_failed:
+        status += f"  [red]✗ {total_failed} failed[/red]"
+    if total_new == 0:
+        status = "[dim]No new episodes[/dim]"
+    console.console.print(
+        rich.panel.Panel(
+            status,
+            border_style="green" if not total_failed else "yellow",
+            box=box.ROUNDED,
+        )
+    )
+    if total_failed:
+        console.console.print(
+            "  [dim]Tip: re-run 'pahebatcher watchlist check' to "
+            "retry failed.[/dim]",
+        )
+
+
+def _cleanup_orphan_cache(cache_dir: pathlib.Path) -> None:
+    """Deletes cached download folders that are over 24 hours old.
+
+    Args:
+        cache_dir: The cache directory.
+    """
+    with contextlib.suppress(Exception):
+        now = time.time()
+        for p in cache_dir.glob("*/*/*.ts"):
+            if now - p.stat().st_mtime > 86400:
+                with contextlib.suppress(Exception):
+                    shutil.rmtree(p.parent.parent)
+
+
 async def run_watchlist_check(
     path: pathlib.Path | None = None,
     verbose: bool = False,
@@ -1244,16 +1894,7 @@ async def run_watchlist_check(
         )
         return
 
-    if filter_id:
-        found = find_entry(all_entries, filter_id)
-        if not found:
-            console.console.print(
-                f"\n  [red]✗ No watchlist entry for:[/red] {filter_id}"
-            )
-            sys.exit(1)
-        to_check = [found[1]]
-    else:
-        to_check = all_entries
+    to_check = _select_entries(all_entries, filter_id)
 
     console.section(f"Watchlist check — {len(to_check)} series")
 
@@ -1277,12 +1918,23 @@ async def run_watchlist_check(
             sys.exit(1)
         console.console.print(f"[ok]✓ {solver.backend_name}[/ok]")
 
-        # Use max workers for shared client, but per-entry ctx controls batch
-        # parallelism
+        # Use max workers for the shared client, but per-entry ctx controls
+        # batch parallelism
         max_workers = max((e.hls_workers for e in to_check), default=24)
         http = pahebatcher.http.HttpClient(max_workers)
         await http.start()
         try:
+            run = _CheckRun(
+                solver=solver,
+                http=http,
+                all_entries=all_entries,
+                path=path,
+                cache_dir=cache_dir,
+                resolve_ahead=resolve_ahead,
+                cache_ttl=cache_ttl_watch,
+                cookie_string=cookie_string,
+                verbose=verbose,
+            )
             total_new = 0
             total_done = 0
             total_failed = 0
@@ -1294,468 +1946,20 @@ async def run_watchlist_check(
                     f"[bold]{entry.title}[/bold]"
                     f" [dim]{entry.url}[/dim]",
                 )
-                # Need to update last_checked after each entry
-                try:
-                    scanner = pahebatcher.extract.scanner.AnimePaheScanner(
-                        solver, entry.host, entry.session
-                    )
-                    # Force fresh scan (TTL 0) to detect new episodes promptly
-                    anime = await scanner.scan(
-                        cache_dir,
-                        prefer_audio=entry.audio_lang,
-                        cache_ttl=cache_ttl_watch,
-                    )
-                except Exception as exc:  # isolation point: keep going
-                    console.console.print(f"  [red]✗ Scan failed:[/red] {exc}")
-                    per_entry_summary.append(
-                        {
-                            "title": entry.title,
-                            "new": 0,
-                            "done": 0,
-                            "failed": 1,
-                            "error": str(exc),
-                        },
-                    )
-                    # update last_checked even on failure
-                    entry.last_checked = time.time()
-                    save_entries(all_entries, path)
-                    total_failed += 1
-                    continue
+                res = await _check_entry(run, entry)
+                per_entry_summary.extend(res.summaries)
+                total_new += res.new
+                total_done += res.done
+                total_failed += res.failed
 
-                # Deduplicate to unique episode numbers, prefer requested audio
-                # Mirrors prompts.noninteractive_episodes and downloader
-                # resolver logic
-                unique_by_num: dict[float, Any] = {}
-                for ep in anime.episodes:
-                    if ep.number not in unique_by_num:
-                        unique_by_num[ep.number] = ep
-                    else:
-                        # Prefer audio_lang variant
-                        existing = unique_by_num[ep.number]
-                        if (
-                            existing.audio != entry.audio_lang
-                            and ep.audio == entry.audio_lang
-                        ):
-                            unique_by_num[ep.number] = ep
-                # Dead-link auto-migrate: same title now at new UUID (e.g. site
-                # re-upload) Use entry.title before overwriting, and treat 404
-                # titles as dead
-                anime_is_dead = (
-                    anime.title == "Unknown Anime"
-                    or _is_404_title(anime.title)
-                    or len(unique_by_num) == 0
-                )
-                is_dead_candidate = (
-                    anime_is_dead
-                    and (
-                        (
-                            entry.title != entry.session
-                            and entry.title != "Unknown Anime"
-                            and not _is_404_title(entry.title)
-                        )
-                        or bool(entry.downloaded)
-                    )
-                )
-                if is_dead_candidate:
-                    # Try to recover corrupted title from cache
-                    search_title = entry.title
-                    if _is_404_title(search_title):
-                        recovered = _recover_title_from_cache(
-                            entry.session, cache_dir
-                        )
-                        if recovered:
-                            console.console.print(
-                                f"  [dim]Recovered title '{recovered}' for "
-                                f"{entry.session[:8]}…[/dim]",
-                            )
-                            search_title = recovered
-                    # Placeholder or still corrupted can't be searched
-                    if (
-                        search_title == entry.session
-                        or search_title == "Unknown Anime"
-                        or _is_404_title(search_title)
-                    ):
-                        console.console.print(
-                            f"  [yellow]✗ Link dead for '{entry.title}' — "
-                            "title unknown.[/yellow]\n"
-                            "  [dim]Use: pahebatcher wl relink "
-                            f"{entry.session[:8]} <new-url>[/dim]",
-                        )
-                        per_entry_summary.append(
-                            {
-                                "title": entry.title,
-                                "new": 0,
-                                "done": 0,
-                                "failed": 1,
-                                "error": "dead link",
-                            },
-                        )
-                        entry.last_checked = time.time()
-                        save_entries(all_entries, path)
-                        total_failed += 1
-                        continue
-                    try:
-                        new_host, new_session, status = (
-                            await _find_single_new_session(
-                                solver, entry.host, search_title, entry.session
-                            )
-                        )
-                        if status == "ok" and new_host and new_session:
-                            old_session = entry.session
-                            entry.session = new_session
-                            entry.host = new_host
-                            entry.url = (
-                                f"https://{new_host}/anime/{new_session}"
-                            )
-                            save_entries(all_entries, path)
-                            console.console.print(
-                                f"  [yellow]↻ Relinked '{entry.title}': "
-                                f"{old_session[:8]}… → "
-                                f"{new_session[:8]}…[/yellow]",
-                            )
-                            # Re-scan with new session
-                            scanner2 = (
-                                pahebatcher.extract.scanner.AnimePaheScanner(
-                                    solver, entry.host, entry.session
-                                )
-                            )
-                            anime2 = await scanner2.scan(
-                                cache_dir,
-                                prefer_audio=entry.audio_lang,
-                                cache_ttl=cache_ttl_watch,
-                            )
-                            if (
-                                anime2.title != "Unknown Anime"
-                                and not _is_404_title(anime2.title)
-                                and anime2.episodes
-                            ):
-                                anime = anime2
-                                if (
-                                    anime.title
-                                    and anime.title != "Unknown Anime"
-                                    and not _is_404_title(anime.title)
-                                ):
-                                    entry.title = anime.title
-                                # Recompute unique_by_num from migrated anime
-                                # (prefer requested audio)
-                                unique_by_num = {}
-                                for ep in anime.episodes:
-                                    if ep.number not in unique_by_num:
-                                        unique_by_num[ep.number] = ep
-                                    else:
-                                        ex = unique_by_num[ep.number]
-                                        if (
-                                            ex.audio != entry.audio_lang
-                                            and ep.audio == entry.audio_lang
-                                        ):
-                                            unique_by_num[ep.number] = ep
-                            else:
-                                raise RuntimeError(
-                                    "migrated session still dead"
-                                )
-                        elif status == "none":
-                            console.console.print(
-                                f"  [yellow]✗ Link dead for '{entry.title}' — "
-                                "no session found.[/yellow]\n"
-                                "  [dim]Use: pahebatcher wl relink "
-                                f"{entry.session[:8]} <new-url>[/dim]",
-                            )
-                            per_entry_summary.append(
-                                {
-                                    "title": entry.title,
-                                    "new": 0,
-                                    "done": 0,
-                                    "failed": 1,
-                                    "error": "dead link",
-                                },
-                            )
-                            entry.last_checked = time.time()
-                            save_entries(all_entries, path)
-                            total_failed += 1
-                            continue
-                        elif status == "unknown_title":
-                            console.console.print(
-                                f"  [yellow]✗ Link dead for '{entry.title}' — "
-                                "title unknown.[/yellow]\n"
-                                "  [dim]Use: pahebatcher wl relink "
-                                f"{entry.session[:8]} <new-url>[/dim]",
-                            )
-                            per_entry_summary.append(
-                                {
-                                    "title": entry.title,
-                                    "new": 0,
-                                    "done": 0,
-                                    "failed": 1,
-                                    "error": "dead link",
-                                },
-                            )
-                            entry.last_checked = time.time()
-                            save_entries(all_entries, path)
-                            total_failed += 1
-                            continue
-                        else:  # ambiguous
-                            # Count for message (helper doesn't return count, so
-                            # generic)
-                            console.console.print(
-                                f"  [yellow]✗ Link dead for '{entry.title}' — "
-                                "multiple candidates, not "
-                                "auto-migrating.[/yellow]\n"
-                                "  [dim]Use: pahebatcher wl relink "
-                                f"{entry.session[:8]} <new-url>[/dim]",
-                            )
-                            per_entry_summary.append(
-                                {
-                                    "title": entry.title,
-                                    "new": 0,
-                                    "done": 0,
-                                    "failed": 1,
-                                    "error": "ambiguous",
-                                },
-                            )
-                            entry.last_checked = time.time()
-                            save_entries(all_entries, path)
-                            total_failed += 1
-                            continue
-                    except Exception as exc:  # isolation point: keep going
-                        # If we already handled and continued, not here;
-                        # otherwise treat as dead
-                        if (
-                            "dead link" not in str(exc).lower()
-                            and "ambiguous" not in str(exc).lower()
-                        ):
-                            console.console.print(
-                                f"  [yellow]✗ Link dead for '{entry.title}' — "
-                                f"auto-migrate failed: {exc}[/yellow]\n"
-                                "  [dim]Use: pahebatcher wl relink "
-                                f"{entry.session[:8]} <new-url>[/dim]",
-                            )
-                        per_entry_summary.append(
-                            {
-                                "title": entry.title,
-                                "new": 0,
-                                "done": 0,
-                                "failed": 1,
-                                "error": str(exc),
-                            },
-                        )
-                        entry.last_checked = time.time()
-                        save_entries(all_entries, path)
-                        total_failed += 1
-                        continue
-                # Update stored title if scan succeeded with valid (non-404)
-                # title
-                if (
-                    anime.title
-                    and anime.title != "Unknown Anime"
-                    and not _is_404_title(anime.title)
-                    and entry.title != anime.title
-                ):
-                    entry.title = anime.title
-                    save_entries(all_entries, path)
-                # Actually better to use get_variant logic per number
-                pending: list[Any] = []
-                skipped_deleted = 0
-                # For _find_existing we need ctx output_dir with sanitized title
-                # Use entry.title when anime is dead to keep folder stable
-                is_anime_dead = (
-                    anime.title == "Unknown Anime" or _is_404_title(anime.title)
-                )
-                safe_title = utils.sanitize(
-                    entry.title if is_anime_dead else anime.title,
-                )
-                full_output = os.path.join(entry.output_dir, safe_title)
-                ctx_for_check = models.AppContext(
-                    output_dir=full_output,
-                    cache_dir=cache_dir,
-                    quality=entry.quality,
-                    audio_lang=entry.audio_lang,
-                    max_parallel=entry.max_parallel,
-                    hls_workers=entry.hls_workers,
-                    keep_temp=entry.keep_temp,
-                    list_only=False,
-                    resolve_ahead=resolve_ahead,
-                    cache_ttl=cache_ttl_watch,
-                    cookie_string=cookie_string,
-                    auto_retry=entry.auto_retry,
-                )
-                # Folder-reset: if series folder no longer exists, forget
-                # deleted skip history
-                downloaded_set = set(float(v) for v in (entry.downloaded or []))
-                folder_exists = pathlib.Path(full_output).exists()
-                if not folder_exists and downloaded_set:
-                    console.console.print(
-                        f"  [dim]Folder not found ({full_output}) — resetting "
-                        "skip history[/dim]",
-                    )
-                    downloaded_set.clear()
-                    entry.downloaded = []
-                    save_entries(all_entries, path)
-                # Temporary orchestrator just for _find_existing helper (no
-                # network)
-                tmp_orch = downloader.BatchOrchestrator(
-                    ctx_for_check, anime, http, solver
-                )
-
-                for num in sorted(unique_by_num.keys()):
-                    # Resolve to desired audio variant if available
-                    ep_variant = anime.get_variant(num, entry.audio_lang)
-                    if not ep_variant:
-                        # fallback to any variant for that number
-                        variants = anime.get_all_variants(num)
-                        if not variants:
-                            continue
-                        ep_variant = variants[0]
-                    # Use existing file check (idempotency) + deleted skip
-                    existing = None
-                    try:
-                        existing = tmp_orch._find_existing(ep_variant)
-                    except Exception:
-                        existing = None
-                    if existing is not None:
-                        # Backfill history: file present means it was downloaded
-                        if num not in downloaded_set:
-                            downloaded_set.add(num)
-                        continue
-                    # Not on disk — if folder exists and we have history, skip
-                    # deleted
-                    if folder_exists and num in downloaded_set:
-                        skipped_deleted += 1
-                        continue
-                    pending.append(ep_variant)
-
-                # Persist backfilled history even when up-to-date
-                if (
-                    downloaded_set
-                    != set(float(v) for v in (entry.downloaded or []))
-                ):
-                    entry.downloaded = sorted(downloaded_set)
-                    save_entries(all_entries, path)
-
-                if not pending:
-                    if skipped_deleted:
-                        console.console.print(
-                            f"  [dim]Up to date — {len(unique_by_num)} "
-                            "episodes, "
-                            f"{skipped_deleted} skipped (deleted)[/dim]",
-                        )
-                    else:
-                        console.console.print(
-                            f"  [dim]Up to date — {len(unique_by_num)} "
-                            "episodes, 0 new[/dim]"
-                        )
-                    per_entry_summary.append(
-                        {"title": entry.title, "new": 0, "done": 0, "failed": 0}
-                    )
-                    entry.last_checked = time.time()
-                    save_entries(all_entries, path)
-                    continue
-
-                console.console.print(
-                    f"  [yellow]{len(pending)} new episode(s)[/yellow]"
-                    f" [dim]({len(unique_by_num)} total)[/dim] → downloading "
-                    f"to [brand]{full_output}[/brand]",
-                )
-
-                # Now actually download using orchestrator (reuses resolver +
-                # segment resume)
-                orch = downloader.BatchOrchestrator(
-                    ctx_for_check, anime, http, solver
-                )
-                try:
-                    results = await orch.download(pending)
-                    # results is dict[session, Path|None]
-                    done = sum(1 for v in results.values() if v is not None)
-                    failed = len(results) - done
-                    total_new += len(pending)
-                    total_done += done
-                    total_failed += failed
-                    per_entry_summary.append(
-                        {
-                            "title": entry.title,
-                            "new": len(pending),
-                            "done": done,
-                            "failed": failed,
-                        },
-                    )
-                    # Update history for successfully downloaded episodes
-                    for ep in pending:
-                        if results.get(ep.session) is not None:
-                            downloaded_set.add(float(ep.number))
-                    entry.downloaded = sorted(downloaded_set)
-                    if failed:
-                        console.console.print(
-                            f"  [yellow]⚠ {failed} failed, {done} done[/yellow]"
-                        )
-                    else:
-                        console.console.print(
-                            f"  [green]✓ {done} episode(s) completed[/green]"
-                        )
-                except Exception as exc:
-                    console.console.print(
-                        f"  [red]✗ Download failed:[/red] {exc}"
-                    )
-                    if verbose:
-                        raise
-                    per_entry_summary.append(
-                        {"title": entry.title, "new": len(pending), "done": 0,
-                         "failed": len(pending), "error": str(exc)},
-                    )
-                    total_failed += len(pending)
-                finally:
-                    entry.last_checked = time.time()
-                    # Persist history even if download failed partially (only
-                    # successes counted)
-                    if 'downloaded_set' in locals():
-                        entry.downloaded = sorted(downloaded_set)
-                    save_entries(all_entries, path)
-                    # Orphan cleanup per entry not needed here
-
-            # Final summary
-            console.console.print()
-            console.section("Watchlist check complete")
-            table = rich.table.Table(
-                box=box.SIMPLE_HEAVY, show_header=True,
-                header_style="brand.bold", border_style="dim",
+            _print_check_summary(
+                per_entry_summary, total_new, total_done, total_failed
             )
-            table.add_column(
-                "Series", style="bold white", ratio=1, overflow="ellipsis"
-            )
-            table.add_column("New", justify="center", width=6)
-            table.add_column("Done", justify="center", width=6, style="green")
-            table.add_column("Failed", justify="center", width=8, style="red")
-            for s in per_entry_summary:
-                table.add_row(
-                    s["title"], str(s["new"]), str(s["done"]), str(s["failed"])
-                )
-            console.console.print(table)
-            status = f"[green]✓ {total_done} new episodes downloaded[/green]"
-            if total_failed:
-                status += f"  [red]✗ {total_failed} failed[/red]"
-            if total_new == 0:
-                status = "[dim]No new episodes[/dim]"
-            console.console.print(
-                rich.panel.Panel(
-                    status,
-                    border_style="green" if not total_failed else "yellow",
-                    box=box.ROUNDED,
-                )
-            )
-            if total_failed:
-                console.console.print(
-                    "  [dim]Tip: re-run 'pahebatcher watchlist check' to "
-                    "retry failed.[/dim]",
-                )
 
         finally:
             await http.close()
     finally:
         await solver.close()
 
-    # Cleanup orphaned cache (>24h) — reuse main.py logic
-
-    with contextlib.suppress(Exception):
-        now = time.time()
-        for p in cache_dir.glob("*/*/*.ts"):
-            if now - p.stat().st_mtime > 86400:
-                with contextlib.suppress(Exception):
-                    shutil.rmtree(p.parent.parent)
+    # Clean up orphaned cache folders (over 24h old)
+    _cleanup_orphan_cache(cache_dir)

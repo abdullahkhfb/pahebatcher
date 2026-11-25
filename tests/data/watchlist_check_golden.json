@@ -1,0 +1,5827 @@
+{
+ "all_deleted_skipped": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [dim]Up to date \u2014 3 episodes, 3 skipped (deleted)[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '0', '0', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": [
+   "Show_A"
+  ],
+  "outcome": null
+ },
+ "all_success": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]3 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 3 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '3', '3', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 3 new episodes downloaded[/green]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "cache_cleanup": {
+  "cache_left": true,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": null,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "  [dim]Up to date \u2014 3 episodes, 0 new[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '0', '0', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "dead_404_recovered": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]404 Not Found[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/404_Not_Found",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "404 Not Found"
+   ],
+   [
+    "print",
+    "  [dim]Up to date \u2014 0 episodes, 0 new[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "404 Not Found",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['404 Not Found', '0', '0', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "404 Not Found",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "dead_404_unrecovered": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]404 Not Found[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/404_Not_Found",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "404 Not Found"
+   ],
+   [
+    "print",
+    "  [dim]Up to date \u2014 0 episodes, 0 new[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "404 Not Found",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['404 Not Found', '0', '0', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "404 Not Found",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "dead_ambiguous": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "find",
+    "animepahe.pw",
+    "Show A",
+    "aaaa0001-0000"
+   ],
+   [
+    "print",
+    "  [yellow]\u2717 Link dead for 'Show A' \u2014 multiple candidates, not auto-migrating.[/yellow]\n  [dim]Use: pahebatcher wl relink aaaa0001 <new-url>[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '0', '0', '1']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',yellow)",
+    {}
+   ],
+   [
+    "print",
+    "  [dim]Tip: re-run 'pahebatcher watchlist check' to retry failed.[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "dead_find_raises": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "find",
+    "animepahe.pw",
+    "Show A",
+    "aaaa0001-0000"
+   ],
+   [
+    "print",
+    "  [yellow]\u2717 Link dead for 'Show A' \u2014 auto-migrate failed: search failed[/yellow]\n  [dim]Use: pahebatcher wl relink aaaa0001 <new-url>[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '0', '0', '1']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',yellow)",
+    {}
+   ],
+   [
+    "print",
+    "  [dim]Tip: re-run 'pahebatcher watchlist check' to retry failed.[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "dead_migrate_dedupe": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "find",
+    "animepahe.pw",
+    "Show A",
+    "aaaa0001-0000"
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.si",
+      "keep_temp": false,
+      "last_checked": null,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "NEW00000-0000",
+      "title": "Show A",
+      "url": "https://animepahe.si/anime/NEW00000-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "  [yellow]\u21bb Relinked 'Show A': aaaa0001\u2026 \u2192 NEW00000\u2026[/yellow]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.si",
+    "NEW00000-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A_New",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A New"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]2 new episode(s)[/yellow] [dim](2 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A_New[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A_New",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A New"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 2 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.si",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "NEW00000-0000",
+      "title": "Show A New",
+      "url": "https://animepahe.si/anime/NEW00000-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A New', '2', '2', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 2 new episodes downloaded[/green]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.si",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "NEW00000-0000",
+    "title": "Show A New",
+    "url": "https://animepahe.si/anime/NEW00000-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "dead_migrate_ok": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "find",
+    "animepahe.pw",
+    "Show A",
+    "aaaa0001-0000"
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.si",
+      "keep_temp": false,
+      "last_checked": null,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "NEW00000-0000",
+      "title": "Show A",
+      "url": "https://animepahe.si/anime/NEW00000-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "  [yellow]\u21bb Relinked 'Show A': aaaa0001\u2026 \u2192 NEW00000\u2026[/yellow]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.si",
+    "NEW00000-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A_New",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A New"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]3 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A_New[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A_New",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A New"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 3 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.si",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "NEW00000-0000",
+      "title": "Show A New",
+      "url": "https://animepahe.si/anime/NEW00000-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A New', '3', '3', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 3 new episodes downloaded[/green]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.si",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "NEW00000-0000",
+    "title": "Show A New",
+    "url": "https://animepahe.si/anime/NEW00000-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "dead_migrate_still_dead": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "find",
+    "animepahe.pw",
+    "Show A",
+    "aaaa0001-0000"
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.si",
+      "keep_temp": false,
+      "last_checked": null,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "NEW00000-0000",
+      "title": "Show A",
+      "url": "https://animepahe.si/anime/NEW00000-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "  [yellow]\u21bb Relinked 'Show A': aaaa0001\u2026 \u2192 NEW00000\u2026[/yellow]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.si",
+    "NEW00000-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [yellow]\u2717 Link dead for 'Show A' \u2014 auto-migrate failed: migrated session still dead[/yellow]\n  [dim]Use: pahebatcher wl relink NEW00000 <new-url>[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.si",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "NEW00000-0000",
+      "title": "Show A",
+      "url": "https://animepahe.si/anime/NEW00000-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '0', '0', '1']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',yellow)",
+    {}
+   ],
+   [
+    "print",
+    "  [dim]Tip: re-run 'pahebatcher watchlist check' to retry failed.[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.si",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "NEW00000-0000",
+    "title": "Show A",
+    "url": "https://animepahe.si/anime/NEW00000-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "dead_no_episodes": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "find",
+    "animepahe.pw",
+    "Show A",
+    "aaaa0001-0000"
+   ],
+   [
+    "print",
+    "  [yellow]\u2717 Link dead for 'Show A' \u2014 no session found.[/yellow]\n  [dim]Use: pahebatcher wl relink aaaa0001 <new-url>[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '0', '0', '1']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',yellow)",
+    {}
+   ],
+   [
+    "print",
+    "  [dim]Tip: re-run 'pahebatcher watchlist check' to retry failed.[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "dead_none": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "find",
+    "animepahe.pw",
+    "Show A",
+    "aaaa0001-0000"
+   ],
+   [
+    "print",
+    "  [yellow]\u2717 Link dead for 'Show A' \u2014 no session found.[/yellow]\n  [dim]Use: pahebatcher wl relink aaaa0001 <new-url>[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '0', '0', '1']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',yellow)",
+    {}
+   ],
+   [
+    "print",
+    "  [dim]Tip: re-run 'pahebatcher watchlist check' to retry failed.[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "dead_title_placeholder": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]aaaa0001-0000[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [yellow]\u2717 Link dead for 'aaaa0001-0000' \u2014 title unknown.[/yellow]\n  [dim]Use: pahebatcher wl relink aaaa0001 <new-url>[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "aaaa0001-0000",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['aaaa0001-0000', '0', '0', '1']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',yellow)",
+    {}
+   ],
+   [
+    "print",
+    "  [dim]Tip: re-run 'pahebatcher watchlist check' to retry failed.[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "aaaa0001-0000",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "dead_unknown_title_status": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "find",
+    "animepahe.pw",
+    "Show A",
+    "aaaa0001-0000"
+   ],
+   [
+    "print",
+    "  [yellow]\u2717 Link dead for 'Show A' \u2014 title unknown.[/yellow]\n  [dim]Use: pahebatcher wl relink aaaa0001 <new-url>[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '0', '0', '1']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',yellow)",
+    {}
+   ],
+   [
+    "print",
+    "  [dim]Tip: re-run 'pahebatcher watchlist check' to retry failed.[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "dedupe_audio": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]2 new episode(s)[/yellow] [dim](2 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 2 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '2', '2', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 2 new episodes downloaded[/green]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "download_raises": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]3 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [red]\u2717 Download failed:[/red] net down",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '3', '0', '3']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',yellow)",
+    {}
+   ],
+   [
+    "print",
+    "  [dim]Tip: re-run 'pahebatcher watchlist check' to retry failed.[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "download_raises_verbose": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]3 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [red]\u2717 Download failed:[/red] net down",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": "RuntimeError:net down"
+ },
+ "exists_raises": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]3 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 3 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '3', '3', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 3 new episodes downloaded[/green]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "filter_hit": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show B[/bold] [dim]https://animepahe.pw/anime/aaaa0002-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0002-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_B",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show B"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]3 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_B[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_B",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show B"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 3 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": null,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     },
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1003.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0002-0000",
+      "title": "Show B",
+      "url": "https://animepahe.pw/anime/aaaa0002-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show B', '3', '3', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 3 new episodes downloaded[/green]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": null,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   },
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1003.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0002-0000",
+    "title": "Show B",
+    "url": "https://animepahe.pw/anime/aaaa0002-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "filter_miss": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "print",
+    "\n  [red]\u2717 No watchlist entry for:[/red] zzz",
+    {}
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": null,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": "exit:1"
+ },
+ "folder_missing_reset": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [dim]Folder not found (<T>/out/Show_A) \u2014 resetting skip history[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": null,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]3 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 3 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '3', '3', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 3 new episodes downloaded[/green]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "folder_present_history_kept": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]1 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 1 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '1', '1', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 1 new episodes downloaded[/green]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": [
+   "Show_A"
+  ],
+  "outcome": null
+ },
+ "mixed_two_entries": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 2 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/2][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [red]\u2717 Scan failed:[/red] x",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1003.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     },
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": null,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0002-0000",
+      "title": "Show B",
+      "url": "https://animepahe.pw/anime/aaaa0002-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "\n  [brand][2/2][/brand] [bold]Show B[/bold] [dim]https://animepahe.pw/anime/aaaa0002-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0002-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_B",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show B"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]3 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_B[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_B",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show B"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [yellow]\u26a0 1 failed, 2 done[/yellow]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1003.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     },
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1004.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0002-0000",
+      "title": "Show B",
+      "url": "https://animepahe.pw/anime/aaaa0002-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '0', '0', '1'], ['Show B', '3', '2', '1']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 2 new episodes downloaded[/green]  [red]\u2717 2 failed[/red]',yellow)",
+    {}
+   ],
+   [
+    "print",
+    "  [dim]Tip: re-run 'pahebatcher watchlist check' to retry failed.[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1003.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   },
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1004.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0002-0000",
+    "title": "Show B",
+    "url": "https://animepahe.pw/anime/aaaa0002-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "no_entries": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "print",
+    "\n  [dim]No watchlist entries. Add one with:[/dim]",
+    {}
+   ],
+   [
+    "print",
+    "  [brand]pahebatcher watchlist add <URL>[/brand]",
+    {}
+   ]
+  ],
+  "final": null,
+  "folders": null,
+  "outcome": null
+ },
+ "partial_fail": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]3 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [yellow]\u26a0 1 failed, 2 done[/yellow]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '3', '2', '1']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 2 new episodes downloaded[/green]  [red]\u2717 1 failed[/red]',yellow)",
+    {}
+   ],
+   [
+    "print",
+    "  [dim]Tip: re-run 'pahebatcher watchlist check' to retry failed.[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "ping_fail": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[red]\u2717 none available[/red]",
+    {}
+   ],
+   [
+    "print",
+    "\n  [red]No Cloudflare solver is available[/red]\n  [dim]HINT[/dim]",
+    {}
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": null,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": "exit:1"
+ },
+ "prefer_fallback": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "eng",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "eng",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]3 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "eng",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 3 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "eng",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '3', '3', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 3 new episodes downloaded[/green]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "eng",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "scan_fail": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "print",
+    "  [red]\u2717 Scan failed:[/red] boom",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '0', '0', '1']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',yellow)",
+    {}
+   ],
+   [
+    "print",
+    "  [dim]Tip: re-run 'pahebatcher watchlist check' to retry failed.[/dim]",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "skipped_deleted": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]1 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 1 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '1', '1', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 1 new episodes downloaded[/green]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": [
+   "Show_A"
+  ],
+  "outcome": null
+ },
+ "title_update": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": null,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A (2024)",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A_2024",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A (2024)"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]3 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A_2024[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A_2024",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A (2024)"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 3 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A (2024)",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A (2024)', '3', '3', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 3 new episodes downloaded[/green]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A (2024)",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "two_ok_all_new": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 2 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    16
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/2][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    4,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]3 new episode(s)[/yellow] [dim](3 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_A[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    4,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ],
+     [
+      3.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 3 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 4,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1003.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     },
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [],
+      "hls_workers": 16,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": null,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0002-0000",
+      "title": "Show B",
+      "url": "https://animepahe.pw/anime/aaaa0002-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "\n  [brand][2/2][/brand] [bold]Show B[/bold] [dim]https://animepahe.pw/anime/aaaa0002-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0002-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_B",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    16,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show B"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "print",
+    "  [yellow]2 new episode(s)[/yellow] [dim](2 total)[/dim] \u2192 downloading to [brand]<T>/out/Show_B[/brand]",
+    {}
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_B",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    16,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show B"
+   ],
+   [
+    "download",
+    [
+     [
+      1.0,
+      "jpn"
+     ],
+     [
+      2.0,
+      "jpn"
+     ]
+    ]
+   ],
+   [
+    "print",
+    "  [green]\u2713 2 episode(s) completed[/green]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 4,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1003.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     },
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0
+      ],
+      "hls_workers": 16,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1004.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0002-0000",
+      "title": "Show B",
+      "url": "https://animepahe.pw/anime/aaaa0002-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '3', '3', '0'], ['Show B', '2', '2', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[green]\u2713 5 new episodes downloaded[/green]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 4,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1003.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   },
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0
+    ],
+    "hls_workers": 16,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1004.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0002-0000",
+    "title": "Show B",
+    "url": "https://animepahe.pw/anime/aaaa0002-0000"
+   }
+  ],
+  "folders": null,
+  "outcome": null
+ },
+ "up_to_date_backfill": {
+  "cache_left": false,
+  "events": [
+   [
+    "cm.load"
+   ],
+   [
+    "banner"
+   ],
+   [
+    "section",
+    "Watchlist check \u2014 1 series"
+   ],
+   [
+    "section",
+    "Checking Prerequisites"
+   ],
+   [
+    "print",
+    "  [muted]Cloudflare solver[/muted]  ",
+    {
+     "end": ""
+    }
+   ],
+   [
+    "solver.from_config"
+   ],
+   [
+    "solver.start"
+   ],
+   [
+    "solver.ping"
+   ],
+   [
+    "print",
+    "[ok]\u2713 fake-browser[/ok]",
+    {}
+   ],
+   [
+    "http.init",
+    8
+   ],
+   [
+    "http.start"
+   ],
+   [
+    "print",
+    "\n  [brand][1/1][/brand] [bold]Show A[/bold] [dim]https://animepahe.pw/anime/aaaa0001-0000[/dim]",
+    {}
+   ],
+   [
+    "scan",
+    "animepahe.pw",
+    "aaaa0001-0000",
+    "jpn",
+    0,
+    "pahe_cache"
+   ],
+   [
+    "orch.init",
+    "<T>/out/Show_A",
+    "pahe_cache",
+    1080,
+    "jpn",
+    2,
+    8,
+    false,
+    false,
+    2,
+    0,
+    "c=1",
+    2,
+    "Show A"
+   ],
+   [
+    "exists?",
+    1.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    2.0,
+    "jpn"
+   ],
+   [
+    "exists?",
+    3.0,
+    "jpn"
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": null,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "  [dim]Up to date \u2014 3 episodes, 0 new[/dim]",
+    {}
+   ],
+   [
+    "save",
+    [
+     {
+      "added_at": 1.0,
+      "audio_lang": "jpn",
+      "auto_retry": 2,
+      "downloaded": [
+       1.0,
+       2.0,
+       3.0
+      ],
+      "hls_workers": 8,
+      "host": "animepahe.pw",
+      "keep_temp": false,
+      "last_checked": 1002.0,
+      "max_parallel": 2,
+      "output_dir": "<T>/out",
+      "quality": 1080,
+      "session": "aaaa0001-0000",
+      "title": "Show A",
+      "url": "https://animepahe.pw/anime/aaaa0001-0000"
+     }
+    ]
+   ],
+   [
+    "print",
+    "",
+    {}
+   ],
+   [
+    "section",
+    "Watchlist check complete"
+   ],
+   [
+    "print",
+    "Table(['Series', 'New', 'Done', 'Failed'],[['Show A', '0', '0', '0']])",
+    {}
+   ],
+   [
+    "print",
+    "Panel('[dim]No new episodes[/dim]',green)",
+    {}
+   ],
+   [
+    "http.close"
+   ],
+   [
+    "solver.close"
+   ]
+  ],
+  "final": [
+   {
+    "added_at": 1.0,
+    "audio_lang": "jpn",
+    "auto_retry": 2,
+    "downloaded": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "hls_workers": 8,
+    "host": "animepahe.pw",
+    "keep_temp": false,
+    "last_checked": 1002.0,
+    "max_parallel": 2,
+    "output_dir": "<T>/out",
+    "quality": 1080,
+    "session": "aaaa0001-0000",
+    "title": "Show A",
+    "url": "https://animepahe.pw/anime/aaaa0001-0000"
+   }
+  ],
+  "folders": [
+   "Show_A"
+  ],
+  "outcome": null
+ }
+}

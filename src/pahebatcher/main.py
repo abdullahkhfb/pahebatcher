@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import contextlib
+import dataclasses
 import logging
 import os
 import pathlib
@@ -379,24 +380,48 @@ def build_watchlist_parser() -> argparse.ArgumentParser:
     return parser
 
 
-async def run(args: argparse.Namespace) -> None:
-    """Runs the command described by the parsed arguments.
+@dataclasses.dataclass
+class _Settings:
+    """Download settings resolved from the command line and saved config.
+
+    Attributes:
+        quality: The preferred vertical resolution.
+        audio_lang: The preferred audio language, ``"jpn"`` or ``"eng"``.
+        parallel: How many episodes to download at once.
+        workers: How many segments to download at once per episode.
+        resolve_ahead: How many episodes to resolve ahead of the downloads.
+        cache_ttl: Minutes a cached series scan stays valid.
+        cookie_string: A user-supplied Cookie header value, or empty.
+        auto_retry: How many times a failed episode is retried.
+        cache_dir: The scan and segment cache directory.
+    """
+
+    quality: int
+    audio_lang: str
+    parallel: int
+    workers: int
+    resolve_ahead: int
+    cache_ttl: int
+    cookie_string: str
+    auto_retry: int
+    cache_dir: pathlib.Path
+
+
+def _resolve_settings(
+    args: argparse.Namespace, cm: config_manager.ConfigManager
+) -> _Settings:
+    """Combines command-line options with the saved configuration.
+
+    Command-line options win. Concurrency and retry values are clamped to
+    their supported ranges.
 
     Args:
         args: The parsed command-line arguments.
+        cm: The loaded configuration manager.
+
+    Returns:
+        The resolved settings.
     """
-    # ── Load persistent config as defaults (CLI args override) ──────────────
-    cm = config_manager.ConfigManager()
-    cm.load()
-
-    console.print_banner()
-
-    if args.verbose:
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        )
-
     quality = (
         args.quality if args.quality is not None else int(cm.get("quality"))
     )
@@ -422,7 +447,360 @@ async def run(args: argparse.Namespace) -> None:
         args.retry if args.retry is not None else int(cm.get("auto_retry"))
     )
     auto_retry = max(0, min(2, auto_retry))
-    cache_dir = pathlib.Path("pahe_cache")
+    return _Settings(
+        quality=quality,
+        audio_lang=audio_lang,
+        parallel=parallel,
+        workers=workers,
+        resolve_ahead=resolve_ahead,
+        cache_ttl=cache_ttl,
+        cookie_string=cookie_string,
+        auto_retry=auto_retry,
+        cache_dir=pathlib.Path("pahe_cache"),
+    )
+
+
+def _apply_watchlist_prefs(
+    args: argparse.Namespace,
+    wl_entry: watchlist.WatchlistEntry,
+    settings: _Settings,
+) -> None:
+    """Applies a watchlist entry's preferences unless a flag was explicit.
+
+    Args:
+        args: The parsed command-line arguments.
+        wl_entry: The watchlist entry the user jumped in from.
+        settings: The settings to update in place.
+    """
+    if args.quality is None:
+        settings.quality = wl_entry.quality
+    if args.audio_lang is None:
+        settings.audio_lang = wl_entry.audio_lang
+    if args.parallel is None:
+        settings.parallel = max(1, min(6, wl_entry.max_parallel))
+    if args.workers is None:
+        settings.workers = max(8, min(32, wl_entry.hls_workers))
+
+
+async def _discover_url(
+    args: argparse.Namespace, solver: pahebatcher.solver.Solver
+) -> str | None:
+    """Gets the series URL from the arguments or an interactive search.
+
+    Args:
+        args: The parsed command-line arguments.
+        solver: The Cloudflare solver, used for the search.
+
+    Returns:
+        The series URL, or None if the user selected nothing.
+    """
+    url = args.url
+    if not url:
+        url, _ = await prompts.interactive_discovery(solver, "animepahe.pw")
+        if not url:
+            console.console.print(
+                "\n  [yellow]No anime selected. Exiting.[/yellow]"
+            )
+            return None
+    return str(url)
+
+
+def _print_scan_banner(anime: models.AnimeInfo) -> None:
+    """Prints the series title, episode count and episode ranges.
+
+    Args:
+        anime: The scanned series.
+    """
+    badge = (
+        " [bold yellow][PARTIAL DOWNLOAD FOUND][/bold yellow]"
+        if anime.has_session
+        else ""
+    )
+    console.console.print(
+        f"  [green]\u2713[/green] [bold]{anime.title}[/bold]{badge}\n"
+        f"  \u2014 [brand]{len(anime.episodes)}[/brand] episodes  "
+        f"({utils.compact_ep_range(anime.episodes)})"
+    )
+
+
+def _print_episode_table(anime: models.AnimeInfo) -> None:
+    """Prints a table of the series' episodes.
+
+    Args:
+        anime: The scanned series.
+    """
+    t = rich.table.Table(
+        box=box.SIMPLE, show_header=True, header_style="brand.bold"
+    )
+    t.add_column("Ep", width=6, justify="right")
+    t.add_column("Title", style="white")
+    t.add_column("Audio", width=5)
+    for ep in anime.episodes:
+        t.add_row(
+            ep.ep_str,
+            ep.title or "\u2014",
+            utils.audio_badge(ep.audio),
+        )
+    console.console.print(t)
+
+
+def _prompt_action(anime: models.AnimeInfo, cache_dir: pathlib.Path) -> str:
+    """Shows the action menu and asks which action to take.
+
+    Args:
+        anime: The scanned series.
+        cache_dir: The cache directory, whose size is shown as a hint.
+
+    Returns:
+        The chosen key: ``"1"`` to ``"5"``, or ``"w"`` / ``"W"``.
+    """
+    console.console.print()
+    console.section("Action")
+    sessions = pahebatcher.sessions.get_sessions(cache_dir)
+    total_cache = sum(s["size"] for s in sessions)
+    cache_hint = (
+        f" [dim]({utils.fmt_bytes(total_cache)})[/dim]"
+        if total_cache > 0
+        else ""
+    )
+    wl_count = 0
+    with contextlib.suppress(Exception):
+        wl_count = len(watchlist.load_entries())
+    wl_hint = f" [dim]({wl_count} tracked)[/dim]" if wl_count > 0 else ""
+
+    console.console.print(
+        rich.panel.Panel(
+            "  [bold white]1[/bold white]  "
+            "[brand]Download[/brand]"
+            "  [dim]\u00b7 save .mp4 files[/dim]\n"
+            "  [bold white]2[/bold white]  "
+            "[brand]Stream[/brand]"
+            "    [dim]\u00b7 play in MPV[/dim]\n"
+            "  [bold white]3[/bold white]  [brand]Sessions & "
+            f"Cache[/brand]{cache_hint}\n"
+            "  [bold white]4[/bold white]  [brand]List[/brand]"
+            "      [dim]\u00b7 show episode table[/dim]\n"
+            "  [bold white]W[/bold white]  "
+            f"[brand]Watchlist[/brand]{wl_hint}\n"
+            "  [bold white]5[/bold white]  [red]Exit[/red]",
+            title=f"[brand.bold]{anime.title}[/brand.bold]",
+            border_style="brand",
+            box=box.ROUNDED,
+            padding=(0, 2),
+        )
+    )
+    return rich.prompt.Prompt.ask(
+        "  [brand]Select action[/brand]",
+        choices=["1", "2", "3", "4", "5", "W", "w"],
+        default="1",
+        show_choices=False,
+    )
+
+
+def _choose_episodes(
+    args: argparse.Namespace, anime: models.AnimeInfo, scripted: bool
+) -> list[models.EpisodeInfo]:
+    """Picks the episodes from the arguments or an interactive prompt.
+
+    Args:
+        args: The parsed command-line arguments.
+        anime: The scanned series.
+        scripted: Whether the arguments already say what to do.
+
+    Returns:
+        The chosen episodes. The list is empty if nothing matched.
+
+    Raises:
+        SystemExit: If ``--range`` matched nothing in scripted mode.
+    """
+    if args.all:
+        return prompts.noninteractive_episodes(anime, "all")
+    if args.range:
+        chosen = prompts.noninteractive_episodes(
+            anime, "range", range_str=args.range
+        )
+        if not chosen:
+            console.console.print(
+                f"  [red]\u2717 No episodes matched:[/red] {args.range}"
+            )
+            console.console.print(
+                "    Available: "
+                "[brand]"
+                f"{utils.compact_ep_range(anime.episodes)}"
+                "[/brand]"
+            )
+            if scripted:
+                sys.exit(1)
+        return chosen
+    if args.latest:
+        return prompts.noninteractive_episodes(
+            anime, "latest", latest_n=args.latest
+        )
+    return prompts.select_episodes(anime)
+
+
+def _make_context(
+    settings: _Settings, output_dir: str, keep_temp: bool, auto_retry: int
+) -> models.AppContext:
+    """Builds the download settings for one run.
+
+    Args:
+        settings: The resolved settings.
+        output_dir: The series output folder.
+        keep_temp: Whether to keep temporary segment files.
+        auto_retry: How many times a failed episode is retried.
+
+    Returns:
+        The download settings.
+    """
+    return models.AppContext(
+        output_dir=output_dir,
+        cache_dir=settings.cache_dir,
+        quality=settings.quality,
+        audio_lang=settings.audio_lang,
+        max_parallel=settings.parallel,
+        hls_workers=settings.workers,
+        keep_temp=keep_temp,
+        list_only=False,
+        resolve_ahead=settings.resolve_ahead,
+        cache_ttl=settings.cache_ttl,
+        cookie_string=settings.cookie_string,
+        auto_retry=auto_retry,
+    )
+
+
+def _audio_badge_text(audio_lang: str) -> str:
+    """Returns the SUB or DUB markup for an audio language."""
+    return "[cyan]SUB[/cyan]" if audio_lang == "jpn" else "[yellow]DUB[/yellow]"
+
+
+def _build_context(
+    args: argparse.Namespace,
+    cm: config_manager.ConfigManager,
+    settings: _Settings,
+    wl_entry: watchlist.WatchlistEntry | None,
+    scripted: bool,
+    output_dir: str,
+    mode: str,
+) -> models.AppContext:
+    """Decides the download settings for the chosen episodes.
+
+    There are four sources, in order: the command-line arguments, a
+    watchlist entry, saved settings, and finally the interactive wizard,
+    whose answers are saved back to the configuration.
+
+    Args:
+        args: The parsed command-line arguments.
+        cm: The loaded configuration manager.
+        settings: The resolved settings.
+        wl_entry: The watchlist entry the user jumped in from, or None.
+        scripted: Whether the arguments already say what to do.
+        output_dir: The series output folder.
+        mode: ``"download"`` or ``"stream"``.
+
+    Returns:
+        The download settings.
+    """
+    if scripted:
+        return _make_context(
+            settings, output_dir, args.keep_temp, settings.auto_retry
+        )
+    badge = _audio_badge_text(settings.audio_lang)
+    if wl_entry is not None:
+        console.console.print(
+            "\n  [dim]Using watchlist prefs for "
+            f"'{wl_entry.title}':"
+            f"  {badge}  {settings.quality}p  {settings.parallel} "
+            f"concurrent  {settings.workers} workers[/dim]\n"
+        )
+        return _make_context(
+            settings, output_dir, wl_entry.keep_temp, wl_entry.auto_retry
+        )
+    if cm.is_customized():
+        console.console.print(
+            f"\n  [dim]Using saved settings from pahebatcher.toml:"
+            f"  {badge}  {settings.quality}p  {settings.parallel} "
+            f"concurrent  {settings.workers} workers[/dim]\n"
+        )
+        return _make_context(
+            settings, output_dir, False, settings.auto_retry
+        )
+    defaults = _make_context(settings, output_dir, False, settings.auto_retry)
+    ctx = prompts.wizard_config(defaults, mode=mode)
+    # Persist choices from wizard
+    cm.set("quality", ctx.quality)
+    cm.set("audio_lang", ctx.audio_lang)
+    cm.set("max_parallel", ctx.max_parallel)
+    cm.set("hls_workers", ctx.hls_workers)
+    try:
+        cm.save()
+        console.console.print(
+            "  [dim]Settings saved to [bold]pahebatcher.toml[/bold][/dim]\n"
+        )
+    except (OSError, ValueError):
+        pass
+    return ctx
+
+
+def _record_download_history(
+    anime: models.AnimeInfo,
+    chosen: list[models.EpisodeInfo],
+    results: dict[str, pathlib.Path | None],
+) -> None:
+    """Adds the downloaded episodes to the series' watchlist history.
+
+    Args:
+        anime: The downloaded series.
+        chosen: The episodes that were requested.
+        results: The download results, keyed by episode session.
+    """
+    done_nums = [
+        ep.number for ep in chosen if results.get(ep.session) is not None
+    ]
+    updated = False
+    with contextlib.suppress(Exception):
+        updated = watchlist.record_watchlist_download(
+            anime.session, anime.title, done_nums
+        )
+    if updated:
+        console.console.print(
+            f"  [dim]Watchlist history updated for '{anime.title}'[/dim]",
+        )
+
+
+def _cleanup_orphan_cache(cache_dir: pathlib.Path) -> None:
+    """Deletes cached download folders that are over 24 hours old.
+
+    Args:
+        cache_dir: The cache directory.
+    """
+    with contextlib.suppress(Exception):
+        now = time.time()
+        for p in cache_dir.glob("*/*/*.ts"):
+            if now - p.stat().st_mtime > 86400:
+                with contextlib.suppress(Exception):
+                    shutil.rmtree(p.parent.parent)
+
+
+async def run(args: argparse.Namespace) -> None:
+    """Runs the command described by the parsed arguments.
+
+    Args:
+        args: The parsed command-line arguments.
+    """
+    # ── Load persistent config as defaults (CLI args override) ──────────────
+    cm = config_manager.ConfigManager()
+    cm.load()
+
+    console.print_banner()
+
+    if args.verbose:
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        )
+
+    settings = _resolve_settings(args, cm)
 
     # Prerequisites check
     console.section("Checking Prerequisites")
@@ -440,75 +818,41 @@ async def run(args: argparse.Namespace) -> None:
             sys.exit(1)
         console.console.print(f"[ok]\u2713 {solver.backend_name}[/ok]")
 
-        http = pahebatcher.http.HttpClient(workers)
+        http = pahebatcher.http.HttpClient(settings.workers)
         await http.start()
 
         try:
             # Discovery
-            url = args.url
+            url = await _discover_url(args, solver)
             if not url:
-                url, _ = await prompts.interactive_discovery(
-                    solver, "animepahe.pw"
-                )
-                if not url:
-                    console.console.print(
-                        "\n  [yellow]No anime selected. Exiting.[/yellow]"
-                    )
-                    return
+                return
 
             host, session = pahebatcher.extract.scanner.parse_anime_url(url)
 
-            # Watchlist jump (wizard browser): entry prefs win unless a CLI flag
-            # was explicit.
+            # Watchlist jump (wizard browser): entry prefs win unless a CLI
+            # flag was explicit.
             wl_entry = getattr(args, "_watchlist_entry", None)
             if wl_entry is not None and wl_entry.session != session:
                 wl_entry = None
             if wl_entry is not None:
-                if args.quality is None:
-                    quality = wl_entry.quality
-                if args.audio_lang is None:
-                    audio_lang = wl_entry.audio_lang
-                if args.parallel is None:
-                    parallel = max(1, min(6, wl_entry.max_parallel))
-                if args.workers is None:
-                    workers = max(8, min(32, wl_entry.hls_workers))
+                _apply_watchlist_prefs(args, wl_entry, settings)
 
             # Scan
             scanner = pahebatcher.extract.scanner.AnimePaheScanner(
                 solver, host, session
             )
             anime = await scanner.scan(
-                cache_dir, prefer_audio=audio_lang, cache_ttl=cache_ttl
+                settings.cache_dir,
+                prefer_audio=settings.audio_lang,
+                cache_ttl=settings.cache_ttl,
             )
-
-            badge = (
-                " [bold yellow][PARTIAL DOWNLOAD FOUND][/bold yellow]"
-                if anime.has_session
-                else ""
-            )
-            console.console.print(
-                f"  [green]\u2713[/green] [bold]{anime.title}[/bold]{badge}\n"
-                f"  \u2014 [brand]{len(anime.episodes)}[/brand] episodes  "
-                f"({utils.compact_ep_range(anime.episodes)})"
-            )
+            _print_scan_banner(anime)
 
             if args.list_only:
-                t = rich.table.Table(
-                    box=box.SIMPLE, show_header=True, header_style="brand.bold"
-                )
-                t.add_column("Ep", width=6, justify="right")
-                t.add_column("Title", style="white")
-                t.add_column("Audio", width=5)
-                for ep in anime.episodes:
-                    t.add_row(
-                        ep.ep_str,
-                        ep.title or "\u2014",
-                        utils.audio_badge(ep.audio),
-                    )
-                console.console.print(t)
+                _print_episode_table(anime)
                 return
 
-            _scripted = bool(
+            scripted = bool(
                 args.all or args.range or args.latest or args.stream
             )
             safe_title = utils.sanitize(anime.title)
@@ -518,56 +862,10 @@ async def run(args: argparse.Namespace) -> None:
             default_output = os.path.join(output_base, safe_title)
 
             while True:
-                if _scripted:
+                if scripted:
                     mode = "stream" if args.stream else "download"
                 else:
-                    console.console.print()
-                    console.section("Action")
-                    sessions = pahebatcher.sessions.get_sessions(
-                        cache_dir
-                    )
-                    total_cache = sum(s["size"] for s in sessions)
-                    cache_hint = (
-                        f" [dim]({utils.fmt_bytes(total_cache)})[/dim]"
-                        if total_cache > 0
-                        else ""
-                    )
-                    wl_count = 0
-                    with contextlib.suppress(Exception):
-                        wl_count = len(watchlist.load_entries())
-                    wl_hint = (
-                        f" [dim]({wl_count} tracked)[/dim]"
-                        if wl_count > 0
-                        else ""
-                    )
-
-                    console.console.print(
-                        rich.panel.Panel(
-                            "  [bold white]1[/bold white]  "
-                            "[brand]Download[/brand]"
-                            "  [dim]\u00b7 save .mp4 files[/dim]\n"
-                            "  [bold white]2[/bold white]  "
-                            "[brand]Stream[/brand]"
-                            "    [dim]\u00b7 play in MPV[/dim]\n"
-                            "  [bold white]3[/bold white]  [brand]Sessions & "
-                            f"Cache[/brand]{cache_hint}\n"
-                            "  [bold white]4[/bold white]  [brand]List[/brand]"
-                            "      [dim]\u00b7 show episode table[/dim]\n"
-                            "  [bold white]W[/bold white]  "
-                            f"[brand]Watchlist[/brand]{wl_hint}\n"
-                            "  [bold white]5[/bold white]  [red]Exit[/red]",
-                            title=f"[brand.bold]{anime.title}[/brand.bold]",
-                            border_style="brand",
-                            box=box.ROUNDED,
-                            padding=(0, 2),
-                        )
-                    )
-                    choice = rich.prompt.Prompt.ask(
-                        "  [brand]Select action[/brand]",
-                        choices=["1", "2", "3", "4", "5", "W", "w"],
-                        default="1",
-                        show_choices=False,
-                    )
+                    choice = _prompt_action(anime, settings.cache_dir)
                     if choice == "5":
                         break
                     if choice.upper() == "W":
@@ -581,149 +879,31 @@ async def run(args: argparse.Namespace) -> None:
                             return await run(args)
                         continue
                     if choice == "4":
-                        t = rich.table.Table(
-                            box=box.SIMPLE,
-                            show_header=True,
-                            header_style="brand.bold",
-                        )
-                        t.add_column("Ep", width=6, justify="right")
-                        t.add_column("Title", style="white")
-                        t.add_column("Audio", width=5)
-                        for ep in anime.episodes:
-                            t.add_row(
-                                ep.ep_str,
-                                ep.title or "\u2014",
-                                utils.audio_badge(ep.audio),
-                            )
-                        console.console.print(t)
+                        _print_episode_table(anime)
                         continue
                     if choice == "3":
-                        new_url = pahebatcher.sessions.run(
-                            cache_dir
-                        )
+                        new_url = pahebatcher.sessions.run(settings.cache_dir)
                         if new_url and new_url != args.url:
                             args.url = new_url
                             return await run(args)
                         continue
                     mode = {"1": "download", "2": "stream"}[choice]
 
-                # Episode selection
-                if args.all:
-                    chosen = prompts.noninteractive_episodes(anime, "all")
-                elif args.range:
-                    chosen = prompts.noninteractive_episodes(
-                        anime, "range", range_str=args.range
-                    )
-                    if not chosen:
-                        console.console.print(
-                            "  [red]\u2717 No episodes matched:[/red] "
-                            f"{args.range}"
-                        )
-                        console.console.print(
-                            "    Available: "
-                            "[brand]"
-                            f"{utils.compact_ep_range(anime.episodes)}"
-                            "[/brand]"
-                        )
-                        if _scripted:
-                            sys.exit(1)
-                        continue
-                elif args.latest:
-                    chosen = prompts.noninteractive_episodes(
-                        anime, "latest", latest_n=args.latest
-                    )
-                else:
-                    chosen = prompts.select_episodes(anime)
-
+                chosen = _choose_episodes(args, anime, scripted)
                 if not chosen:
-                    if _scripted:
+                    if scripted:
                         break
                     continue
 
-                if _scripted:
-                    ctx = models.AppContext(
-                        output_dir=default_output, cache_dir=cache_dir,
-                        quality=quality, audio_lang=audio_lang,
-                        max_parallel=parallel, hls_workers=workers,
-                        keep_temp=args.keep_temp, list_only=False,
-                        resolve_ahead=resolve_ahead, cache_ttl=cache_ttl,
-                        cookie_string=cookie_string, auto_retry=auto_retry,
-                    )
-                elif wl_entry is not None:
-                    audio_badge_text = (
-                        "[cyan]SUB[/cyan]"
-                        if audio_lang == "jpn"
-                        else "[yellow]DUB[/yellow]"
-                    )
-                    console.console.print(
-                        "\n  [dim]Using watchlist prefs for "
-                        f"'{wl_entry.title}':"
-                        f"  {audio_badge_text}  {quality}p  {parallel} "
-                        f"concurrent  {workers} workers[/dim]\n"
-                    )
-                    ctx = models.AppContext(
-                        output_dir=default_output,
-                        cache_dir=cache_dir,
-                        quality=quality,
-                        audio_lang=audio_lang,
-                        max_parallel=parallel,
-                        hls_workers=workers,
-                        keep_temp=wl_entry.keep_temp,
-                        list_only=False,
-                        resolve_ahead=resolve_ahead,
-                        cache_ttl=cache_ttl,
-                        cookie_string=cookie_string,
-                        auto_retry=wl_entry.auto_retry,
-                    )
-                elif cm.is_customized():
-                    audio_badge_text = (
-                        "[cyan]SUB[/cyan]"
-                        if audio_lang == "jpn"
-                        else "[yellow]DUB[/yellow]"
-                    )
-                    console.console.print(
-                        f"\n  [dim]Using saved settings from pahebatcher.toml:"
-                        f"  {audio_badge_text}  {quality}p  {parallel} "
-                        f"concurrent  {workers} workers[/dim]\n"
-                    )
-                    ctx = models.AppContext(
-                        output_dir=default_output, cache_dir=cache_dir,
-                        quality=quality, audio_lang=audio_lang,
-                        max_parallel=parallel, hls_workers=workers,
-                        keep_temp=False, list_only=False,
-                        resolve_ahead=resolve_ahead, cache_ttl=cache_ttl,
-                        cookie_string=cookie_string, auto_retry=auto_retry,
-                    )
-                else:
-                    _defaults = models.AppContext(
-                        output_dir=default_output, cache_dir=cache_dir,
-                        quality=quality, audio_lang=audio_lang,
-                        max_parallel=parallel, hls_workers=workers,
-                        keep_temp=False, list_only=False,
-                        resolve_ahead=resolve_ahead, cache_ttl=cache_ttl,
-                        cookie_string=cookie_string, auto_retry=auto_retry,
-                    )
-                    ctx = prompts.wizard_config(_defaults, mode=mode)
-                    # Persist choices from wizard
-                    cm.set("quality", ctx.quality)
-                    cm.set("audio_lang", ctx.audio_lang)
-                    cm.set("max_parallel", ctx.max_parallel)
-                    cm.set("hls_workers", ctx.hls_workers)
-                    try:
-                        cm.save()
-                        console.console.print(
-                            "  [dim]Settings saved to "
-                            "[bold]pahebatcher.toml[/bold][/dim]\n"
-                        )
-                    except (OSError, ValueError):
-                        pass
+                ctx = _build_context(
+                    args, cm, settings, wl_entry, scripted, default_output, mode
+                )
 
                 if mode == "stream":
                     await stream.run_stream(ctx, anime, chosen, solver)
                 else:
-                    if (
-                        not _scripted
-                        and not prompts.confirm_download(anime, chosen, ctx)
+                    if not scripted and not prompts.confirm_download(
+                        anime, chosen, ctx
                     ):
                         continue
                     orch = downloader.BatchOrchestrator(
@@ -731,21 +911,7 @@ async def run(args: argparse.Namespace) -> None:
                     )
                     results = await orch.download(chosen)
                     if wl_entry is not None:
-                        done_nums = [
-                            ep.number
-                            for ep in chosen
-                            if results.get(ep.session) is not None
-                        ]
-                        updated = False
-                        with contextlib.suppress(Exception):
-                            updated = watchlist.record_watchlist_download(
-                                anime.session, anime.title, done_nums
-                            )
-                        if updated:
-                            console.console.print(
-                                "  [dim]Watchlist history updated for "
-                                f"'{anime.title}'[/dim]",
-                            )
+                        _record_download_history(anime, chosen, results)
 
                 break
 
@@ -755,12 +921,7 @@ async def run(args: argparse.Namespace) -> None:
         await solver.close()
 
     # Cleanup orphaned cache (>24h old)
-    with contextlib.suppress(Exception):
-        now = time.time()
-        for p in cache_dir.glob("*/*/*.ts"):
-            if now - p.stat().st_mtime > 86400:
-                with contextlib.suppress(Exception):
-                    shutil.rmtree(p.parent.parent)
+    _cleanup_orphan_cache(settings.cache_dir)
 
     console.console.print("\n  [brand.bold]Session finished.[/brand.bold]")
 
