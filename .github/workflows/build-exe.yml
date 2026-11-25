@@ -33,9 +33,6 @@ jobs:
           - os: ubuntu-latest
             asset: pahebatcher-linux-x64
             binary: pahebatcher
-          - os: macos-latest
-            asset: pahebatcher-macos-arm64
-            binary: pahebatcher
     runs-on: ${{ matrix.os }}
     defaults:
       run:
