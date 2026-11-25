@@ -5,7 +5,7 @@
 Batch-download and stream anime from [animepahe](https://animepahe.pw), from a
 desktop app or the terminal.
 
-[![Version 3.9.0][version-badge]][latest-release]
+[![Version 3.9.1][version-badge]][latest-release]
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License MIT](https://img.shields.io/badge/license-MIT-green)
 
@@ -360,4 +360,4 @@ official creators.
 
 [hellharbinger]: https://www.reddit.com/user/HellHarbinger/
 [latest-release]: https://github.com/abdullahkhfb/pahebatcher/releases/latest
-[version-badge]: https://img.shields.io/badge/version-3.9.0-blue
+[version-badge]: https://img.shields.io/badge/version-3.9.1-blue

@@ -732,6 +732,7 @@ class App(tk.Tk):
             ok=self._set_solver,
             err=lambda _e: self._set_solver(False),
         )
+        self.after(1000, self._check_updates_at_startup)
 
     def _set_icon(self) -> None:
         """Sets the window icon."""
@@ -803,14 +804,33 @@ class App(tk.Tk):
     # updates --------------------------------------------------------------
     def check_updates(self) -> None:
         """Checks for a newer release and offers to install it."""
+        self._check_updates(show_when_current=True, show_errors=True)
+
+    def _check_updates_at_startup(self) -> None:
+        """Silently checks for an update once the desktop app has started."""
+        self._check_updates(show_when_current=False, show_errors=False)
+
+    def _check_updates(
+        self,
+        *,
+        show_when_current: bool,
+        show_errors: bool,
+    ) -> None:
+        """Runs an update check with optional startup-only suppression."""
         if self._upd_busy:
             return
         self._upd_busy = True
         self.upd_link.configure(text="Checking…")
         self.bridge.thread(
             updater.check,
-            ok=self._update_checked,
-            err=self._update_failed,
+            ok=lambda info: self._update_checked(
+                info,
+                show_when_current=show_when_current,
+            ),
+            err=lambda exc: self._update_failed(
+                exc,
+                show_error=show_errors,
+            ),
         )
 
     def _update_idle(self) -> None:
@@ -818,18 +838,25 @@ class App(tk.Tk):
         self._upd_busy = False
         self.upd_link.configure(text="Check for updates")
 
-    def _update_checked(self, info: updater.UpdateInfo | None) -> None:
+    def _update_checked(
+        self,
+        info: updater.UpdateInfo | None,
+        *,
+        show_when_current: bool = True,
+    ) -> None:
         """Reports the result of a check and offers the update.
 
         Args:
             info: The newer release, or None if this version is current.
+            show_when_current: Whether to show the up-to-date dialog.
         """
         self._update_idle()
         if info is None:
-            messagebox.showinfo(
-                "Up to date",
-                f"You already have the latest version (v{config.VERSION}).",
-            )
+            if show_when_current:
+                messagebox.showinfo(
+                    "Up to date",
+                    f"You already have the latest version (v{config.VERSION}).",
+                )
             return
         notes = info.notes[:600] + ("…" if len(info.notes) > 600 else "")
         text = (
@@ -890,14 +917,21 @@ class App(tk.Tk):
                 "The new version starts the next time you open the app.",
             )
 
-    def _update_failed(self, exc: BaseException) -> None:
+    def _update_failed(
+        self,
+        exc: BaseException,
+        *,
+        show_error: bool = True,
+    ) -> None:
         """Shows that checking or installing failed.
 
         Args:
             exc: The error.
+            show_error: Whether to show the failure dialog.
         """
         self._update_idle()
-        messagebox.showerror("Update failed", str(exc))
+        if show_error:
+            messagebox.showerror("Update failed", str(exc))
 
     # full screen ----------------------------------------------------------
     def set_fullscreen(self, on: bool) -> None:
