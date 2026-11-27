@@ -442,3 +442,115 @@ def make_listbox(master: tk.Misc, fonts: Fonts) -> tuple[tk.Frame, tk.Listbox]:
     sb._pack_kw["before"] = lb
     lb.pack(side="left", fill="both", expand=True)
     return frame, lb
+
+
+class Slider(tk.Canvas):
+    """A flat horizontal slider for seeking and volume.
+
+    Clicking jumps to that point and dragging scrubs. ``on_drag`` is called
+    with the fraction while the pointer moves, and ``on_commit`` once when it
+    is released, so a seek can wait until the user lets go.
+    """
+
+    KNOB = 6
+
+    def __init__(
+        self,
+        master: tk.Misc,
+        on_drag: Callable[[float], None] | None = None,
+        on_commit: Callable[[float], None] | None = None,
+        height: int = 20,
+        **kw: Any,
+    ) -> None:
+        """Initializes the slider at 0.
+
+        Args:
+            master: The parent widget.
+            on_drag: Called with the fraction while dragging, or None.
+            on_commit: Called with the fraction on release, or None.
+            height: The widget's height in pixels.
+            **kw: Extra options passed to ``tk.Canvas``.
+        """
+        super().__init__(
+            master,
+            height=height,
+            bg=BG,
+            highlightthickness=0,
+            bd=0,
+            cursor="hand2",
+            **kw,
+        )
+        self._on_drag = on_drag
+        self._on_commit = on_commit
+        self._frac = 0.0
+        self._dragging = False
+        self._hover = False
+        self.bind("<Configure>", lambda _e: self._draw())
+        self.bind("<ButtonPress-1>", self._press)
+        self.bind("<B1-Motion>", self._move)
+        self.bind("<ButtonRelease-1>", self._release)
+        self.bind("<Enter>", lambda _e: self._set_hover(True))
+        self.bind("<Leave>", lambda _e: self._set_hover(False))
+
+    @property
+    def dragging(self) -> bool:
+        """Whether the user is holding the knob."""
+        return self._dragging
+
+    def set(self, frac: float) -> None:
+        """Moves the knob, unless the user is dragging it.
+
+        Args:
+            frac: The position, from 0.0 to 1.0.
+        """
+        if self._dragging:
+            return
+        self._frac = max(0.0, min(1.0, frac))
+        self._draw()
+
+    def _set_hover(self, on: bool) -> None:
+        self._hover = on
+        self._draw()
+
+    def _frac_at(self, x: float) -> float:
+        span = max(self.winfo_width() - 2 * self.KNOB, 1)
+        return max(0.0, min(1.0, (x - self.KNOB) / span))
+
+    def _press(self, e: tk.Event[Any]) -> None:
+        self._dragging = True
+        self._frac = self._frac_at(e.x)
+        self._draw()
+        if self._on_drag:
+            self._on_drag(self._frac)
+
+    def _move(self, e: tk.Event[Any]) -> None:
+        if not self._dragging:
+            return
+        self._frac = self._frac_at(e.x)
+        self._draw()
+        if self._on_drag:
+            self._on_drag(self._frac)
+
+    def _release(self, _e: tk.Event[Any]) -> None:
+        if not self._dragging:
+            return
+        self._dragging = False
+        self._draw()
+        if self._on_commit:
+            self._on_commit(self._frac)
+
+    def _draw(self) -> None:
+        """Redraws the track, the filled part and the knob."""
+        self.delete("all")
+        w, h = self.winfo_width(), self.winfo_height()
+        if w <= 1:
+            return
+        k = self.KNOB
+        mid = h / 2
+        x = k + (w - 2 * k) * self._frac
+        self.create_rectangle(k, mid - 2, w - k, mid + 2, fill=TRACK, width=0)
+        self.create_rectangle(k, mid - 2, x, mid + 2, fill=BAR, width=0)
+        if self._hover or self._dragging:
+            self.create_oval(
+                x - k, mid - k, x + k, mid + k, fill=PINK, outline=PINK
+            )

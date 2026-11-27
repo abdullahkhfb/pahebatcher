@@ -92,6 +92,8 @@ jobs:
           --collect-all curl_cffi
           --collect-all Cryptodome
           --collect-all patchright
+          --collect-all sounddevice
+          --collect-all PIL
           --collect-submodules pahebatcher
       - name: Rename
         run: mv dist/pahebatcher-gui.exe dist/pahebatcher-gui-windows-x64.exe

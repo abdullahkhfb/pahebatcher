@@ -29,7 +29,7 @@ if exist "venv\Lib\site-packages\patchright\driver\package\.local-browsers" (
 echo Building desktop app...
 pyinstaller scripts\pyinstaller_gui_entry.py --onefile --windowed --clean --noconfirm ^
   --name pahebatcher-gui --icon %ICON% --paths src ^
-  --collect-all curl_cffi --collect-all Cryptodome --collect-all patchright --add-data "src\pahebatcher\gui\assets;pahebatcher\gui\assets" ^
+  --collect-all curl_cffi --collect-all Cryptodome --collect-all patchright --collect-all sounddevice --collect-all PIL --add-data "src\pahebatcher\gui\assets;pahebatcher\gui\assets" ^
   --collect-submodules pahebatcher || goto :fail
 
 echo Building command-line app...

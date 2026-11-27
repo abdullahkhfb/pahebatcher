@@ -5,7 +5,7 @@
 Batch-download and stream anime from [animepahe](https://animepahe.pw), from a
 desktop app or the terminal.
 
-[![Version 3.9.1][version-badge]][latest-release]
+[![Version 3.9.2][version-badge]][latest-release]
 ![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License MIT](https://img.shields.io/badge/license-MIT-green)
 
@@ -18,8 +18,9 @@ desktop app or the terminal.
     dashboard.
 *   **Fast and safe:** parallel episodes, parallel HLS segments, and downloads
     resume exactly where they stopped.
-*   **Stream in MPV** from the terminal, and switch between SUB and DUB between
-    episodes.
+*   **Built-in player in the desktop app:** double-click an episode to watch it,
+    with seek, volume, and full screen, no MPV needed. The
+    terminal can still stream in MPV.
 *   **Watchlist:** follow airing shows and fetch only the new episodes.
 *   **No Docker, no extra services.** A built-in browser solver gets past
     Cloudflare using the Chrome or Edge you already have.
@@ -56,8 +57,8 @@ pahebatcher          # terminal
 | Python 3.11+   | running from source                       | [python.org](https://www.python.org/downloads/)                                                               |
 | Tkinter        | the desktop app, when running from source | included with most Python installs; some Linux distributions package it separately (for example `python3-tk`) |
 | Chrome or Edge | the built-in Cloudflare solver            | usually already installed                                                                                     |
-| FFmpeg         | joining downloaded pieces into `.mp4`     | the desktop app installs it; or `winget install Gyan.FFmpeg` / `brew install ffmpeg` / `apt install ffmpeg`   |
-| MPV            | streaming only                            | `winget install mpv.net` / `brew install mpv` / `apt install mpv`                                             |
+| FFmpeg         | joining downloads into `.mp4`, and the desktop app's built-in player | the desktop app installs it; or `winget install Gyan.FFmpeg` / `brew install ffmpeg` / `apt install ffmpeg`   |
+| MPV            | streaming from the terminal only          | `winget install mpv.net` / `brew install mpv` / `apt install mpv`                                             |
 
 ## Desktop app
 
@@ -81,8 +82,30 @@ changes), and the terminal app finds it there too. A copy already on your
 header); `Esc` exits. The window can also be maximized or resized freely, and
 the content stays centered on wide screens.
 
-The desktop app doesn't do streaming or the watchlist yet. Use the terminal for
-those.
+### Watching
+
+Double-click an episode (or press `Enter` on it) to play it and every episode
+after it, or tick some episodes and press **Watch**. Playback uses the built-in
+player: FFmpeg decodes, the picture is drawn in the window and the sound goes to
+your default audio device. MPV is not used.
+
+| Key / mouse           | Action                              |
+| --------------------- | ----------------------------------- |
+| `Space` / `K` / click | pause or resume                     |
+| `Left` / `Right`      | seek 5 s back / forward             |
+| `J` / `L`             | seek 10 s back / forward            |
+| `Up` / `Down`, wheel  | volume                              |
+| `M`                   | mute                                |
+| `N` / `P`             | next / previous episode             |
+| `F` / double-click    | full screen (controls hide when idle) |
+| `Esc`                 | leave full screen, then the player  |
+
+Episodes play one after another. Quality and audio (SUB/DUB) come from the
+settings on the search screen, and the volume is remembered.
+
+If no audio device can be opened (on Linux this usually means PortAudio is
+missing: `sudo apt install libportaudio2`), the video still plays, silently, and
+the player says so. The watchlist is still terminal-only.
 
 ## Terminal
 
@@ -262,7 +285,7 @@ old output, installs everything and writes:
 Both use the app icon from `src/pahebatcher/gui/assets/` (`icon.ico` for the
 file, `icon.png` for the window; `icon.svg` is the editable source).
 
-Pushing a tag like `v3.9.1` makes the **Build executables** GitHub workflow run
+Pushing a tag like `v3.9.2` makes the **Build executables** GitHub workflow run
 the tests, build the binaries and attach them to a Release (the Windows desktop
 app, plus Windows, Linux and macOS terminal apps). You can also run it by hand
 from the Actions tab, which builds the binaries without publishing a Release.
@@ -291,7 +314,8 @@ exists, the app shows its release notes and asks before doing anything.
 | "No Cloudflare solver"                                     | Install Chrome or Edge and `pip install "pahebatcher[browser]"`. In WSL, install a Linux Chrome or set `PAHEBATCHER_BROWSER`.                      |
 | Solver never gets through                                  | `pahebatcher config set browser_mode headed`, then tick the checkbox in the window. Or try another network, or a proxy via `PAHEBATCHER_PROXY`.    |
 | FFmpeg not found                                           | Press **Install FFmpeg** in the desktop app, or install it and make sure `ffmpeg -version` works.                                                  |
-| `MPV not found`                                            | Install MPV, or use download mode.                                                                                                                 |
+| `MPV not found`                                            | Only the terminal's `--stream` needs MPV. The desktop app has its own player.                                                                      |
+| Desktop player has no sound (Linux)                        | `sudo apt install libportaudio2`, and check your default audio output.                                                                             |
 | Many segment failures or slow downloads                    | Lower `-w` to 8-12 and `-j` to 1 if the CDN is rate limiting; raise `-w` to 24-32 if you are just slow.                                            |
 | `Resolution timed out`                                     | Try `-j 1`. It already retries each episode automatically (see `--retry`).                                                                         |
 | `No Kwik link found`                                       | Try another `--quality`, or set `cookie_string` from your browser.                                                                                 |
@@ -316,7 +340,8 @@ Linux, macOS and WSL.
 | Path                             | Purpose                                                                  |
 | -------------------------------- | ------------------------------------------------------------------------ |
 | `main.py`                        | command-line parsing and the main flow                                   |
-| `gui/`                           | desktop app (Tkinter): `app.py`, `bridge.py`, `widgets.py`, `assets/`    |
+| `gui/`                           | desktop app (Tkinter): `app.py`, `bridge.py`, `widgets.py`, `player.py`, `engine.py` |
+| `hls_proxy.py`                   | local HLS proxy that feeds the built-in player (cache, prefetch)         |
 | `ui/`                            | terminal UI: dashboard, prompts, tables, theme, console                  |
 | `downloader.py`                  | two-stage pipeline: resolve stream URLs ahead, then download in parallel |
 | `store.py`                       | segment cache with atomic writes, resume, and FFmpeg assembly            |
@@ -324,7 +349,7 @@ Linux, macOS and WSL.
 | `solver.py`, `browser_solver.py` | Cloudflare solving (built-in browser)                                    |
 | `ffmpeg_setup.py`                | finds FFmpeg or installs it                                              |
 | `extract/`                       | animepahe scanner, Kwik link extraction, M3U8 parsing                    |
-| `stream.py`                      | MPV streaming                                                            |
+| `stream.py`                      | MPV streaming (terminal)                                          |
 | `watchlist.py`, `sessions.py`    | watchlist and session manager                                            |
 | `config.py`, `config_manager.py` | constants and saved settings                                             |
 | `models.py`, `utils.py`          | shared data classes and helpers                                          |
@@ -338,8 +363,8 @@ Fork, branch, and open a pull request. Keep `pytest`, `ruff check src` and
 `mypy src` green, add tests for what you change, and use a conventional commit
 prefix (`fix:`, `feat:`, `docs:`, `refactor:`, `chore:`).
 
-Ideas welcome: PyPI publishing, finishing active downloads on Ctrl+C, streaming
-and watchlist in the desktop app, other audio languages.
+Ideas welcome: PyPI publishing, finishing active downloads on Ctrl+C, the
+watchlist in the desktop app, other audio languages.
 
 ## Credits
 
@@ -360,4 +385,4 @@ official creators.
 
 [hellharbinger]: https://www.reddit.com/user/HellHarbinger/
 [latest-release]: https://github.com/abdullahkhfb/pahebatcher/releases/latest
-[version-badge]: https://img.shields.io/badge/version-3.9.1-blue
+[version-badge]: https://img.shields.io/badge/version-3.9.2-blue

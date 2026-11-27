@@ -36,6 +36,7 @@ class ConfigManager:
         "auto_retry": 2,
         "clearance_ttl": 20,
         "browser_mode": "auto",
+        "volume": 100,
     }
 
     def __init__(self, path: pathlib.Path | None = None) -> None:
@@ -129,6 +130,7 @@ class ConfigManager:
             "browser_mode": lambda v: v
             if v in ("auto", "headless", "headed")
             else None,
+            "volume": lambda v: max(0, min(100, int(v))),
         }
         if key not in validators:
             raise KeyError(f"Unknown config key: {key}")
@@ -163,6 +165,7 @@ class ConfigManager:
             "auto_retry": int,
             "clearance_ttl": int,
             "browser_mode": lambda v: v.strip().lower(),
+            "volume": int,
         }
         if key not in converters:
             raise KeyError(f"Unknown config key: {key}")

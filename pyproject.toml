@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pahebatcher"
-version = "3.9.1"
+version = "3.9.2"
 description = "High-performance animepahe batch downloader with parallel HLS engine"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
 authors = [{ name = "smolfiddle" }]
-keywords = ["anime", "downloader", "hls", "animepahe", "tui"]
+keywords = ["anime", "downloader", "streaming", "hls", "animepahe", "tui"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
@@ -84,7 +84,10 @@ warn_unused_ignores = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 
 [[tool.mypy.overrides]]
-module = ["curl_cffi.*", "Cryptodome.*", "patchright.*", "playwright.*"]
+module = [
+    "curl_cffi.*", "Cryptodome.*", "patchright.*", "playwright.*",
+    "sounddevice.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

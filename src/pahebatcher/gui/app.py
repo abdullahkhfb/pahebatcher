@@ -1,6 +1,7 @@
 """Desktop app (Tkinter).
 
-Search, pick episodes, and watch the downloads finish.
+Search, pick episodes, then download them or watch them in the built-in
+player.
 """
 
 from __future__ import annotations
@@ -19,7 +20,7 @@ from typing import Any
 import webbrowser
 
 from pahebatcher import config, ffmpeg_setup, models, updater, utils
-from pahebatcher.gui import bridge, widgets
+from pahebatcher.gui import bridge, player, widgets
 from pahebatcher.ui import dashboard, prompts
 
 PIP_CMD = 'pip install "pahebatcher[browser]"'
@@ -362,9 +363,14 @@ class EpisodesView(tk.Frame):
 
         frame, self.lb = widgets.make_listbox(self, f)
         frame.pack(fill="both", expand=True)
+        self._swallow = False  # the release that ends a double-click
         self.lb.bind("<ButtonRelease-1>", self._click)
+        self.lb.bind("<Double-Button-1>", self._double_click)
         self.lb.bind(
             "<space>", lambda _e: self._toggle(self.lb.index("active"))
+        )
+        self.lb.bind(
+            "<Return>", lambda _e: self.watch_from(self.lb.index("active"))
         )
 
         foot = tk.Frame(self, bg=widgets.BG)
@@ -375,6 +381,8 @@ class EpisodesView(tk.Frame):
         self.summary.pack(side="left")
         self.go = widgets.Button(foot, "Download", self.start, f, primary=True)
         self.go.pack(side="right")
+        self.watch = widgets.Button(foot, "Watch", self.watch_selected, f)
+        self.watch.pack(side="right", padx=(0, 10))
 
     def load(self, anime: models.AnimeInfo) -> None:
         """Fills the list with a series' episodes.
@@ -392,7 +400,10 @@ class EpisodesView(tk.Frame):
             if self.eps
             else ("-", "-")
         )
-        self.sub.configure(text=f"{len(self.eps)} episodes · {first} to {last}")
+        self.sub.configure(
+            text=f"{len(self.eps)} episodes · {first} to {last}"
+            " · double-click an episode to watch it"
+        )
         self.lb.delete(0, "end")
         for ep in self.eps:
             self.lb.insert("end", _episode_line(ep, False))
@@ -415,7 +426,22 @@ class EpisodesView(tk.Frame):
         self._summary()
 
     def _click(self, e: tk.Event[Any]) -> None:
+        if self._swallow:
+            self._swallow = False
+            return
         self._toggle(int(self.lb.nearest(e.y)))  # type: ignore[no-untyped-call]
+
+    def _double_click(self, e: tk.Event[Any]) -> None:
+        """Plays from the episode that was double-clicked.
+
+        The first click of the pair already toggled the row, so that is
+        undone, and the release that ends the pair is ignored.
+        """
+        i = int(self.lb.nearest(e.y))  # type: ignore[no-untyped-call]
+        self._toggle(i)
+        self._swallow = True
+        self.after(400, lambda: setattr(self, "_swallow", False))
+        self.watch_from(i)
 
     def _set_all(self, numbers: set[float]) -> None:
         self.sel = set(numbers)
@@ -449,6 +475,14 @@ class EpisodesView(tk.Frame):
             else "Download"
         )
         self.go.enable(n > 0)
+        self.watch.configure(
+            text="Watch"
+            if n == 0
+            else "Watch episode"
+            if n == 1
+            else f"Watch {n} episodes"
+        )
+        self.watch.enable(n > 0)
 
     def start(self) -> None:
         """Starts downloading the selected episodes."""
@@ -457,6 +491,25 @@ class EpisodesView(tk.Frame):
         chosen = [e for e in self.eps if e.number in self.sel]
         anime = self.anime
         self.app.ensure_ffmpeg(lambda: self.app.start_download(anime, chosen))
+
+    def watch_selected(self) -> None:
+        """Plays the selected episodes in the built-in player."""
+        if self.anime is None or not self.sel:
+            return
+        chosen = [e for e in self.eps if e.number in self.sel]
+        anime = self.anime
+        self.app.ensure_ffmpeg(lambda: self.app.start_stream(anime, chosen, 0))
+
+    def watch_from(self, index: int) -> None:
+        """Plays the whole series, starting at one episode.
+
+        Args:
+            index: The position in the episode list to start from.
+        """
+        if self.anime is None or not 0 <= index < len(self.eps):
+            return
+        anime, eps = self.anime, list(self.eps)
+        self.app.ensure_ffmpeg(lambda: self.app.start_stream(anime, eps, index))
 
 
 def _episode_line(ep: models.EpisodeInfo, on: bool) -> str:
@@ -707,6 +760,7 @@ class App(tk.Tk):
         dashboard_ui.Dashboard = factory  # type: ignore[assignment,misc,attr-defined,unused-ignore]
 
         self._fullscreen = False
+        self._chrome = True  # header and notices; hidden in player full screen
         self._pad = 32
         self._build_header()
         self.notices = tk.Frame(self, bg=widgets.BG)
@@ -718,6 +772,7 @@ class App(tk.Tk):
         self.v_search, self.v_eps, self.v_dl = (
             SearchView(self), EpisodesView(self), DownloadView(self)
         )
+        self.v_player = player.PlayerView(self)
         self.show_search()
 
         self.refresh_ffmpeg_status()
@@ -948,6 +1003,35 @@ class App(tk.Tk):
             # still works
             pass
         self.fs_link.configure(text="Exit full screen" if on else "Full screen")
+        if self.v_player.winfo_ismapped():
+            self.v_player.on_fullscreen(on)
+
+    @property
+    def fullscreen(self) -> bool:
+        """Whether the window is full screen."""
+        return self._fullscreen
+
+    def set_chrome(self, visible: bool) -> None:
+        """Shows or hides the header and notices around the content.
+
+        The player hides them in full screen so the picture gets the window.
+
+        Args:
+            visible: True to show them.
+        """
+        if visible == self._chrome:
+            return
+        self._chrome = visible
+        if visible:
+            self.notices.pack(fill="x", padx=self._pad, before=self.body)
+            self.hdr.pack(
+                fill="x", padx=self._pad, pady=(24, 0), before=self.notices
+            )
+            self.body.pack_configure(padx=self._pad, pady=(18, 24))
+        else:
+            self.hdr.pack_forget()
+            self.notices.pack_forget()
+            self.body.pack_configure(padx=0, pady=0)
 
     def toggle_fullscreen(self, _e: tk.Event[Any] | None = None) -> str:
         """Toggles full screen.
@@ -962,8 +1046,11 @@ class App(tk.Tk):
         return "break"
 
     def _exit_fullscreen(self, _e: tk.Event[Any] | None = None) -> None:
+        """Leaves full screen; pressed again in the player, leaves it too."""
         if self._fullscreen:
             self.set_fullscreen(False)
+        elif self.v_player.winfo_ismapped():
+            self.leave_player()
 
     def _on_resize(self, e: tk.Event[Any]) -> None:
         """Keeps content centered with a sensible maximum width.
@@ -978,8 +1065,9 @@ class App(tk.Tk):
         pad = max(32, (e.width - MAX_CONTENT) // 2)
         if pad != self._pad:
             self._pad = pad
-            for w in (self.hdr, self.notices, self.body):
-                w.pack_configure(padx=pad)
+            if self._chrome:  # hidden widgets must not be packed again
+                for w in (self.hdr, self.notices, self.body):
+                    w.pack_configure(padx=pad)
 
     def _notice(self, text: str) -> tuple[tk.Frame, tk.Label, tk.Frame]:
         """Builds a notice bar at the top of the window.
@@ -1190,7 +1278,7 @@ class App(tk.Tk):
 
     # navigation -----------------------------------------------------------
     def _show(self, view: tk.Frame) -> None:
-        for v in (self.v_search, self.v_eps, self.v_dl):
+        for v in (self.v_search, self.v_eps, self.v_dl, self.v_player):
             v.pack_forget()
         view.pack(fill="both", expand=True)
 
@@ -1206,6 +1294,39 @@ class App(tk.Tk):
             anime: The series to pick episodes from.
         """
         self.v_eps.load(anime)
+        self._show(self.v_eps)
+
+    def start_stream(
+        self,
+        anime: models.AnimeInfo,
+        episodes: list[models.EpisodeInfo],
+        index: int = 0,
+    ) -> None:
+        """Plays episodes in the built-in player.
+
+        Args:
+            anime: The series.
+            episodes: The episodes to play, in order.
+            index: The position in ``episodes`` to start from.
+        """
+        if not self.solver_ok:
+            messagebox.showwarning(
+                "pahebatcher",
+                "The Cloudflare solver isn't ready yet. See the notice at "
+                "the top of the window.",
+            )
+            return
+        self._show(self.v_player)
+        self.v_player.start(
+            anime, episodes, index, str(self.cfg.get("audio_lang"))
+        )
+
+    def leave_player(self) -> None:
+        """Stops playback and returns to the episode picker."""
+        self.v_player.stop_playback()
+        if self._fullscreen:
+            self.set_fullscreen(False)
+        self.set_chrome(True)
         self._show(self.v_eps)
 
     def start_download(
@@ -1250,6 +1371,7 @@ class App(tk.Tk):
             return
         if self.v_dl.future is not None:
             self.v_dl.future.cancel()
+        self.v_player.shutdown()
         try:
             self.bridge.run(self.backend.close()).result(timeout=6)
         except Exception:  # best-effort cleanup; must not raise

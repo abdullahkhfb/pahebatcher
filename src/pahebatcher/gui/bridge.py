@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 import concurrent.futures as cf
+import dataclasses
 import os
 import pathlib
 import queue
@@ -15,14 +16,36 @@ from pahebatcher import (
     config_manager,
     downloader,
     ffmpeg_setup,
+    hls_proxy,
     http,
     models,
     solver,
+    stream,
     utils,
 )
+from pahebatcher.extract import kwik
 import pahebatcher.extract.scanner
 
 Callback = Callable[[Any], None]
+
+
+@dataclasses.dataclass
+class StreamSession:
+    """A resolved episode being served to the built-in player.
+
+    Attributes:
+        episode: The episode, with its title and audio filled in.
+        info: The resolved stream.
+        proxy: The local proxy serving it.
+        url: The local playlist URL to play.
+        duration: The length in seconds from the playlist, or 0.0.
+    """
+
+    episode: models.EpisodeInfo
+    info: models.StreamInfo
+    proxy: hls_proxy.HlsProxy
+    url: str
+    duration: float
 
 
 class Bridge:
@@ -290,6 +313,48 @@ class Backend:
         return await downloader.BatchOrchestrator(
             ctx, anime, self.http, self.solver
         ).download(episodes)
+
+    async def open_stream(
+        self, episode: models.EpisodeInfo, audio: str
+    ) -> StreamSession:
+        """Resolves an episode and serves it locally for the player.
+
+        Args:
+            episode: The episode to play.
+            audio: The preferred audio language, ``"jpn"`` or ``"eng"``.
+
+        Returns:
+            The session. Close it with ``close_stream`` when done.
+
+        Raises:
+            RuntimeError: If the episode cannot be resolved.
+        """
+        info = await kwik.extract_stream(
+            self.solver,
+            episode.play_url,
+            int(self.cfg.get("quality")),
+            audio,
+            str(self.cfg.get("cookie_string")),
+        )
+        episode.audio = info.audio
+        stream._clean_ep_title(episode, info)  # pylint: disable=protected-access
+        if info.fansub:
+            episode.fansub = info.fansub
+        proxy = hls_proxy.HlsProxy(self.http, info)
+        try:
+            url = await proxy.start()
+        except BaseException:  # includes cancellation: never leak the server
+            await proxy.close()
+            raise
+        return StreamSession(episode, info, proxy, url, proxy.duration)
+
+    async def close_stream(self, session: StreamSession) -> None:
+        """Stops serving a stream.
+
+        Args:
+            session: The session from ``open_stream``.
+        """
+        await session.proxy.close()
 
     async def close(self) -> None:
         """Closes the solver and the HTTP client."""
