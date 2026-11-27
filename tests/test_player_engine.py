@@ -127,9 +127,24 @@ def test_playlist_is_rewritten_to_local_names() -> None:
 
 
 # ── integration with a real FFmpeg ───────────────────────────────────────
-needs_ffmpeg = pytest.mark.skipif(
-    shutil.which("ffmpeg") is None, reason="ffmpeg is not installed"
-)
+def _require_ffmpeg() -> None:
+    """Fails, instead of skipping, when FFmpeg is missing.
+
+    The player cannot be tested without it, and a silent skip would let a
+    broken player pass CI.
+    """
+    assert shutil.which("ffmpeg"), (
+        "ffmpeg is required for the player tests: install it "
+        "(apt install ffmpeg / brew install ffmpeg / winget install ffmpeg)"
+    )
+
+
+needs_ffmpeg = pytest.mark.usefixtures("require_ffmpeg")
+
+
+@pytest.fixture
+def require_ffmpeg() -> None:
+    _require_ffmpeg()
 
 
 class _FileHttp:
@@ -214,6 +229,7 @@ def _wait(cond: Any, timeout: float) -> bool:
 
 @pytest.fixture(params=[False, True], ids=["plain", "aes128"])
 def served(request: pytest.FixtureRequest, tmp_path: pathlib.Path) -> Any:
+    _require_ffmpeg()
     playlist = _make_hls(tmp_path, encrypt=request.param)
     loop = _Loop()
     proxy = hls_proxy.HlsProxy(

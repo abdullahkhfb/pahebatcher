@@ -17,8 +17,14 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+      - name: Install FFmpeg (the player tests decode a real stream)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          ffmpeg -hide_banner -encoders | grep -q libx264
       - run: pip install -e ".[dev]"
-      - run: pytest -q
+      # the real-browser tests need Chrome and a display: not run in CI
+      - run: pytest -q -rs -k "not test_real_browser"
 
   build:
     needs: test
